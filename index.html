@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ElectroMaison – Connexion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0D1117;
+      --surface: #161B22;
+      --border: #30363D;
+      --accent: #E85D26;
+      --accent2: #1A3A2A;
+      --green: #2EA043;
+      --text: #E6EDF3;
+      --muted: #8B949E;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Animated background */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(232,93,38,0.12) 0%, transparent 70%);
+      top: -100px; left: -100px;
+      animation: pulse 6s ease-in-out infinite;
+    }
+    body::after {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(26,58,42,0.2) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+      animation: pulse 6s ease-in-out infinite reverse;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); opacity:0.8; }
+      50% { transform: scale(1.15); opacity:1; }
+    }
+
+    .login-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 50px 44px;
+      width: 460px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+      animation: slideUp 0.5s ease-out;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(30px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .logo span { color: var(--accent); }
+    .tagline {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-bottom: 36px;
+    }
+
+    .tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 32px;
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 9px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: transparent;
+      color: var(--muted);
+    }
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .form-group { margin-bottom: 20px; }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .submit-btn:hover { background: #c94d1e; transform: translateY(-2px); }
+
+    .divider { text-align:center; color:var(--muted); font-size:0.82rem; margin:20px 0; }
+    .register-link {
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .register-link a {
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .register-link a:hover { text-decoration: underline; }
+
+    /* Register form (hidden by default) */
+    .register-form { display: none; }
+    .register-form.show { display: block; }
+    .login-form.hide { display: none; }
+
+    .error-msg {
+      background: rgba(232,93,38,0.1);
+      border: 1px solid rgba(232,93,38,0.3);
+      color: #ff6b47;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .success-msg {
+      background: rgba(46,160,67,0.1);
+      border: 1px solid rgba(46,160,67,0.3);
+      color: #3fb950;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .demo-hint {
+      margin-top: 24px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .demo-hint strong { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="login-container">
+  <div class="logo">Electro<span>Maison</span></div>
+  <p class="tagline">Votre boutique électroménager en ligne</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('login')">Se connecter</button>
+    <button class="tab-btn" onclick="switchTab('register')">S'inscrire</button>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div class="login-form" id="login-form">
+    <div class="error-msg" id="login-error"></div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="votre@email.com"/>
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()"/>
+    </div>
+    <button class="submit-btn" onclick="doLogin()">Se connecter →</button>
+    <div class="demo-hint">
+      <strong>Compte démo admin :</strong><br/>
+      Email : admin@electromaison.com<br/>
+      Mot de passe : admin123<br/>
+      <br/>
+      <strong>Compte démo client :</strong><br/>
+      Email : client@test.com &nbsp;|&nbsp; Mot de passe : client123
+    </div>
+  </div>
+
+  <!-- REGISTER FORM -->
+  <div class="register-form" id="register-form">
+    <div class="error-msg" id="register-error"></div>
+    <div class="success-msg" id="register-success"></div>
+    <div class="form-group">
+      <label>Nom complet</label>
+      <input type="text" id="reg-name" placeholder="Jean Dupont"/>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="votre@email.com"/>
+    </div>
+    <div class="form-group">
+      <label>Téléphone</label>
+      <input type="tel" id="reg-phone" placeholder="+243 XXX XXX XXX"/>
+    </div>
+    <div class="form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="reg-password" placeholder="Minimum 6 caractères"/>
+    </div>
+    <button class="submit-btn" onclick="doRegister()">Créer mon compte →</button>
+  </div>
+</div>
+
+<script>
+  // ── INIT DEFAULT DATA ──
+  function initData() {
+    if (!localStorage.getItem('em_users')) {
+      const users = [
+        { id: 1, name: 'Administrateur', email: 'admin@electromaison.com', password: 'admin123', role: 'admin', phone: '+243 000 000 000' },
+        { id: 2, name: 'Client Test', email: 'client@test.com', password: 'client123', role: 'client', phone: '+243 111 111 111' }
+      ];
+      localStorage.setItem('em_users', JSON.stringify(users));
+    }
+
+    if (!localStorage.getItem('em_products')) {
+      const products = [
+        { id:1, name:'Réfrigérateur Double Porte', category:'froid', icon:'🧊', price:450000, oldPrice:520000, stock:12, description:'200L, classe A+, low noise, tiroir congélateur séparé.', badge:'Promo', active:true },
+        { id:2, name:'Machine à Laver 7kg', category:'lavage', icon:'🫧', price:320000, oldPrice:null, stock:8, description:'7 programmes, 1200 tr/min, départ différé 24h.', badge:null, active:true },
+        { id:3, name:'Climatiseur Split 12000 BTU', category:'climatisation', icon:'❄️', price:580000, oldPrice:640000, stock:5, description:'Chaud/Froid, Wi-Fi intégré, filtre antiallergique.', badge:'Best-seller', active:true },
+        { id:4, name:'Cuisinière 4 Feux Gaz', category:'cuisine', icon:'🍳', price:275000, oldPrice:null, stock:15, description:'4 brûleurs, four multifonction, minuteur intégré.', badge:null, active:true },
+        { id:5, name:'Micro-ondes 23L', category:'cuisine', icon:'📡', price:135000, oldPrice:155000, stock:20, description:'900W, 10 niveaux de puissance, gril intégré.', badge:'Promo', active:true },
+        { id:6, name:'Aspirateur Robot', category:'petit', icon:'🤖', price:195000, oldPrice:null, stock:7, description:'Autonomie 120 min, capteurs anti-chute, silencieux.', badge:'Nouveau', active:true },
+        { id:7, name:'Congélateur Coffre 200L', category:'froid', icon:'🧊', price:360000, oldPrice:395000, stock:9, description:'A++, serrure de sécurité, bac amovible.', badge:null, active:true },
+        { id:8, name:'Fer à Repasser Vapeur', category:'petit', icon:'♨️', price:45000, oldPrice:null, stock:30, description:'2400W, semelle inox, réservoir 300ml.', badge:null, active:true },
+        { id:9, name:'Lave-vaisselle 12 couverts', category:'lavage', icon:'🍽️', price:490000, oldPrice:550000, stock:4, description:'12 couverts, A+++, départ différé, silence 44dB.', badge:'Promo', active:true },
+        { id:10, name:'Blender Professionnel', category:'petit', icon:'🥤', price:58000, oldPrice:null, stock:25, description:'1200W, 6 vitesses, bol en verre 2L.', badge:'Nouveau', active:true },
+      ];
+      localStorage.setItem('em_products', JSON.stringify(products));
+    }
+
+    if (!localStorage.getItem('em_orders')) {
+      localStorage.setItem('em_orders', JSON.stringify([]));
+    }
+  }
+
+  // ── TAB SWITCH ──
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)));
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+  }
+
+  // ── LOGIN ──
+  function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+
+    if (!email || !password) {
+      showMsg(errEl, 'Veuillez remplir tous les champs.');
+      return;
+    }
+    const users = JSON.parse(localStorage.getItem('em_users') || '[]');
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+      showMsg(errEl, 'Email ou mot de passe incorrect.');
+      return;
+    }
+    localStorage.setItem('em_current_user', JSON.stringify(user));
+    if (user.role === 'admin') window.location.href = 'admin.html';
+    else window.location.href = 'client.html';
+  }
+
+  // ── REGISTER ──
+  function doRegister() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const errEl = document.getElementById('register-error');
+    const sucEl = document.getElementById('register-success');
+
+    if (!name || !email || !password) {
+      showMsg(errEl, 'Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    if (password.length < 6) {
+      showMsg(errEl, 'Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    const users = JSON.parse(localStorage.getItem('em_users') || '[]');
+    if (users.find(u => u.email === email)) {
+      showMsg(errEl, 'Cet email est déjà utilisé.');
+      return;
+    }
+    const newUser = { id: Date.now(), name, email, phone, password, role: 'client' };
+    users.push(newUser);
+    localStorage.setItem('em_users', JSON.stringify(users));
+    errEl.style.display = 'none';
+    showMsg(sucEl, '✅ Compte créé ! Vous pouvez maintenant vous connecter.');
+    setTimeout(() => switchTab('login'), 2000);
+  }
+
+  function showMsg(el, msg) {
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+  }
+
+  initData();
+  switchTab('login');
+</script>
+</body>
+</html>
