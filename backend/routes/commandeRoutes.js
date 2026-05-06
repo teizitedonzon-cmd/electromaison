@@ -1,16 +1,20 @@
-// routes/commandeRoutes.js
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const {
-  passerCommande, mesCommandes,
-  toutesLesCommandes, changerStatut, statistiques
+  passerCommande,
+  mesCommandes,
+  mesVentes,
+  toutesLesCommandes,
+  changerStatut,
+  statistiques
 } = require('../controllers/commandeController');
-const { proteger, adminSeulement } = require('../middleware/authMiddleware');
+const { proteger, admin, vendeurOuAdmin } = require('../middleware/authMiddleware');
 
-router.post('/',                proteger, passerCommande);
-router.get('/mes-commandes',    proteger, mesCommandes);
-router.get('/',                 proteger, adminSeulement, toutesLesCommandes);
-router.get('/stats',            proteger, adminSeulement, statistiques);
-router.put('/:id/statut',       proteger, adminSeulement, changerStatut);
+router.post('/', proteger, passerCommande);
+router.get('/mes-commandes', proteger, mesCommandes);
+router.get('/mes-ventes', proteger, vendeurOuAdmin, mesVentes);
+router.get('/stats', proteger, admin, statistiques);
+router.get('/', proteger, admin, toutesLesCommandes);
+router.put('/:id/statut', proteger, admin, changerStatut);
 
 module.exports = router;
