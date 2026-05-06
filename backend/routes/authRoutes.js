@@ -1,12 +1,11 @@
-// routes/authRoutes.js
-const express = require('express');
-const router  = express.Router();
-const { inscription, connexion, moi, modifierMotDePasse } = require('../controllers/authController');
-const { proteger } = require('../middleware/authMiddleware');
 
-router.post('/inscription', inscription);
-router.post('/connexion',   connexion);
-router.get('/moi',          proteger, moi);
-router.put('/mot-de-passe', proteger, modifierMotDePasse);
+const express = require('express');
+const router = express.Router();
+const { inscription, connexion } = require('../controllers/authController');
+const upload = require('../middleware/uploadMiddleware'); // Ton middleware Multer
+
+// On ajoute upload.single('photoProfil') ici
+router.post('/inscription', upload.single('photoProfil'), inscription);
+router.post('/connexion', connexion);
 
 module.exports = router;
