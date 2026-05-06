@@ -1,22 +1,23 @@
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 const {
-  listerProduits, getProduit, creerProduit,
-  modifierProduit, supprimerProduit, tousLesProduits
+  listerProduits,
+  obtenirProduit,
+  listerProduitsAdmin,
+  mesProduits,
+  creerProduit,
+  modifierProduit,
+  supprimerProduit
 } = require('../controllers/produitController');
-const { proteger, adminSeulement } = require('../middleware/authMiddleware');
+const { proteger, admin, vendeurOuAdmin } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
-// Routes publiques
-router.get('/',    listerProduits);
-router.get('/:id', getProduit);
-
-// Routes Admin
-router.get('/admin/tous', proteger, adminSeulement, tousLesProduits);
-
-// Upload jusqu'à 3 images par produit
-router.post('/',   proteger, adminSeulement, upload.array('images', 3), creerProduit);
-router.put('/:id', proteger, adminSeulement, upload.array('images', 3), modifierProduit);
-router.delete('/:id', proteger, adminSeulement, supprimerProduit);
+router.get('/', listerProduits);
+router.get('/admin/tous', proteger, admin, listerProduitsAdmin);
+router.get('/mes-produits', proteger, mesProduits);
+router.post('/', proteger, vendeurOuAdmin, upload.array('images', 3), creerProduit);
+router.put('/:id', proteger, vendeurOuAdmin, upload.array('images', 3), modifierProduit);
+router.delete('/:id', proteger, vendeurOuAdmin, supprimerProduit);
+router.get('/:id', obtenirProduit);
 
 module.exports = router;
