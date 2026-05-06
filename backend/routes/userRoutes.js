@@ -1,36 +1,89 @@
-// routes/userRoutes.js
 const express = require('express');
-const router  = express.Router();
-const User    = require('../models/User');
-const { proteger, adminSeulement } = require('../middleware/authMiddleware');
+const router = express.Router();
+const { proteger, admin } = require('../middleware/authMiddleware');
+const User = require('../models/User');
 
-// GET /api/users — Lister tous les clients (Admin)
-router.get('/', proteger, adminSeulement, async (req, res) => {
+router.get('/', proteger, admin, async (req, res) => {
   try {
-    const users = await User.find({ role: 'client' }).sort({ createdAt: -1 });
+    const users = await User.find().select('-motDePasse').sort({ createdAt: -1 });
     res.json(users);
-  } catch (e) { res.status(500).json({ message: e.message }); }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// PUT /api/users/:id/actif — Activer/Désactiver un client (Admin)
-router.put('/:id/actif', proteger, adminSeulement, async (req, res) => {
+router.get('/profil', proteger, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id, { actif: req.body.actif }, { new: true }
-    );
-    res.json({ message: 'Statut mis à jour.', user });
-  } catch (e) { res.status(500).json({ message: e.message }); }
+    const user = await User.findById(req.user._id).select('-motDePasse');
+    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// PUT /api/users/profil — Modifier son propre profil (Client)
 router.put('/profil', proteger, async (req, res) => {
   try {
-    const { nom, prenom, telephone, adresse } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
+
+    user.nom = req.body.nom || user.nom;
+    user.prenom = req.body.prenom || user.prenom;
+    user.telephone = req.body.telephone ?? user.telephone;
+    if (req.body.motDePasse) user.motDePasse = req.body.motDePasse;
+
+    const misAJour = await user.save();
+    res.json({
+      message: 'Profil mis a jour',
+      user: {
+        _id: misAJour._id,
+        nom: misAJour.nom,
+        prenom: misAJour.prenom,
+        email: misAJour.email,
+        role: misAJour.role,
+        statutVendeur: misAJour.statutVendeur,
+        telephone: misAJour.telephone,
+        photoProfil: misAJour.photoProfil
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.put('/:id/actif', proteger, admin, async (req, res) => {
+  try {
     const user = await User.findByIdAndUpdate(
-      req.user._id, { nom, prenom, telephone, adresse }, { new: true, runValidators: true }
-    );
-    res.json({ message: 'Profil mis à jour.', user });
-  } catch (e) { res.status(500).json({ message: e.message }); }
+      req.params.id,
+      { actif: req.body.actif },
+      { new: true, runValidators: true }
+    ).select('-motDePasse');
+
+    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    res.json({ message: 'Statut mis a jour', user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.put('/:id/statut-vendeur', proteger, admin, async (req, res) => {
+  try {
+    const { statutVendeur } = req.body;
+    if (!['en_attente', 'approuve', 'rejete'].includes(statutVendeur)) {
+      return res.status(400).json({ message: 'Statut vendeur invalide' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { statutVendeur },
+      { new: true, runValidators: true }
+    ).select('-motDePasse');
+
+    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    res.json({ message: 'Statut vendeur mis a jour', user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;
