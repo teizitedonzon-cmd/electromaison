@@ -1,47 +1,44 @@
-// middleware/authMiddleware.js — Protection des routes par JWT
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// ── MIDDLEWARE : Vérifier que l'utilisateur est connecté ──
 const proteger = async (req, res, next) => {
   let token;
-
-  // Le token est envoyé dans le header : Authorization: Bearer <token>
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-motDePasse');
+      if (!req.user || req.user.actif === false) {
+        return res.status(401).json({ message: 'Compte introuvable ou desactive' });
+      }
+      next();
+    } catch (error) {
+      res.status(401).json({ message: 'Non autorisé, token invalide' });
+    }
   }
-
   if (!token) {
-    return res.status(401).json({ message: 'Non autorisé. Veuillez vous connecter.' });
-  }
-
-  try {
-    // Déchiffre le token pour récupérer l'ID utilisateur
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Récupère l'utilisateur depuis la DB et l'attache à la requête
-    req.user = await User.findById(decoded.id).select('-motDePasse');
-
-    if (!req.user) {
-      return res.status(401).json({ message: 'Utilisateur introuvable.' });
-    }
-    if (!req.user.actif) {
-      return res.status(401).json({ message: 'Compte désactivé.' });
-    }
-
-    next(); // Passe au controller suivant
-  } catch (error) {
-    return res.status(401).json({ message: 'Token invalide ou expiré.' });
+    res.status(401).json({ message: 'Non autorisé, aucun token' });
   }
 };
 
-// ── MIDDLEWARE : Vérifier que l'utilisateur est admin ──
-const adminSeulement = (req, res, next) => {
+const admin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     next();
   } else {
-    res.status(403).json({ message: 'Accès refusé. Réservé aux administrateurs.' });
+    res.status(403).json({ message: 'Accès refusé : réservé aux administrateurs' });
   }
 };
 
-module.exports = { proteger, adminSeulement };
+const vendeurOuAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  }
+
+  if (req.user && req.user.role === 'vendeur' && req.user.statutVendeur === 'approuve') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Acces refuse : vendeur non approuve' });
+  }
+};
+
+module.exports = { proteger, admin, vendeurOuAdmin };
