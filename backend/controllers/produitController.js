@@ -1,117 +1,120 @@
-// controllers/produitController.js — CRUD complet des produits
 const Produit = require('../models/Produit');
 
-// ── GET /api/produits ─────────────────────────────────────
-// Liste tous les produits (avec filtres, recherche, pagination)
+// Lister les produits (Public)
 exports.listerProduits = async (req, res) => {
   try {
-    const { categorie, recherche, badge, minPrix, maxPrix, page = 1, limite = 12 } = req.query;
-
-    // Construction du filtre dynamique
+    const { categorie, recherche, page = 1, limite = 12, minPrix, maxPrix } = req.query;
     const filtre = { actif: true };
-    if (categorie)  filtre.categorie = categorie;
-    if (badge)      filtre.badge = badge;
+    if (categorie) {
+      const cat = String(categorie).toLowerCase();
+      if (cat.includes('lectron')) filtre.categorie = { $regex: 'lectron', $options: 'i' };
+      else if (cat.includes('tement')) filtre.categorie = { $regex: 'tement', $options: 'i' };
+      else if (cat.includes('beaut')) filtre.categorie = { $regex: 'beaut', $options: 'i' };
+      else if (cat.includes('electromenager')) filtre.categorie = { $regex: 'electromenager', $options: 'i' };
+      else filtre.categorie = categorie;
+    }
+    if (recherche) filtre.$text = { $search: recherche };
     if (minPrix || maxPrix) {
       filtre.prix = {};
       if (minPrix) filtre.prix.$gte = Number(minPrix);
       if (maxPrix) filtre.prix.$lte = Number(maxPrix);
     }
-    if (recherche) {
-      filtre.$text = { $search: recherche }; // Recherche full-text
-    }
 
-    const skip = (Number(page) - 1) * Number(limite);
-    const total = await Produit.countDocuments(filtre);
     const produits = await Produit.find(filtre)
+      .select('-vendeur')
       .sort({ createdAt: -1 })
-      .skip(skip)
+      .skip((Number(page) - 1) * Number(limite))
       .limit(Number(limite));
 
-    res.json({
-      produits,
-      pagination: {
-        total,
-        page: Number(page),
-        pages: Math.ceil(total / Number(limite)),
-      },
-    });
+    const total = await Produit.countDocuments(filtre);
+    res.json({ produits, total, pages: Math.ceil(total / limite) });
   } catch (error) {
-    res.status(500).json({ message: 'Erreur.', error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// ── GET /api/produits/:id ─────────────────────────────────
-exports.getProduit = async (req, res) => {
+exports.mesProduits = async (req, res) => {
   try {
-    const produit = await Produit.findById(req.params.id);
-    if (!produit) return res.status(404).json({ message: 'Produit introuvable.' });
+    const produits = await Produit.find({ vendeur: req.user._id })
+      .sort({ createdAt: -1 });
+    res.json({ produits, total: produits.length });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Détail produit (Correction : manquait dans ta version initiale)
+exports.obtenirProduit = async (req, res) => {
+  try {
+    const produit = await Produit.findOne({ _id: req.params.id, actif: true }).select('-vendeur');
+    if (!produit) return res.status(404).json({ message: 'Produit introuvable' });
     res.json(produit);
   } catch (error) {
-    res.status(500).json({ message: 'Erreur.', error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// ── POST /api/produits ── (Admin seulement) ───────────────
-// ── POST /api/produits ── (Admin seulement)
+// Liste Admin (Correction : manquait dans ta version initiale)[cite: 9]
+exports.listerProduitsAdmin = async (req, res) => {
+  try {
+    const produits = await Produit.find().populate('vendeur', 'nom prenom').sort({ createdAt: -1 });
+    res.json({ produits });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.creerProduit = async (req, res) => {
   try {
-    // Si des images ont été uploadées, récupère leurs chemins
-    const images = req.files
-      ? req.files.map((f) => `/uploads/${f.filename}`)
-      : [];
+    if (Number(req.body.prix) < 0 || Number(req.body.stock) < 0) {
+      return res.status(400).json({ message: 'Prix et stock doivent etre positifs.' });
+    }
 
-    const produit = await Produit.create({ ...req.body, images });
-    res.status(201).json({ message: 'Produit créé !', produit });
+    const images = req.files ? req.files.map((f) => `/uploads/${f.filename}`) : [];
+    const nouveauProduit = await Produit.create({ ...req.body, images, vendeur: req.user._id });
+    res.status(201).json({ message: 'Produit mis en vente !', produit: nouveauProduit });
   } catch (error) {
-    res.status(400).json({ message: 'Données invalides.', error: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-// ── PUT /api/produits/:id ── (Admin seulement)
 exports.modifierProduit = async (req, res) => {
   try {
-    const updates = { ...req.body };
+    const produit = await Produit.findById(req.params.id);
+    if (!produit) return res.status(404).json({ message: 'Produit introuvable' });
 
-    // Si de nouvelles images sont uploadées, les ajouter
+    if (produit.vendeur.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vous ne pouvez modifier que vos propres produits.' });
+    }
+
+    const updates = { ...req.body };
+    if ((updates.prix !== undefined && Number(updates.prix) < 0) || (updates.stock !== undefined && Number(updates.stock) < 0)) {
+      return res.status(400).json({ message: 'Prix et stock doivent etre positifs.' });
+    }
+
     if (req.files && req.files.length > 0) {
       updates.images = req.files.map((f) => `/uploads/${f.filename}`);
     }
-
-    const produit = await Produit.findByIdAndUpdate(
-      req.params.id,
-      updates,
-      { new: true, runValidators: true }
-    );
-    if (!produit) return res.status(404).json({ message: 'Produit introuvable.' });
-    res.json({ message: 'Produit modifié !', produit });
+    const produitModifie = await Produit.findByIdAndUpdate(req.params.id, updates, { new: true });
+    res.json(produitModifie);
   } catch (error) {
-    res.status(400).json({ message: 'Erreur.', error: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-// ── DELETE /api/produits/:id ── (Admin seulement) ─────────
-// Suppression douce : on désactive plutôt que supprimer
 exports.supprimerProduit = async (req, res) => {
   try {
-    const produit = await Produit.findByIdAndUpdate(
-      req.params.id,
-      { actif: false },
-      { new: true }
-    );
-    if (!produit) return res.status(404).json({ message: 'Produit introuvable.' });
-    res.json({ message: 'Produit supprimé.' });
-  } catch (error) {
-    res.status(500).json({ message: 'Erreur.', error: error.message });
-  }
-};
+    const produit = await Produit.findById(req.params.id);
+    if (!produit) return res.status(404).json({ message: 'Produit introuvable' });
 
-// ── GET /api/produits/admin/tous ── (Admin seulement) ─────
-// Voir TOUS les produits (y compris les désactivés)
-exports.tousLesProduits = async (req, res) => {
-  try {
-    const produits = await Produit.find().sort({ createdAt: -1 });
-    res.json({ produits, total: produits.length });
+    if (produit.vendeur.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Action non autorisee.' });
+    }
+
+    produit.actif = !produit.actif;
+    await produit.save();
+    res.json({ message: 'Statut mis à jour.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erreur.', error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
