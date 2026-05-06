@@ -1,561 +1,1192 @@
-// src/pages/admin/Produits.jsx — Gestion des produits avec upload d'images
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-
-const CATEGORIES = [
-  { value: 'cuisine',             label: '🍳 Cuisine' },
-  { value: 'froid',               label: '🧊 Réfrigération' },
-  { value: 'lavage',              label: '🫧 Lavage' },
-  { value: 'climatisation',       label: '❄️ Climatisation' },
-  { value: 'petit_electromenager',label: '⚡ Petit Électroménager' },
-];
-const BADGES = ['', 'Promo', 'Nouveau', 'Best-seller'];
-
-const formVide = {
-  nom: '', description: '', prix: '', prixAncien: '',
-  categorie: 'cuisine', marque: '', stock: '', badge: '',
-};
+import Icon from '../../components/Icon';
+import logot from '../../assets/images/logot.jpg';
 
 export default function AdminProduits() {
-  const [produits, setProduits]           = useState([]);
-  const [modal, setModal]                 = useState(false);
-  const [produitEnCours, setProduitEnCours] = useState(null);
-  const [form, setForm]                   = useState(formVide);
-  const [fichiers, setFichiers]           = useState(null);
-  const [previews, setPreviews]           = useState([]);
-  const [chargement, setChargement]       = useState(false);
-  const [recherche, setRecherche]         = useState('');
+  const { user, deconnexion } = useAuth();
+  const [produits, setProduits] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategorie, setSelectedCategorie] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProduit, setSelectedProduit] = useState(null);
+  const [formData, setFormData] = useState({
+    nom: '',
+    description: '',
+    prix: '',
+    stock: '',
+    categorie: '',
+    marque: '',
+    actif: true
+  });
+  const [images, setImages] = useState([]);
+  const [hoveredLink, setHoveredLink] = useState(null);
+  const [hoveredProduct, setHoveredProduct] = useState(null);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // ── Chargement des produits ──────────────────────────────
+  const categoriesList = ['Électronique', 'Vêtements', 'Alimentation', 'electromenager', 'Beauté', 'immobilier', 'Sport', 'Autre'];
+
+  useEffect(() => {
+    chargerProduits();
+  }, []);
+
   const chargerProduits = async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get('/produits/admin/tous');
-      setProduits(data.produits);
-    } catch {
-      toast.error('Erreur chargement produits');
+      const { data } = await api.get('/produits');
+      const produitsData = data.produits || [];
+      setProduits(produitsData);
+      
+      const catsMap = new Map();
+      produitsData.forEach(p => {
+        const cat = p.categorie || 'Non classé';
+        if (!catsMap.has(cat)) {
+          catsMap.set(cat, { nom: cat, totalStock: 0, produits: [] });
+        }
+        catsMap.get(cat).totalStock += p.stock || 0;
+        catsMap.get(cat).produits.push(p);
+      });
+      setCategories(Array.from(catsMap.values()));
+    } catch (err) {
+      toast.error('Erreur lors du chargement des produits');
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => { chargerProduits(); }, []);
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  // ── Gestion des previews d'images ────────────────────────
-  const handleFichiers = (e) => {
-    const files = e.target.files;
-    setFichiers(files);
-    // Génère les aperçus
-    const urls = Array.from(files).map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-  };
-
-  // ── Ouvrir modal création ────────────────────────────────
-  const ouvrirCreation = () => {
-    setForm(formVide);
-    setFichiers(null);
-    setPreviews([]);
-    setProduitEnCours(null);
-    setModal(true);
-  };
-
-  // ── Ouvrir modal édition ─────────────────────────────────
-  const ouvrirEdition = (produit) => {
-    setForm({
-      nom:         produit.nom         || '',
-      description: produit.description || '',
-      prix:        produit.prix        || '',
-      prixAncien:  produit.prixAncien  || '',
-      categorie:   produit.categorie   || 'cuisine',
-      marque:      produit.marque      || '',
-      stock:       produit.stock       || '',
-      badge:       produit.badge       || '',
-    });
-    // Affiche les images existantes comme previews
-    setPreviews(
-      produit.images && produit.images.length > 0
-        ? produit.images.map((img) => `http://localhost:5000${img}`)
-        : []
-    );
-    setFichiers(null);
-    setProduitEnCours(produit);
-    setModal(true);
-  };
-
-  const fermerModal = () => {
-    setModal(false);
-    setPreviews([]);
-    setFichiers(null);
-  };
-
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
-
-  // ── Soumission du formulaire ─────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setChargement(true);
+    const data = new FormData();
+    Object.keys(formData).forEach(key => data.append(key, formData[key]));
+    Array.from(images).forEach(img => data.append('images', img));
+
     try {
-      // FormData pour envoyer texte + fichiers ensemble
-      const formData = new FormData();
-      Object.keys(form).forEach((key) => {
-        if (form[key] !== '' && form[key] !== null) {
-          formData.append(key, form[key]);
-        }
-      });
-      if (fichiers && fichiers.length > 0) {
-        Array.from(fichiers).forEach((f) => formData.append('images', f));
-      }
-
-      const config = { headers: { 'Content-Type': 'multipart/form-data' } };
-
-      if (produitEnCours) {
-        await api.put(`/produits/${produitEnCours._id}`, formData, config);
-        toast.success('✅ Produit modifié avec succès !');
+      if (selectedProduit) {
+        await api.put(`/produits/${selectedProduit._id}`, data);
+        toast.success('Produit modifié avec succès');
       } else {
-        await api.post('/produits', formData, config);
-        toast.success('✅ Produit créé avec succès !');
+        await api.post('/produits', data);
+        toast.success('Produit créé avec succès');
       }
-      fermerModal();
+      setShowModal(false);
+      setSelectedProduit(null);
+      setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', actif: true });
+      setImages([]);
       chargerProduits();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Erreur lors de la sauvegarde.');
-    } finally {
-      setChargement(false);
+      toast.error(err.response?.data?.message || "Erreur lors de l'opération");
     }
   };
 
-  // ── Suppression ──────────────────────────────────────────
-  const supprimer = async (id) => {
-    if (!window.confirm('Supprimer ce produit ? Cette action est irréversible.')) return;
+  const handleDelete = async (id, nomProduit) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer "${nomProduit}" ?`)) {
+      try {
+        await api.delete(`/produits/${id}`);
+        toast.success('Produit supprimé avec succès');
+        chargerProduits();
+      } catch (err) {
+        toast.error('Erreur lors de la suppression');
+      }
+    }
+  };
+
+  const handleEdit = (produit) => {
+    setSelectedProduit(produit);
+    setFormData({
+      nom: produit.nom,
+      description: produit.description || '',
+      prix: produit.prix,
+      stock: produit.stock,
+      categorie: produit.categorie,
+      marque: produit.marque || '',
+      actif: produit.actif !== false
+    });
+    setImages([]);
+    setShowModal(true);
+  };
+
+  const handleToggleActif = async (produit) => {
     try {
-      await api.delete(`/produits/${id}`);
-      toast.success('Produit supprimé.');
+      await api.put(`/produits/${produit._id}`, { actif: !produit.actif });
+      toast.success(`Produit ${!produit.actif ? 'activé' : 'désactivé'} avec succès`);
       chargerProduits();
-    } catch {
-      toast.error('Erreur lors de la suppression.');
+    } catch (err) {
+      toast.error('Erreur lors du changement de statut');
     }
   };
 
-  // ── Filtrage ─────────────────────────────────────────────
-  const produitsFiltres = produits.filter((p) =>
-    p.nom.toLowerCase().includes(recherche.toLowerCase()) ||
-    p.marque?.toLowerCase().includes(recherche.toLowerCase())
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    setTimeout(() => deconnexion(), 500);
+  };
+
+  const getNavLinkStyle = (id) => ({
+    ...styles.navLink,
+    color: hoveredLink === id ? '#F4A76A' : 'rgba(255,255,255,0.85)',
+    transform: hoveredLink === id ? 'translateY(-2px)' : 'translateY(0)',
+    background: hoveredLink === id ? 'rgba(255,255,255,0.08)' : 'transparent',
+  });
+
+  const EditIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 3l4 4-7 7H9v-4l7-7z" />
+      <path d="M3 21l4-4" />
+    </svg>
   );
 
-  // ── MENU SIDEBAR ─────────────────────────────────────────
-  const menuItems = [
-    { path: '/admin/dashboard', label: 'Tableau de bord', icone: '📊' },
-    { path: '/admin/produits',  label: 'Produits',         icone: '📦' },
-    { path: '/admin/commandes', label: 'Commandes',        icone: '🛒' },
-    { path: '/admin/clients',   label: 'Clients',          icone: '👥' },
-  ];
+  const TrashIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M8 4V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v1" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  );
+
+  const produitsFiltres = produits.filter(p => {
+    const matchSearch = p.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        p.marque?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchSearch;
+  });
+
+  const produitsParCategorie = selectedCategorie 
+    ? produits.filter(p => p.categorie === selectedCategorie.nom)
+    : [];
+
+  const totalStockGeneral = categories.reduce((sum, cat) => sum + cat.totalStock, 0);
+  const totalProduits = produits.length;
+  const produitsActifs = produits.filter(p => p.actif !== false).length;
+
+  // Fonction pour obtenir une couleur de fond légère pour chaque catégorie
+  const getCategoryColor = (nom, index) => {
+    const colors = [
+      '#FFF5F0', '#F0F7FF', '#F0FFF4', '#FFF9F0', '#FDF0FF', '#F0FFF9', '#FFF0F5', '#F0F5FF'
+    ];
+    return colors[index % colors.length];
+  };
 
   return (
     <div style={styles.layout}>
-
-      {/* ── SIDEBAR ── */}
+      {/* Sidebar */}
       <aside style={styles.sidebar}>
-        <div style={styles.sidebarLogo}>⚡ Admin</div>
-        <nav style={{ flex: 1 }}>
-          {menuItems.map((item) => (
-            <Link key={item.path} to={item.path} style={styles.menuItem}>
-              <span>{item.icone}</span> {item.label}
-            </Link>
-          ))}
+        <div style={styles.sidebarHeader}>
+          <div style={styles.logoWrapper}>
+            <img src={logot} alt="TeyShop" style={styles.logoImage} />
+          </div>
+          <div style={styles.logoContainer}>
+            <span style={styles.logoText}>TeyShop</span>
+            <span style={styles.sidebarBadge}>Admin</span>
+          </div>
+        </div>
+        
+        <nav style={styles.nav}>
+          <Link to="/admin/dashboard" style={getNavLinkStyle('dashboard')} onMouseEnter={() => setHoveredLink('dashboard')} onMouseLeave={() => setHoveredLink(null)}>
+            <Icon name="dashboard" size={18} color="#fff" /> Tableau de bord
+          </Link>
+          <Link to="/admin/produits" style={getNavLinkStyle('produits')} onMouseEnter={() => setHoveredLink('produits')} onMouseLeave={() => setHoveredLink(null)}>
+            <Icon name="package" size={18} color="#fff" /> Produits
+          </Link>
+          <Link to="/admin/commandes" style={getNavLinkStyle('commandes')} onMouseEnter={() => setHoveredLink('commandes')} onMouseLeave={() => setHoveredLink(null)}>
+            <Icon name="shopping-cart" size={18} color="#fff" /> Commandes
+          </Link>
+          <Link to="/admin/clients" style={getNavLinkStyle('clients')} onMouseEnter={() => setHoveredLink('clients')} onMouseLeave={() => setHoveredLink(null)}>
+            <Icon name="users" size={18} color="#fff" /> utilisateurs
+          </Link>
         </nav>
+        
+        <div style={styles.sidebarFooter}>
+          <div style={styles.userInfo}>
+            <div style={styles.userAvatar}>{user?.prenom?.[0] || 'A'}</div>
+            <div>
+              <div style={styles.userName}>{user?.prenom} {user?.nom}</div>
+              <div style={styles.userEmail}>{user?.email}</div>
+            </div>
+          </div>
+          <button onClick={handleLogout} style={styles.deconnexionBtn} className="logout-btn">
+            <Icon name="log-out" size={18} color="#fff" />
+            <span>{isLoggingOut ? 'Déconnexion...' : 'Déconnexion'}</span>
+            {!isLoggingOut && <span style={styles.logoutArrow}>→</span>}
+            {isLoggingOut && <div style={styles.spinner}></div>}
+          </button>
+        </div>
       </aside>
 
-      {/* ── CONTENU PRINCIPAL ── */}
+      {/* Main Content */}
       <main style={styles.main}>
-
-        {/* En-tête */}
-        <div style={styles.topBar}>
+        <div style={styles.header}>
           <div>
-            <h1 style={styles.titre}>Gestion des Produits</h1>
-            <p style={styles.sousTitre}>{produits.length} produit(s) au total</p>
+            <h1 style={styles.titre}>Gestion des produits</h1>
+            <p style={styles.sousTitre}>Gérez votre catalogue par catégorie</p>
           </div>
-          <button onClick={ouvrirCreation} style={styles.btnPrimaire}>
-            + Nouveau produit
+          <button onClick={() => { setSelectedProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', actif: true }); setImages([]); setShowModal(true); }} style={styles.addBtn}>
+            <Icon name="plus" size={18} /> Nouveau produit
           </button>
         </div>
 
+        {/* Statistiques */}
+        <div style={styles.statsBar}>
+          <div style={styles.statItem}>
+            <div style={styles.statIcon}>📦</div>
+            <div>
+              <div style={styles.statValue}>{totalProduits}</div>
+              <div style={styles.statLabel}>Total produits</div>
+            </div>
+          </div>
+          <div style={styles.statItem}>
+            <div style={styles.statIcon}>✅</div>
+            <div>
+              <div style={styles.statValue}>{produitsActifs}</div>
+              <div style={styles.statLabel}>Actifs</div>
+            </div>
+          </div>
+          <div style={styles.statItem}>
+            <div style={styles.statIcon}>📊</div>
+            <div>
+              <div style={styles.statValue}>{totalStockGeneral.toLocaleString('fr-FR')}</div>
+              <div style={styles.statLabel}>Stock total</div>
+            </div>
+          </div>
+        </div>
+
         {/* Barre de recherche */}
-        <div style={styles.searchWrap}>
-          <input
-            type="text"
-            placeholder="🔍 Rechercher par nom ou marque..."
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            style={styles.searchInput}
-          />
+        <div style={styles.filtersBar}>
+          <div style={styles.searchWrapper}>
+            <Icon name="search" size={16} style={styles.searchIcon} />
+            <input 
+              type="text" 
+              placeholder="Rechercher un produit..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={styles.searchInput} 
+            />
+          </div>
         </div>
 
-        {/* Tableau des produits */}
-        <div style={styles.tableWrap}>
-          <table style={styles.table}>
-            <thead>
-              <tr style={styles.theadRow}>
-                {['Image','Produit','Catégorie','Prix','Stock','Badge','Statut','Actions'].map((h) => (
-                  <th key={h} style={styles.th}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {produitsFiltres.map((p) => (
-                <tr key={p._id} style={styles.tr}>
-
-                  {/* Image */}
-                  <td style={styles.td}>
-                    {p.images && p.images.length > 0 ? (
-                      <img
-                        src={`http://localhost:5000${p.images[0]}`}
-                        alt={p.nom}
-                        style={styles.thumb}
-                        onError={(e) => { e.target.style.display = 'none'; }}
-                      />
-                    ) : (
-                      <div style={styles.thumbPlaceholder}>
-                        {CATEGORIES.find(c => c.value === p.categorie)?.label.split(' ')[0] || '📦'}
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Nom + Marque */}
-                  <td style={styles.td}>
-                    <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{p.nom}</div>
-                    <div style={{ color: '#888', fontSize: '0.8rem', marginTop: '2px' }}>{p.marque}</div>
-                  </td>
-
-                  <td style={styles.td}>
-                    <span style={styles.catTag}>
-                      {CATEGORIES.find(c => c.value === p.categorie)?.label || p.categorie}
-                    </span>
-                  </td>
-
-                  <td style={styles.td}>
-                    <div style={{ fontWeight: '700', color: '#1A3A2A' }}>
-                      {Number(p.prix).toLocaleString('fr-FR')} FCFA
-                    </div>
-                    {p.prixAncien && (
-                      <div style={{ textDecoration: 'line-through', color: '#aaa', fontSize: '0.78rem' }}>
-                        {Number(p.prixAncien).toLocaleString('fr-FR')} FCFA
-                      </div>
-                    )}
-                  </td>
-
-                  <td style={styles.td}>
-                    <span style={{
-                      fontWeight: '700',
-                      color: p.stock === 0 ? '#E74C3C' : p.stock < 5 ? '#E67E22' : '#27AE60'
-                    }}>
-                      {p.stock} unités
-                    </span>
-                  </td>
-
-                  <td style={styles.td}>
-                    {p.badge ? (
-                      <span style={styles.badgeTag}>{p.badge}</span>
-                    ) : <span style={{ color: '#ccc' }}>—</span>}
-                  </td>
-
-                  <td style={styles.td}>
-                    <span style={{
-                      ...styles.statutTag,
-                      background: p.actif ? '#D5F5E3' : '#FADBD8',
-                      color: p.actif ? '#1E8449' : '#C0392B',
-                    }}>
-                      {p.actif ? '✅ Actif' : '🚫 Masqué'}
-                    </span>
-                  </td>
-
-                  <td style={styles.td}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => ouvrirEdition(p)} style={styles.btnEdit}>
-                        ✏️ Modifier
-                      </button>
-                      <button onClick={() => supprimer(p._id)} style={styles.btnDel}>
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {produitsFiltres.length === 0 && (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '48px', color: '#888' }}>
-                    Aucun produit trouvé.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </main>
-
-      {/* ── MODAL CRÉATION / ÉDITION ── */}
-      {modal && (
-        <div style={styles.overlay} onClick={fermerModal}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-
-            {/* En-tête modal */}
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitre}>
-                {produitEnCours ? '✏️ Modifier le produit' : '➕ Nouveau produit'}
-              </h2>
-              <button onClick={fermerModal} style={styles.closeBtn}>✕</button>
+        {/* Vue Catégories ou Produits */}
+        {selectedCategorie ? (
+          <>
+            <div style={styles.backButtonContainer}>
+              <button onClick={() => setSelectedCategorie(null)} style={styles.backButton}>
+                ← Retour aux catégories
+              </button>
+              <div style={styles.categoryHeaderInfo}>
+                <h2 style={styles.categoryTitle}>{selectedCategorie.nom}</h2>
+                <span style={styles.categoryCount}>{selectedCategorie.produits.length} produits</span>
+              </div>
             </div>
 
+            <div style={styles.tableContainer}>
+              {loading ? (
+                <div style={styles.loadingState}>
+                  <div style={styles.spinnerLarge}></div>
+                  <p>Chargement...</p>
+                </div>
+              ) : produitsParCategorie.length === 0 ? (
+                <div style={styles.emptyState}>
+                  <div style={styles.emptyIcon}>📭</div>
+                  <h3>Aucun produit</h3>
+                  <p>Aucun produit dans cette catégorie</p>
+                </div>
+              ) : (
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Produit</th>
+                      <th>Marque</th>
+                      <th>Prix</th>
+                      <th>Stock</th>
+                      <th>Statut</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {produitsParCategorie.map((p) => (
+                      <tr key={p._id} className="product-row" onMouseEnter={() => setHoveredProduct(p._id)} onMouseLeave={() => setHoveredProduct(null)}>
+                        <td style={styles.imageCell}>
+                          {p.images?.[0] ? (
+                            <img src={p.images[0]?.startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0]}`} alt={p.nom} style={styles.productImage} />
+                          ) : (
+                            <div style={styles.imagePlaceholder}>📷</div>
+                          )}
+                        </td>
+                        <td style={styles.productNameCell}>
+                          <div style={styles.productName}>{p.nom}</div>
+                        </td>
+                        <td style={styles.brandCell}>{p.marque || '—'}</td>
+                        <td style={styles.priceCell}>{Number(p.prix).toLocaleString('fr-FR')} FCFA</td>
+                        <td style={styles.stockCell}>
+                          <span className={`stock-badge ${p.stock > 10 ? 'stock-high' : p.stock > 0 ? 'stock-medium' : 'stock-low'}`}>
+                            {p.stock || 0} unités
+                          </span>
+                        </td>
+                        <td style={styles.statusCell}>
+                          <button onClick={() => handleToggleActif(p)} className={`status-btn ${p.actif !== false ? 'active' : 'inactive'}`}>
+                            {p.actif !== false ? 'Actif' : 'Inactif'}
+                          </button>
+                        </td>
+                        <td style={styles.actionsCell}>
+                          <button onClick={() => handleEdit(p)} className="action-btn edit" title="Modifier">
+                            <EditIcon />
+                          </button>
+                          <button onClick={() => handleDelete(p._id, p.nom)} className="action-btn delete" title="Supprimer">
+                            <TrashIcon />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={styles.categoriesHeader}>
+              <h2 style={styles.categoriesTitle}>Catégories</h2>
+              <p style={styles.categoriesSubtitle}>Cliquez sur une catégorie pour gérer ses produits</p>
+            </div>
+
+            <div style={styles.categoriesGrid}>
+              {categories.map((cat, idx) => (
+                <div 
+                  key={idx} 
+                  className="category-card"
+                  style={{ 
+                    ...styles.categoryCard, 
+                    background: getCategoryColor(cat.nom, idx),
+                    transform: hoveredCategory === idx ? 'translateY(-8px)' : 'translateY(0)'
+                  }}
+                  onMouseEnter={() => setHoveredCategory(idx)}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                  onClick={() => setSelectedCategorie(cat)}
+                >
+                  <div style={styles.categoryCardInfo}>
+                    <h3 style={styles.categoryCardName}>{cat.nom}</h3>
+                    <div style={styles.categoryCardStats}>
+                      <span>📦 {cat.produits.length} produits</span>
+                      <span>📊 {cat.totalStock.toLocaleString('fr-FR')} unités</span>
+                    </div>
+                  </div>
+                  <div style={styles.categoryCardArrow}>→</div>
+                </div>
+              ))}
+            </div>
+
+            {categories.length === 0 && !loading && (
+              <div style={styles.emptyState}>
+                <div style={styles.emptyIcon}>📭</div>
+                <h3>Aucune catégorie</h3>
+                <p>Ajoutez des produits pour voir les catégories</p>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* Modal */}
+      {showModal && (
+        <div style={styles.overlay} onClick={() => setShowModal(false)}>
+          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>{selectedProduit ? '✏️ Modifier le produit' : '➕ Nouveau produit'}</h3>
+              <button style={styles.modalClose} onClick={() => setShowModal(false)}>✕</button>
+            </div>
             <form onSubmit={handleSubmit}>
-
-              {/* ── Section : Informations générales ── */}
-              <div style={styles.sectionLabel}>Informations générales</div>
-              <div style={styles.gridDeux}>
-                <div style={styles.champ}>
-                  <label style={styles.label}>Nom du produit *</label>
-                  <input
-                    type="text" name="nom" required
-                    value={form.nom} onChange={handleChange}
-                    placeholder="Ex: Réfrigérateur Samsung 200L"
-                    style={styles.input}
-                  />
-                </div>
-                <div style={styles.champ}>
-                  <label style={styles.label}>Marque *</label>
-                  <input
-                    type="text" name="marque" required
-                    value={form.marque} onChange={handleChange}
-                    placeholder="Ex: Samsung, LG, Bosch..."
-                    style={styles.input}
-                  />
-                </div>
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Nom du produit</label>
+                <input name="nom" placeholder="Ex: iPhone 13 Pro" value={formData.nom} onChange={handleChange} required style={styles.input} />
               </div>
-
-              <div style={styles.champ}>
-                <label style={styles.label}>Description *</label>
-                <textarea
-                  name="description" required
-                  value={form.description} onChange={handleChange}
-                  placeholder="Décrivez le produit : caractéristiques, avantages..."
-                  rows={3}
-                  style={{ ...styles.input, resize: 'vertical', lineHeight: '1.6' }}
-                />
-              </div>
-
-              {/* ── Section : Prix & Stock ── */}
-              <div style={styles.sectionLabel}>Prix & Stock</div>
-              <div style={styles.gridTrois}>
-                <div style={styles.champ}>
-                  <label style={styles.label}>Prix (FCFA) *</label>
-                  <input
-                    type="number" name="prix" required min="0"
-                    value={form.prix} onChange={handleChange}
-                    placeholder="Ex: 450000"
-                    style={styles.input}
-                  />
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Marque</label>
+                  <input name="marque" placeholder="Apple, Samsung..." value={formData.marque} onChange={handleChange} required style={styles.input} />
                 </div>
-                <div style={styles.champ}>
-                  <label style={styles.label}>Ancien prix (optionnel)</label>
-                  <input
-                    type="number" name="prixAncien" min="0"
-                    value={form.prixAncien} onChange={handleChange}
-                    placeholder="Ex: 520000"
-                    style={styles.input}
-                  />
-                </div>
-                <div style={styles.champ}>
-                  <label style={styles.label}>Stock *</label>
-                  <input
-                    type="number" name="stock" required min="0"
-                    value={form.stock} onChange={handleChange}
-                    placeholder="Ex: 15"
-                    style={styles.input}
-                  />
-                </div>
-              </div>
-
-              {/* ── Section : Catégorie & Badge ── */}
-              <div style={styles.sectionLabel}>Classification</div>
-              <div style={styles.gridDeux}>
-                <div style={styles.champ}>
-                  <label style={styles.label}>Catégorie *</label>
-                  <select
-                    name="categorie" value={form.categorie}
-                    onChange={handleChange} style={styles.input}
-                  >
-                    {CATEGORIES.map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={styles.champ}>
-                  <label style={styles.label}>Badge promotionnel</label>
-                  <select
-                    name="badge" value={form.badge}
-                    onChange={handleChange} style={styles.input}
-                  >
-                    {BADGES.map((b) => (
-                      <option key={b} value={b}>{b || 'Aucun badge'}</option>
-                    ))}
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Catégorie</label>
+                  <select name="categorie" value={formData.categorie} onChange={handleChange} required style={styles.input}>
+                    <option value="">Sélectionner</option>
+                    {categoriesList.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
-
-              {/* ── Section : Images ── */}
-              <div style={styles.sectionLabel}>Images du produit</div>
-              <div style={styles.champ}>
-                <label style={styles.label}>
-                  Sélectionner des images (JPG, PNG, WEBP — max 3 fichiers, 5MB chacun)
-                </label>
-
-                {/* Zone de dépôt d'images */}
-                <label style={styles.uploadZone}>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    multiple
-                    onChange={handleFichiers}
-                    style={{ display: 'none' }}
-                  />
-                  <div style={styles.uploadIcone}>📷</div>
-                  <div style={styles.uploadTexte}>
-                    {fichiers && fichiers.length > 0
-                      ? `${fichiers.length} fichier(s) sélectionné(s)`
-                      : 'Cliquer pour choisir des images'}
-                  </div>
-                  <div style={styles.uploadSous}>
-                    ou glisser-déposer ici
-                  </div>
-                </label>
-
-                {/* Aperçus des images */}
-                {previews.length > 0 && (
-                  <div style={styles.previewsWrap}>
-                    {previews.map((url, i) => (
-                      <div key={i} style={styles.previewItem}>
-                        <img
-                          src={url}
-                          alt={`Aperçu ${i + 1}`}
-                          style={styles.previewImg}
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                        <div style={styles.previewLabel}>Image {i + 1}</div>
-                      </div>
+              <div style={styles.formRow}>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Prix (FCFA)</label>
+                  <input name="prix" type="number" min="0" placeholder="0" value={formData.prix} onChange={handleChange} required style={styles.input} />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.formLabel}>Stock</label>
+                  <input name="stock" type="number" min="0" placeholder="0" value={formData.stock} onChange={handleChange} required style={styles.input} />
+                </div>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Description</label>
+                <textarea name="description" placeholder="Description détaillée..." value={formData.description} onChange={handleChange} required style={{ ...styles.input, height: '80px', resize: 'vertical' }} />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Statut</label>
+                <div style={styles.radioGroup}>
+                  <label className="radio-label">
+                    <input type="radio" name="actif" value="true" checked={formData.actif === true} onChange={() => setFormData({ ...formData, actif: true })} />
+                    <span>Actif</span>
+                  </label>
+                  <label className="radio-label">
+                    <input type="radio" name="actif" value="false" checked={formData.actif === false} onChange={() => setFormData({ ...formData, actif: false })} />
+                    <span>Inactif</span>
+                  </label>
+                </div>
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Images</label>
+                <div style={styles.fileUploadArea}>
+                  <Icon name="image" size={24} color="#C8410A" />
+                  <p>Cliquez ou glissez des images</p>
+                  <input type="file" multiple accept="image/*" onChange={e => setImages(e.target.files)} style={styles.fileInput} />
+                </div>
+                {images.length > 0 && (
+                  <div style={styles.imagePreview}>
+                    {Array.from(images).map((img, idx) => (
+                      <span key={idx} style={styles.imagePreviewItem}>{img.name}</span>
                     ))}
                   </div>
                 )}
-
-                {produitEnCours && (!fichiers || fichiers.length === 0) && previews.length === 0 && (
-                  <p style={{ color: '#888', fontSize: '0.82rem', marginTop: '8px' }}>
-                    ℹ️ Ce produit n'a pas encore d'images. Sélectionne des fichiers pour en ajouter.
-                  </p>
-                )}
               </div>
-
-              {/* ── Boutons d'action ── */}
+              {selectedProduit && selectedProduit.images?.length > 0 && images.length === 0 && (
+                <div style={styles.existingImages}>
+                  <p style={styles.existingImagesLabel}>Images actuelles :</p>
+                  <div style={styles.existingImagesList}>
+                    {selectedProduit.images.map((img, idx) => (
+                      <img key={idx} src={`http://localhost:5000${img}`} alt={`Image ${idx + 1}`} style={styles.existingImage} />
+                    ))}
+                  </div>
+                </div>
+              )}
               <div style={styles.modalActions}>
-                <button
-                  type="button"
-                  onClick={fermerModal}
-                  style={styles.btnSecondaire}
-                  disabled={chargement}
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  style={styles.btnPrimaire}
-                  disabled={chargement}
-                >
-                  {chargement
-                    ? '⏳ Enregistrement...'
-                    : produitEnCours
-                      ? '✅ Enregistrer les modifications'
-                      : '✅ Créer le produit'}
-                </button>
+                <button type="button" onClick={() => setShowModal(false)} style={styles.cancelBtn}>Annuler</button>
+                <button type="submit" style={styles.confirmBtn}>{selectedProduit ? 'Modifier' : 'Créer'}</button>
               </div>
-
             </form>
           </div>
         </div>
       )}
+
+      {/* Styles globaux injectés */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        
+        .spinner-large {
+          width: 40px;
+          height: 40px;
+          border: 3px solid #f0f0f0;
+          border-top-color: #C8410A;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+          margin: 0 auto 16px;
+        }
+        
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        
+        th {
+          text-align: left;
+          padding: 16px 12px;
+          background: #F8F9FA;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #666;
+          border-bottom: 1px solid #E8E8E8;
+        }
+        
+        td {
+          padding: 16px 12px;
+          border-bottom: 1px solid #F0F0F0;
+        }
+        
+        .product-row:hover {
+          background: #F8F9FA;
+        }
+        
+        .stock-badge {
+          display: inline-block;
+          padding: 4px 12px;
+          border-radius: 30px;
+          font-size: 0.7rem;
+          font-weight: 500;
+        }
+        
+        .stock-high {
+          background: #E8F5E9;
+          color: #2E7D32;
+        }
+        
+        .stock-medium {
+          background: #FFF3E0;
+          color: #F57C00;
+        }
+        
+        .stock-low {
+          background: #FFEBEE;
+          color: #D32F2F;
+        }
+        
+        .status-btn {
+          padding: 5px 14px;
+          border-radius: 30px;
+          border: none;
+          font-size: 0.7rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .status-btn.active {
+          background: #2ECC71;
+          color: #fff;
+        }
+        
+        .status-btn.inactive {
+          background: #E74C3C;
+          color: #fff;
+        }
+        
+        .status-btn:hover {
+          transform: scale(1.05);
+          opacity: 0.85;
+        }
+        
+        .action-btn {
+          background: none;
+          border: none;
+          padding: 8px;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 4px;
+        }
+        
+        .action-btn.edit {
+          background: #F0F0F0;
+          color: #666;
+        }
+        
+        .action-btn.delete {
+          background: #FEF0EE;
+          color: #E74C3C;
+        }
+        
+        .action-btn.edit:hover {
+          background: #E0E0E0;
+          transform: scale(1.08);
+          color: #112219;
+        }
+        
+        .action-btn.delete:hover {
+          background: #FADBD8;
+          transform: scale(1.08);
+          color: #C0392B;
+        }
+        
+        .radio-label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.85rem;
+          cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+          .sidebar {
+            display: none;
+          }
+          .main {
+            padding: 16px;
+          }
+          .stats-bar {
+            flex-direction: column;
+          }
+          .stat-item {
+            width: 100%;
+          }
+          .table-container {
+            overflow-x: auto;
+          }
+          table {
+            min-width: 600px;
+          }
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+          .categories-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      ` }} />
     </div>
   );
 }
 
-// ── STYLES ─────────────────────────────────────────────────
+// Styles
 const styles = {
-  layout:        { display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#F5F0E8' },
-
-  // Sidebar
-  sidebar:       { width: '240px', background: '#1A3A2A', padding: '32px 16px', display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', flexShrink: 0 },
-  sidebarLogo:   { color: '#fff', fontFamily: 'Georgia, serif', fontSize: '1.3rem', marginBottom: '32px', paddingLeft: '8px' },
-  menuItem:      { display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', color: 'rgba(255,255,255,0.75)', textDecoration: 'none', borderRadius: '10px', fontSize: '0.9rem', marginBottom: '4px', fontWeight: '500' },
-
-  // Main
-  main:          { flex: 1, padding: '36px 40px', overflowY: 'auto' },
-  topBar:        { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' },
-  titre:         { fontSize: '1.8rem', fontWeight: '700', color: '#1C1C1C', marginBottom: '4px' },
-  sousTitre:     { color: '#888', fontSize: '0.88rem' },
-
-  // Recherche
-  searchWrap:    { marginBottom: '24px' },
-  searchInput:   { padding: '11px 20px', borderRadius: '50px', border: '1.5px solid #E2DAD0', background: '#fff', fontSize: '0.93rem', fontFamily: 'inherit', outline: 'none', width: '360px' },
-
-  // Tableau
-  tableWrap:     { background: '#fff', borderRadius: '16px', overflow: 'auto', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' },
-  table:         { width: '100%', borderCollapse: 'collapse' },
-  theadRow:      { background: '#f8f6f2', borderBottom: '2px solid #EDE8E0' },
-  th:            { padding: '13px 16px', textAlign: 'left', fontSize: '0.78rem', fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: '0.6px', whiteSpace: 'nowrap' },
-  tr:            { borderBottom: '1px solid #F5F0E8', transition: 'background 0.15s' },
-  td:            { padding: '14px 16px', fontSize: '0.88rem', verticalAlign: 'middle' },
-
-  // Miniature image
-  thumb:         { width: '52px', height: '52px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #E2DAD0' },
-  thumbPlaceholder: { width: '52px', height: '52px', borderRadius: '10px', background: '#F5F0E8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem', border: '1px solid #E2DAD0' },
-
-  // Tags
-  catTag:        { background: '#EAF3DE', color: '#3B6D11', padding: '4px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: '600', whiteSpace: 'nowrap' },
-  badgeTag:      { background: '#FDE8DC', color: '#993C1D', padding: '4px 10px', borderRadius: '50px', fontSize: '0.78rem', fontWeight: '700' },
-  statutTag:     { padding: '4px 12px', borderRadius: '50px', fontSize: '0.78rem', fontWeight: '700' },
-
-  // Boutons tableau
-  btnEdit:       { background: '#EBF5FB', color: '#2980B9', border: 'none', padding: '7px 14px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '600', whiteSpace: 'nowrap' },
-  btnDel:        { background: '#FADBD8', color: '#C0392B', border: 'none', padding: '7px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem' },
-
-  // Boutons principaux
-  btnPrimaire:   { background: '#C8410A', color: '#fff', border: 'none', padding: '12px 26px', borderRadius: '50px', fontWeight: '700', cursor: 'pointer', fontSize: '0.92rem', fontFamily: 'inherit' },
-  btnSecondaire: { background: '#eee', color: '#555', border: 'none', padding: '12px 22px', borderRadius: '50px', fontWeight: '600', cursor: 'pointer', fontSize: '0.92rem', fontFamily: 'inherit' },
-
-  // Modal
-  overlay:       { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
-  modal:         { background: '#fff', borderRadius: '20px', padding: '36px', width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
-  modalHeader:   { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' },
-  modalTitre:    { fontSize: '1.3rem', fontWeight: '700', color: '#1C1C1C' },
-  closeBtn:      { background: '#F5F0E8', border: 'none', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  modalActions:  { display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '28px', paddingTop: '20px', borderTop: '1px solid #F0EDE8' },
-
-  // Sections dans le formulaire
-  sectionLabel:  { fontSize: '0.75rem', fontWeight: '700', color: '#C8410A', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px', marginTop: '24px', paddingBottom: '8px', borderBottom: '1px solid #F0EDE8' },
-
-  // Grilles
-  gridDeux:      { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
-  gridTrois:     { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' },
-
-  // Champs
-  champ:         { marginBottom: '16px' },
-  label:         { display: 'block', marginBottom: '6px', fontSize: '0.85rem', fontWeight: '600', color: '#444' },
-  input:         { width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #E2DAD0', fontSize: '0.93rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', background: '#FDFCFA' },
-
-  // Zone upload
-  uploadZone:    { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', border: '2px dashed #D4C8BC', borderRadius: '14px', padding: '32px 20px', cursor: 'pointer', background: '#FDFCFA', transition: 'border-color 0.2s', textAlign: 'center' },
-  uploadIcone:   { fontSize: '2.4rem' },
-  uploadTexte:   { fontSize: '0.93rem', fontWeight: '600', color: '#444' },
-  uploadSous:    { fontSize: '0.8rem', color: '#999' },
-
-  // Previews
-  previewsWrap:  { display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap' },
-  previewItem:   { textAlign: 'center' },
-  previewImg:    { width: '90px', height: '90px', objectFit: 'cover', borderRadius: '10px', border: '1.5px solid #E2DAD0', display: 'block' },
-  previewLabel:  { fontSize: '0.75rem', color: '#888', marginTop: '4px' },
+  layout: { 
+    display: 'flex', 
+    minHeight: '100vh', 
+    fontFamily: "'Inter', -apple-system, sans-serif",
+    background: '#F5F7FA'
+  },
+  sidebar: { 
+    width: '280px', 
+    background: 'linear-gradient(180deg, #1A3A2A 0%, #0E251B 100%)', 
+    padding: '28px 20px', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    position: 'sticky', 
+    top: 0, 
+    height: '100vh',
+    boxShadow: '4px 0 30px rgba(0,0,0,0.08)'
+  },
+  sidebarHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '40px',
+    paddingBottom: '20px',
+    borderBottom: '1px solid rgba(255,255,255,0.1)'
+  },
+  logoWrapper: {
+    width: '42px',
+    height: '42px',
+    background: 'rgba(255,255,255,0.12)',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden'
+  },
+  logoImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+  },
+  logoContainer: {
+    flex: 1
+  },
+  logoText: {
+    color: '#fff',
+    fontSize: '1.1rem',
+    fontWeight: '700'
+  },
+  sidebarBadge: {
+    display: 'inline-block',
+    background: '#C8410A',
+    color: '#fff',
+    fontSize: '0.6rem',
+    padding: '2px 8px',
+    borderRadius: '12px',
+    marginLeft: '8px'
+  },
+  nav: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  navLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 16px',
+    color: 'rgba(255,255,255,0.8)',
+    textDecoration: 'none',
+    borderRadius: '12px',
+    fontSize: '0.85rem',
+    transition: 'all 0.2s ease'
+  },
+  sidebarFooter: {
+    marginTop: 'auto',
+    paddingTop: '20px',
+    borderTop: '1px solid rgba(255,255,255,0.1)'
+  },
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '16px',
+    padding: '8px'
+  },
+  userAvatar: {
+    width: '40px',
+    height: '40px',
+    background: 'rgba(255,255,255,0.15)',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1rem',
+    fontWeight: '600',
+    color: '#fff'
+  },
+  userName: {
+    color: '#fff',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    marginBottom: '2px'
+  },
+  userEmail: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: '0.7rem'
+  },
+  deconnexionBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    border: 'none',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    width: '100%',
+    transition: 'all 0.2s ease'
+  },
+  logoutArrow: {
+    marginLeft: 'auto',
+    transition: 'transform 0.2s ease'
+  },
+  spinner: {
+    width: '16px',
+    height: '16px',
+    border: '2px solid rgba(255,255,255,0.3)',
+    borderTopColor: '#fff',
+    borderRadius: '50%',
+    animation: 'spin 0.6s linear infinite'
+  },
+  main: {
+    flex: 1,
+    padding: '28px 36px',
+    overflowY: 'auto'
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '28px',
+    flexWrap: 'wrap',
+    gap: '16px'
+  },
+  titre: {
+    fontSize: '1.6rem',
+    fontWeight: '700',
+    color: '#112219',
+    marginBottom: '6px'
+  },
+  sousTitre: {
+    color: '#666',
+    fontSize: '0.85rem'
+  },
+  addBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'linear-gradient(135deg, #C8410A 0%, #E8622A 100%)',
+    color: '#fff',
+    border: 'none',
+    padding: '12px 24px',
+    borderRadius: '40px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 8px rgba(200,65,10,0.2)'
+  },
+  statsBar: {
+    display: 'flex',
+    gap: '20px',
+    marginBottom: '28px',
+    flexWrap: 'wrap'
+  },
+  statItem: {
+    background: '#fff',
+    padding: '16px 24px',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    minWidth: '160px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+    border: '1px solid #E8E8E8'
+  },
+  statIcon: {
+    fontSize: '1.8rem'
+  },
+  statValue: {
+    fontSize: '1.6rem',
+    fontWeight: '700',
+    color: '#C8410A',
+    lineHeight: 1.2
+  },
+  statLabel: {
+    fontSize: '0.7rem',
+    color: '#666'
+  },
+  filtersBar: {
+    marginBottom: '28px'
+  },
+  searchWrapper: {
+    position: 'relative',
+    maxWidth: '380px'
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '14px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: '#999'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '12px 16px 12px 42px',
+    borderRadius: '40px',
+    border: '1px solid #E0E0E0',
+    outline: 'none',
+    fontSize: '0.85rem',
+    background: '#fff',
+    transition: 'all 0.2s ease'
+  },
+  backButtonContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
+    marginBottom: '24px',
+    flexWrap: 'wrap'
+  },
+  backButton: {
+    background: 'none',
+    border: 'none',
+    color: '#C8410A',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    padding: '8px 0',
+    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px'
+  },
+  categoryHeaderInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  categoryTitle: {
+    fontSize: '1.4rem',
+    fontWeight: '700',
+    color: '#112219',
+    margin: 0
+  },
+  categoryCount: {
+    fontSize: '0.85rem',
+    color: '#666',
+    background: '#F0F0F0',
+    padding: '4px 12px',
+    borderRadius: '30px'
+  },
+  tableContainer: {
+    background: '#fff',
+    borderRadius: '20px',
+    overflow: 'hidden',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.04)'
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse'
+  },
+  imageCell: {
+    width: '60px'
+  },
+  productImage: {
+    width: '50px',
+    height: '50px',
+    objectFit: 'cover',
+    borderRadius: '10px'
+  },
+  imagePlaceholder: {
+    width: '50px',
+    height: '50px',
+    background: '#F5F5F5',
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.2rem'
+  },
+  productNameCell: {
+    minWidth: '160px'
+  },
+  productName: {
+    fontWeight: '600',
+    color: '#112219',
+    fontSize: '0.85rem'
+  },
+  brandCell: {
+    fontSize: '0.8rem',
+    color: '#888'
+  },
+  priceCell: {
+    fontWeight: '600',
+    color: '#C8410A',
+    fontSize: '0.85rem'
+  },
+  stockCell: {
+    minWidth: '100px'
+  },
+  statusCell: {
+    minWidth: '90px'
+  },
+  actionsCell: {
+    minWidth: '90px'
+  },
+  spinnerLarge: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid #f0f0f0',
+    borderTopColor: '#C8410A',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
+    margin: '0 auto 16px'
+  },
+  loadingState: {
+    textAlign: 'center',
+    padding: '80px',
+    color: '#999'
+  },
+  emptyState: {
+    textAlign: 'center',
+    padding: '80px',
+    color: '#999'
+  },
+  emptyIcon: {
+    fontSize: '4rem',
+    marginBottom: '16px'
+  },
+  categoriesHeader: {
+    marginBottom: '28px'
+  },
+  categoriesTitle: {
+    fontSize: '1.4rem',
+    fontWeight: '700',
+    color: '#112219',
+    marginBottom: '8px'
+  },
+  categoriesSubtitle: {
+    fontSize: '0.85rem',
+    color: '#666'
+  },
+  categoriesGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gap: '20px'
+  },
+  categoryCard: {
+    background: '#fff',
+    borderRadius: '20px',
+    padding: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    cursor: 'pointer',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+    border: '1px solid #E8E8E8',
+    transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+  },
+  categoryCardInfo: {
+    flex: 1
+  },
+  categoryCardName: {
+    fontSize: '1rem',
+    fontWeight: '600',
+    color: '#112219',
+    marginBottom: '6px'
+  },
+  categoryCardStats: {
+    display: 'flex',
+    gap: '16px',
+    fontSize: '0.7rem',
+    color: '#888'
+  },
+  categoryCardArrow: {
+    color: '#C8410A',
+    fontSize: '1.2rem',
+    opacity: 0.5,
+    transition: 'all 0.2s ease'
+  },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    backdropFilter: 'blur(4px)'
+  },
+  modal: {
+    background: '#fff',
+    borderRadius: '24px',
+    width: '100%',
+    maxWidth: '560px',
+    maxHeight: '90vh',
+    overflow: 'auto',
+    boxShadow: '0 25px 60px rgba(0,0,0,0.3)'
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '24px 28px',
+    borderBottom: '1px solid #E8E8E8'
+  },
+  modalTitle: {
+    fontSize: '1.2rem',
+    fontWeight: '600',
+    color: '#112219',
+    margin: 0
+  },
+  modalClose: {
+    width: '34px',
+    height: '34px',
+    border: 'none',
+    background: '#F8F9FA',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    fontSize: '1.2rem',
+    color: '#666',
+    transition: 'all 0.2s ease'
+  },
+  formGroup: {
+    marginBottom: '20px',
+    padding: '0 28px'
+  },
+  formRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px',
+    padding: '0 28px'
+  },
+  formLabel: {
+    display: 'block',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    color: '#444',
+    marginBottom: '6px'
+  },
+  input: {
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: '12px',
+    border: '1.5px solid #E2E8F0',
+    fontSize: '0.85rem',
+    outline: 'none',
+    transition: 'all 0.2s ease'
+  },
+  radioGroup: {
+    display: 'flex',
+    gap: '24px'
+  },
+  fileUploadArea: {
+    position: 'relative',
+    border: '2px dashed #E2E8F0',
+    borderRadius: '16px',
+    padding: '30px',
+    textAlign: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    background: '#FAFAFA'
+  },
+  fileInput: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0,
+    cursor: 'pointer'
+  },
+  imagePreview: {
+    marginTop: '16px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  imagePreviewItem: {
+    background: '#F0F0F0',
+    padding: '6px 14px',
+    borderRadius: '8px',
+    fontSize: '0.7rem',
+    color: '#666'
+  },
+  existingImages: {
+    marginTop: '20px',
+    padding: '0 28px'
+  },
+  existingImagesLabel: {
+    fontSize: '0.75rem',
+    color: '#666',
+    marginBottom: '10px'
+  },
+  existingImagesList: {
+    display: 'flex',
+    gap: '12px',
+    flexWrap: 'wrap'
+  },
+  existingImage: {
+    width: '65px',
+    height: '65px',
+    objectFit: 'cover',
+    borderRadius: '10px'
+  },
+  modalActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '12px',
+    marginTop: '28px',
+    padding: '24px 28px',
+    borderTop: '1px solid #E8E8E8'
+  },
+  cancelBtn: {
+    padding: '12px 24px',
+    border: '1.5px solid #E2E8F0',
+    background: '#fff',
+    borderRadius: '40px',
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    transition: 'all 0.2s ease'
+  },
+  confirmBtn: {
+    padding: '12px 28px',
+    border: 'none',
+    background: 'linear-gradient(135deg, #C8410A 0%, #E8622A 100%)',
+    color: '#fff',
+    borderRadius: '40px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.85rem',
+    transition: 'all 0.2s ease'
+  }
 };
