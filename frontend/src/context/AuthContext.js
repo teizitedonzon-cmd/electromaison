@@ -1,58 +1,64 @@
-// src/context/AuthContext.js — État global de l'authentification
-// Ce contexte est accessible dans TOUS les composants de l'app
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
 
-// 1. Créer le contexte
 const AuthContext = createContext();
 
-// 2. Créer le Provider (enveloppe toute l'application)
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(null);
-  const [chargement, setChargement] = useState(true); // Vrai au démarrage
+  const [user, setUser] = useState(null);
+  const [chargement, setChargement] = useState(true);
 
-  // Au chargement de l'app, vérifie si l'utilisateur est déjà connecté
   useEffect(() => {
     const userSauvegarde = localStorage.getItem('user');
-    const token          = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
     if (userSauvegarde && token) {
-      setUser(JSON.parse(userSauvegarde));
+      try {
+        setUser(JSON.parse(userSauvegarde));
+      } catch (e) {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
     }
     setChargement(false);
   }, []);
 
-  // Connexion
   const connexion = async (email, motDePasse) => {
     const { data } = await api.post('/auth/connexion', { email, motDePasse });
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
-    return data.user; // Retourne l'utilisateur pour la redirection
-  };
-
-  // Inscription
-  const inscription = async (formData) => {
-    const { data } = await api.post('/auth/inscription', formData);
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
     return data.user;
   };
 
-  // Déconnexion
+  const inscription = async (formData) => {
+    // PAS de headers manuels ici, api (axios) gère le FormData
+    const { data } = await api.post('/auth/inscription', formData);
+    
+    if (data.token) localStorage.setItem('token', data.token);
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+    }
+    return data.user;
+  };
+
+  const updateUser = (nouvellesInfos) => {
+    const updatedUser = { ...user, ...nouvellesInfos };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  };
+
   const deconnexion = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    window.location.href = '/connexion';
   };
 
   return (
-    <AuthContext.Provider value={{ user, chargement, connexion, inscription, deconnexion }}>
+    <AuthContext.Provider value={{ user, chargement, connexion, inscription, deconnexion, updateUser }}>
       {!chargement && children}
     </AuthContext.Provider>
   );
 };
 
-// 3. Hook personnalisé pour utiliser le contexte facilement
 export const useAuth = () => useContext(AuthContext);
