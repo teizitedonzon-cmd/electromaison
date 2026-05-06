@@ -1,69 +1,86 @@
-// models/User.js — Modèle de l'utilisateur (Admin ou Client)
+// const mongoose = require('mongoose');
+// const bcrypt = require('bcryptjs');
+
+// const userSchema = new mongoose.Schema(
+//   {
+//     nom: { type: String, required: [true, 'Le nom est obligatoire'], trim: true },
+//     prenom: { type: String, required: [true, 'Le prénom est obligatoire'], trim: true },
+//     email: { type: String, required: [true, "L'email est obligatoire"], unique: true, lowercase: true, trim: true },
+//     motDePasse: { type: String, required: [true, 'Le mot de passe est obligatoire'], minlength: [6, 'Minimum 6 caractères'], select: false },
+//     role: { type: String, enum: ['client', 'vendeur', 'admin'], default: 'client' },
+//     photoProfil: { type: String, default: '/uploads/default-avatar.png' },
+//     telephone: { type: String, trim: true },
+//     adresse: {
+//       rue: { type: String },
+//       ville: { type: String },
+//       pays: { type: String, default: 'Cameroun' },
+//     },
+//     actif: { type: Boolean, default: true },
+//   },
+//   { timestamps: true }
+// );
+
+// // HOOK : Sécurité Admin Unique + Hachage
+// userSchema.pre('save', async function (next) {
+//   // On ne vérifie l'existence de l'admin que si on crée un admin ou change le rôle vers admin
+//   if (this.isModified('role') && this.role === 'admin') {
+//     const adminExiste = await mongoose.models.User.findOne({ role: 'admin' });
+//     // Vérification : un admin existe déjà ET ce n'est pas l'utilisateur en cours d'édition[cite: 40]
+//     if (adminExiste && adminExiste._id.toString() !== this._id.toString()) {
+//       return next(new Error('Il ne peut y avoir qu’un seul administrateur global.'));
+//     }
+//   }
+
+//   if (!this.isModified('motDePasse')) return next();
+//   this.motDePasse = await bcrypt.hash(this.motDePasse, 12);
+//   next();
+// });
+
+// userSchema.methods.verifierMotDePasse = async function (motDePasseSaisi) {
+//   return await bcrypt.compare(motDePasseSaisi, this.motDePasse);
+// };
+
+// module.exports = mongoose.model('User', userSchema);
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema(
-  {
-    nom: {
-      type: String,
-      required: [true, 'Le nom est obligatoire'],
-      trim: true,
-    },
-    prenom: {
-      type: String,
-      required: [true, 'Le prénom est obligatoire'],
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: [true, "L'email est obligatoire"],
-      unique: true,           // Un seul compte par email
-      lowercase: true,
-      trim: true,
-    },
-    motDePasse: {
-      type: String,
-      required: [true, 'Le mot de passe est obligatoire'],
-      minlength: [6, 'Minimum 6 caractères'],
-      select: false,          // Ne jamais renvoyer le mot de passe dans les requêtes
-    },
-    role: {
-      type: String,
-      enum: ['client', 'admin'], // Seulement ces deux valeurs possibles
-      default: 'client',
-    },
-    telephone: {
-      type: String,
-      trim: true,
-    },
-    adresse: {
-      rue:    { type: String },
-      ville:  { type: String },
-      pays:   { type: String, default: 'RDC' },
-    },
-    actif: {
-      type: Boolean,
-      default: true,          // Permet de désactiver un compte sans le supprimer
-    },
+const userSchema = new mongoose.Schema({
+  nom: { type: String, required: true, trim: true },
+  prenom: { type: String, required: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  motDePasse: { type: String, required: true, minlength: 6 },
+  role: { 
+    type: String, 
+    enum: ['client', 'vendeur', 'admin'], 
+    default: 'client' 
   },
-  {
-    timestamps: true, // Ajoute automatiquement createdAt et updatedAt
-  }
-);
+  statutVendeur: {
+    type: String,
+    enum: ['non_applicable', 'en_attente', 'approuve', 'rejete'],
+    default: 'non_applicable'
+  },
+  nomBoutique: { type: String, trim: true },
+  villeBoutique: { type: String, trim: true },
+  telephone: { type: String, trim: true },
+  adresse: {
+    rue: { type: String },
+    ville: { type: String },
+    pays: { type: String, default: 'Cameroun' },
+  },
+  photoProfil: { type: String, default: '/uploads/default-avatar.png' },
+  actif: { type: Boolean, default: true }
+}, { timestamps: true });
 
-// ── HOOK : Hacher le mot de passe avant de sauvegarder ──
-// Ce code s'exécute automatiquement avant chaque .save()
-userSchema.pre('save', async function (next) {
-  // Si le mot de passe n'a pas changé, on passe
+// Hachage du mot de passe avant sauvegarde
+userSchema.pre('save', async function(next) {
   if (!this.isModified('motDePasse')) return next();
-  // On hache le mot de passe (12 = niveau de sécurité)
-  this.motDePasse = await bcrypt.hash(this.motDePasse, 12);
+  const salt = await bcrypt.genSalt(10);
+  this.motDePasse = await bcrypt.hash(this.motDePasse, salt);
   next();
 });
 
-// ── MÉTHODE : Vérifier le mot de passe lors de la connexion ──
-userSchema.methods.verifierMotDePasse = async function (motDePasseSaisi) {
-  return await bcrypt.compare(motDePasseSaisi, this.motDePasse);
+userSchema.methods.verifierMotDePasse = async function(motDePasseSaisi) {
+  return bcrypt.compare(motDePasseSaisi, this.motDePasse);
 };
 
 module.exports = mongoose.model('User', userSchema);
