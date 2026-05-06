@@ -12,7 +12,9 @@ export const CartProvider = ({ children }) => {
       const existant = prev.find((item) => item._id === produit._id);
       if (existant) {
         return prev.map((item) =>
-          item._id === produit._id ? { ...item, quantite: item.quantite + 1 } : item
+          item._id === produit._id
+            ? { ...item, quantite: Math.min(item.quantite + 1, item.stock || item.quantite + 1) }
+            : item
         );
       }
       return [...prev, { ...produit, quantite: 1 }];
@@ -23,7 +25,11 @@ export const CartProvider = ({ children }) => {
   const changerQuantite = (id, delta) => {
     setPanier((prev) =>
       prev
-        .map((item) => item._id === id ? { ...item, quantite: item.quantite + delta } : item)
+        .map((item) => {
+          if (item._id !== id) return item;
+          const prochaineQuantite = item.quantite + delta;
+          return { ...item, quantite: Math.min(prochaineQuantite, item.stock || prochaineQuantite) };
+        })
         .filter((item) => item.quantite > 0)
     );
   };
