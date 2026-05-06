@@ -1,98 +1,118 @@
-// src/pages/admin/Clients.jsx — Gestion des clients
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
+import Icon from '../../components/Icon';
 
 export default function AdminClients() {
-  const [clients, setClients] = useState([]);
-  const [recherche, setRecherche] = useState('');
+  const [utilisateurs, setUtilisateurs] = useState([]);
+  const [vue, setVue] = useState('client');
 
-  useEffect(() => {
-    api.get('/users').then(({ data }) => setClients(data)).catch(() => toast.error('Erreur'));
-  }, []);
-
-  const toggleActif = async (id, actuel) => {
+  const chargerData = async () => {
     try {
-      await api.put(`/users/${id}/actif`, { actif: !actuel });
-      setClients(prev => prev.map(c => c._id === id ? { ...c, actif: !actuel } : c));
-      toast.success('Statut mis à jour !');
-    } catch { toast.error('Erreur.'); }
+      const { data } = await api.get('/users');
+      setUtilisateurs(data);
+    } catch {
+      toast.error('Erreur de chargement');
+    }
   };
 
-  const filtres = clients.filter(c =>
-    `${c.nom} ${c.prenom} ${c.email}`.toLowerCase().includes(recherche.toLowerCase())
-  );
+  useEffect(() => { chargerData(); }, []);
+
+  const toggleStatut = async (id, actuel) => {
+    try {
+      await api.put(`/users/${id}/actif`, { actif: !actuel });
+      toast.success('Mis a jour !');
+      chargerData();
+    } catch { toast.error('Erreur'); }
+  };
+
+  const changerStatutVendeur = async (id, statutVendeur) => {
+    try {
+      await api.put(`/users/${id}/statut-vendeur`, { statutVendeur });
+      toast.success('Statut vendeur mis a jour !');
+      chargerData();
+    } catch { toast.error('Erreur'); }
+  };
+
+  const filtres = utilisateurs.filter((u) => u.role === vue);
 
   return (
-    <div style={styles.layout}>
-      <aside style={styles.sidebar}>
-        <h2 style={styles.sidebarLogo}>⚡ Admin</h2>
-        {[['📊','Tableau de bord','/admin/dashboard'],['📦','Produits','/admin/produits'],['🛒','Commandes','/admin/commandes'],['👥','Clients','/admin/clients']].map(([ic,lb,pt]) => (
-          <Link key={pt} to={pt} style={styles.menuItem}>{ic} {lb}</Link>
-        ))}
-      </aside>
-
-      <main style={styles.main}>
-        <h1 style={styles.titre}>Clients ({clients.length})</h1>
-        <input
-          type="text" placeholder="🔍 Rechercher un client..."
-          value={recherche} onChange={e => setRecherche(e.target.value)}
-          style={styles.searchInput}
-        />
-
-        <div style={styles.tableWrap}>
-          <table style={styles.table}>
-            <thead>
-              <tr style={styles.thead}>
-                {['Nom','Email','Téléphone','Inscription','Statut','Action'].map(h => (
-                  <th key={h} style={styles.th}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtres.map((c) => (
-                <tr key={c._id} style={styles.tr}>
-                  <td style={styles.td}><strong>{c.prenom} {c.nom}</strong></td>
-                  <td style={styles.td}>{c.email}</td>
-                  <td style={styles.td}>{c.telephone || '—'}</td>
-                  <td style={styles.td}>{new Date(c.createdAt).toLocaleDateString('fr-FR')}</td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.badge, background: c.actif ? '#D5F5E3':'#FADBD8', color: c.actif ? '#1E8449':'#C0392B' }}>
-                      {c.actif ? 'Actif' : 'Désactivé'}
-                    </span>
-                  </td>
-                  <td style={styles.td}>
-                    <button
-                      onClick={() => toggleActif(c._id, c.actif)}
-                      style={{ ...styles.btn, background: c.actif ? '#FADBD8':'#D5F5E3', color: c.actif ? '#C0392B':'#1E8449' }}>
-                      {c.actif ? '🚫 Désactiver' : '✅ Activer'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div style={styles.page}>
+      <div style={styles.header}>
+        <h1 style={styles.title}>Gestion des utilisateurs</h1>
+        <div style={styles.tabs}>
+          <button onClick={() => setVue('client')} style={{ ...styles.tab, ...(vue === 'client' ? styles.tabActive : {}) }}>
+            <Icon name="users" size={17} /> Clients
+          </button>
+          <button onClick={() => setVue('vendeur')} style={{ ...styles.tab, ...(vue === 'vendeur' ? styles.tabActiveOrange : {}) }}>
+            <Icon name="shop" size={17} /> Vendeurs
+          </button>
         </div>
-      </main>
+      </div>
+
+      <div style={styles.tableCard}>
+        <table style={styles.table}>
+          <thead>
+            <tr style={styles.thead}>
+              <th style={styles.th}>Photo</th>
+              <th style={styles.th}>Nom</th>
+              <th style={styles.th}>Email</th>
+              {vue === 'vendeur' && <th style={styles.th}>Validation</th>}
+              <th style={styles.th}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtres.map((u) => (
+              <tr key={u._id} style={styles.tr}>
+                <td style={styles.td}><img src={u.photoProfil ? `http://localhost:5000${u.photoProfil}` : '/avatar.png'} style={styles.avatar} alt="profil" /></td>
+                <td style={styles.td}>{u.nom} {u.prenom}</td>
+                <td style={styles.td}>{u.email}</td>
+                {vue === 'vendeur' && (
+                  <td style={styles.td}>
+                    <span style={{ ...styles.badge, ...badgeVendeur(u.statutVendeur) }}>{u.statutVendeur || 'en_attente'}</span>
+                  </td>
+                )}
+                <td style={styles.td}>
+                  <button onClick={() => toggleStatut(u._id, u.actif)} style={{ ...styles.btn, background: u.actif ? '#e74c3c' : '#2ecc71' }}>
+                    {u.actif ? 'Bannir' : 'Activer'}
+                  </button>
+                  {vue === 'vendeur' && (
+                    <>
+                      <button onClick={() => changerStatutVendeur(u._id, 'approuve')} style={{ ...styles.btn, background: '#1E8449', marginLeft: '8px' }}>Approuver</button>
+                      <button onClick={() => changerStatutVendeur(u._id, 'rejete')} style={{ ...styles.btn, background: '#B03A2E', marginLeft: '8px' }}>Rejeter</button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
+const badgeVendeur = (statut) => {
+  if (statut === 'approuve') return { background: '#D5F5E3', color: '#1E8449' };
+  if (statut === 'rejete') return { background: '#FADBD8', color: '#C0392B' };
+  return { background: '#FEF5E7', color: '#B9770E' };
+};
+
 const styles = {
-  layout:      { display:'flex', minHeight:'100vh', fontFamily:"'DM Sans',sans-serif" },
-  sidebar:     { width:'240px', background:'#1A3A2A', padding:'32px 20px', display:'flex', flexDirection:'column', gap:'8px', position:'sticky', top:0, height:'100vh' },
-  sidebarLogo: { color:'#fff', fontSize:'1.3rem', marginBottom:'32px', paddingLeft:'8px' },
-  menuItem:    { display:'flex', alignItems:'center', gap:'10px', padding:'12px 14px', color:'rgba(255,255,255,0.8)', textDecoration:'none', borderRadius:'10px', fontSize:'0.93rem', marginBottom:'4px' },
-  main:        { flex:1, padding:'40px', background:'#F5F0E8', overflowY:'auto' },
-  titre:       { fontSize:'1.8rem', fontWeight:'700', marginBottom:'20px', color:'#1C1C1C' },
-  searchInput: { padding:'12px 20px', borderRadius:'50px', border:'1.5px solid #E2DAD0', background:'#fff', fontSize:'0.93rem', fontFamily:'inherit', outline:'none', marginBottom:'24px', width:'320px' },
-  tableWrap:   { background:'#fff', borderRadius:'16px', overflow:'auto', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' },
-  table:       { width:'100%', borderCollapse:'collapse' },
-  thead:       { background:'#f8f6f2' },
-  th:          { padding:'14px 16px', textAlign:'left', fontSize:'0.82rem', fontWeight:'700', color:'#888', textTransform:'uppercase' },
-  tr:          { borderBottom:'1px solid #F0EDE8' },
-  td:          { padding:'14px 16px', fontSize:'0.9rem' },
-  badge:       { padding:'4px 12px', borderRadius:'50px', fontSize:'0.78rem', fontWeight:'700' },
-  btn:         { padding:'6px 14px', borderRadius:'8px', border:'none', cursor:'pointer', fontSize:'0.82rem', fontWeight:'600' },
+  page: { padding: '30px', background: '#F5F0E8', minHeight: '100vh' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, marginBottom: 26 },
+  title: { margin: 0, color: '#1C1C1C', fontSize: '1.7rem' },
+  tabs: { display: 'flex', gap: 12 },
+  tab: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', background: '#ddd', color: '#333' },
+  tabActive: { background: '#1A3A2A', color: '#fff' },
+  tabActiveOrange: { background: '#C8410A', color: '#fff' },
+  tableCard: { background: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' },
+  table: { width: '100%', borderCollapse: 'collapse' },
+  thead: { background: '#f4f4f4' },
+  th: { padding: '15px', textAlign: 'left' },
+  tr: { borderBottom: '1px solid #eee' },
+  td: { padding: '15px' },
+  avatar: { width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' },
+  badge: { padding: '5px 10px', borderRadius: '999px', fontSize: '0.78rem', fontWeight: '700' },
+  btn: { color: '#fff', border: 'none', padding: '7px 12px', borderRadius: '5px', cursor: 'pointer' }
 };
