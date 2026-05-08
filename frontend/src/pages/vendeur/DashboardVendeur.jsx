@@ -19,7 +19,7 @@ function BarChart({ title, data = [], max, icon }) {
           <div style={styles.chartIconBg}><Icon name={icon} size={18} color="#C8410A" /></div>
           <span>{title}</span>
         </div>
-        <div style={styles.chartPeriod}>2024</div>
+        <div style={styles.chartPeriod}>2026</div>
       </div>
       <div style={styles.barChartBody}>
         {data.map((item, idx) => (
