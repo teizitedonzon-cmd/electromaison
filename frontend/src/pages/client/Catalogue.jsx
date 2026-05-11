@@ -772,6 +772,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
+import { mediaUrl } from '../../utils/media';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../../components/Icon';
@@ -1025,7 +1026,7 @@ export default function Catalogue() {
                       {p.badge && <span style={styles.badge}>{p.badge}</span>}
                       {p.images && p.images.length > 0 ? (
                         <img 
-                          src={p.images?.[0]?.startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0]}`} 
+                          src={mediaUrl(p.images?.[0])} 
                           alt={p.nom} 
                           style={{
                             ...styles.productImg,
