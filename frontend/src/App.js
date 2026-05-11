@@ -141,16 +141,42 @@ const RoutePrivee = ({ children }) => {
   return user ? children : <Navigate to="/connexion" replace />;
 };
 
+const dashboardParRole = (user) => {
+  if (!user) return '/connexion';
+  if (user.role === 'admin') return '/admin/dashboard';
+  if (user.role === 'vendeur') return '/vendeur/dashboard';
+  return '/';
+};
+
+const RouteClientPublique = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.role === 'admin' || user?.role === 'vendeur') {
+    return <Navigate to={dashboardParRole(user)} replace />;
+  }
+  return children;
+};
+
+const RouteClient = ({ children }) => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/connexion" replace />;
+  return user.role === 'client' ? children : <Navigate to={dashboardParRole(user)} replace />;
+};
+
 const RouteAdmin = ({ children }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/connexion" replace />;
-  return user.role === 'admin' ? children : <Navigate to="/" replace />;
+  return user.role === 'admin' ? children : <Navigate to={dashboardParRole(user)} replace />;
 };
 
 const RouteVendeur = ({ children }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/connexion" replace />;
-  return user.role === 'vendeur' || user.role === 'admin' ? children : <Navigate to="/" replace />;
+  return user.role === 'vendeur' ? children : <Navigate to={dashboardParRole(user)} replace />;
+};
+
+const RouteAuth = ({ children }) => {
+  const { user } = useAuth();
+  return user ? <Navigate to={dashboardParRole(user)} replace /> : children;
 };
 
 // ── LOGIQUE DE REDIRECTION PAR RÔLE ──
@@ -171,21 +197,21 @@ function App() {
         <CartProvider>
           <Routes>
             {/* Routes Publiques (accessibles sans connexion) */}
-            <Route path="/" element={<Accueil />} />
-            <Route path="/catalogue" element={<Catalogue />} />
-            <Route path="/produit/:id" element={<DetailProduit />} />
-            <Route path="/panier" element={<Panier />} />
+            <Route path="/" element={<RouteClientPublique><Accueil /></RouteClientPublique>} />
+            <Route path="/catalogue" element={<RouteClientPublique><Catalogue /></RouteClientPublique>} />
+            <Route path="/produit/:id" element={<RouteClientPublique><DetailProduit /></RouteClientPublique>} />
+            <Route path="/panier" element={<RouteClientPublique><Panier /></RouteClientPublique>} />
             
             {/* Routes Auth */}
-            <Route path="/connexion" element={<Connexion />} />
-            <Route path="/inscription" element={<Inscription />} />
+            <Route path="/connexion" element={<RouteAuth><Connexion /></RouteAuth>} />
+            <Route path="/inscription" element={<RouteAuth><Inscription /></RouteAuth>} />
             
             {/* Route de redirection après login */}
             <Route path="/accueil" element={<RedirectionParRole />} />
 
             {/* Routes Client Protégées (nécessitent connexion) */}
-            <Route path="/mes-commandes" element={<RoutePrivee><MesCommandes /></RoutePrivee>} />
-            <Route path="/profil" element={<RoutePrivee><Profil /></RoutePrivee>} />
+            <Route path="/mes-commandes" element={<RouteClient><MesCommandes /></RouteClient>} />
+            <Route path="/profil" element={<RouteClient><Profil /></RouteClient>} />
 
             {/* Routes Vendeur */}
             <Route path="/vendeur/dashboard" element={<RouteVendeur><DashboardVendeur /></RouteVendeur>} />
