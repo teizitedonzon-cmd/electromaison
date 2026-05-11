@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { mediaUrl } from '../../utils/media';
 import Icon from '../../components/Icon';
 
 export default function Panier() {
@@ -125,7 +126,7 @@ export default function Panier() {
                   {/* Image produit */}
                   <div style={styles.itemImage}>
                     {item.images?.[0] ? (
-                      <img src={item.images[0]} alt={item.nom} style={styles.itemImg} />
+                      <img src={mediaUrl(item.images[0])} alt={item.nom} style={styles.itemImg} />
                     ) : (
                       <div style={styles.itemImagePlaceholder}>
                         <Icon name="package" size={24} color="#C8410A" />
