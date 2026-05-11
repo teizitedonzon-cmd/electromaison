@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
+import { mediaUrl } from '../../utils/media';
 import Icon from '../../components/Icon';
 
 export default function AdminClients() {
@@ -64,7 +65,7 @@ export default function AdminClients() {
           <tbody>
             {filtres.map((u) => (
               <tr key={u._id} style={styles.tr}>
-                <td style={styles.td}><img src={u.photoProfil ? `http://localhost:5000${u.photoProfil}` : '/avatar.png'} style={styles.avatar} alt="profil" /></td>
+                <td style={styles.td}><img src={u.photoProfil ? mediaUrl(u.photoProfil) : '/avatar.png'} style={styles.avatar} alt="profil" /></td>
                 <td style={styles.td}>{u.nom} {u.prenom}</td>
                 <td style={styles.td}>{u.email}</td>
                 {vue === 'vendeur' && (
