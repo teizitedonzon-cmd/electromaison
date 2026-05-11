@@ -7,7 +7,9 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { mediaUrl } from '../../utils/media';
 import Icon from '../../components/Icon';
+import logot from '../../assets/images/logot.jpg';
 
 // Composant BarChart professionnel
 function BarChart({ title, data = [], max, icon }) {
@@ -81,12 +83,7 @@ function PieChart({ title, data = [], total, icon }) {
             {slices.map((slice, i) => (
               <path key={i} d={slice.path} fill={slice.color} filter="url(#pieShadow)" className="pie-slice" />
             ))}
-            <circle cx="100" cy="100" r="40" fill="#fff" className="pie-center" />
           </svg>
-          <div style={styles.pieCenterTotal}>
-            <div style={styles.pieCenterValue}>{slices.length}</div>
-            <div style={styles.pieCenterLabel}>catégories</div>
-          </div>
         </div>
         <div style={styles.pieLegendList}>
           {slices.map((slice, i) => (
@@ -116,6 +113,10 @@ export default function DashboardVendeur() {
   const [selectedProduit, setSelectedProduit] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [hoveredStat, setHoveredStat] = useState(null);
+  const [editingProduit, setEditingProduit] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [nonLues, setNonLues] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const chargerMesProduits = async () => {
     try {
@@ -135,9 +136,21 @@ export default function DashboardVendeur() {
     }
   };
 
+  const chargerNotifications = async () => {
+    try {
+      const { data } = await api.get('/notifications/mes-notifications');
+      setNotifications(data.notifications || []);
+      setNonLues(data.nonLues || 0);
+    } catch {
+      setNotifications([]);
+      setNonLues(0);
+    }
+  };
+
   useEffect(() => {
     chargerMesProduits();
     chargerMesVentes();
+    chargerNotifications();
   }, []);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -148,9 +161,15 @@ export default function DashboardVendeur() {
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
     Array.from(images || []).forEach((img) => data.append('images', img));
     try {
-      await api.post('/produits', data);
-      toast.success('Produit envoyé pour publication.');
+      if (editingProduit) {
+        await api.put(`/produits/${editingProduit._id}`, data);
+        toast.success('Produit modifie avec succes.');
+      } else {
+        await api.post('/produits', data);
+        toast.success('Produit envoye pour publication.');
+      }
       setShowModal(false);
+      setEditingProduit(null);
       setFormData(formVide);
       setImages([]);
       chargerMesProduits();
@@ -162,6 +181,46 @@ export default function DashboardVendeur() {
   const handleLogout = () => {
     setIsLoggingOut(true);
     setTimeout(() => deconnexion(), 500);
+  };
+
+  const ouvrirEdition = (produit) => {
+    setEditingProduit(produit);
+    setFormData({
+      nom: produit.nom || '',
+      description: produit.description || '',
+      prix: produit.prix || '',
+      stock: produit.stock || '',
+      categorie: produit.categorie || '',
+      marque: produit.marque || '',
+    });
+    setImages([]);
+    setShowDetailModal(false);
+    setShowModal(true);
+  };
+
+  const supprimerProduit = async (produit) => {
+    if (!window.confirm(`Supprimer "${produit.nom}" ?`)) return;
+    try {
+      await api.delete(`/produits/${produit._id}`);
+      toast.success('Produit supprime.');
+      setShowDetailModal(false);
+      chargerMesProduits();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Suppression impossible');
+    }
+  };
+
+  const marquerToutLu = async () => {
+    try {
+      await api.put('/notifications/tout-lire');
+      chargerNotifications();
+    } catch {
+      toast.error('Erreur lors de la lecture des notifications');
+    }
+  };
+
+  const ouvrirNotifications = () => {
+    setShowNotifications((visible) => !visible);
   };
 
   const revenu = ventes.reduce((s, v) => s + (v.montantVendeur || 0), 0);
@@ -197,17 +256,53 @@ export default function DashboardVendeur() {
   const categoryData = ventesParCategorie();
   const maxMonthly = Math.max(...monthlyData.map(d => d.value), 1);
   const totalCategorie = categoryData.reduce((s, i) => s + i.value, 0);
+  const produitsCommandes = new Set(
+    ventes.flatMap((vente) =>
+      (vente.lignes || []).map((ligne) => String(ligne.produit?._id || ligne.produit || ''))
+    )
+  );
+  const produitEstCommande = (produitId) => produitsCommandes.has(String(produitId));
 
   return (
     <div style={styles.container}>
       <header style={styles.header}>
         <div style={styles.headerLeft}>
-          <div style={styles.logoWrapper}><span style={styles.logoIcon}>🏪</span></div>
+          <div style={styles.logoWrapper}><img src={logot} alt="TeyShop" style={styles.logoImageHeader} /></div>
           <div><h1 style={styles.headerTitle}>Espace Vendeur</h1><p style={styles.headerSubtitle}>Gérez vos ventes et produits</p></div>
         </div>
         <div style={styles.userSection}>
+          <div style={styles.notificationWrapper}>
+            <button onClick={ouvrirNotifications} style={styles.bellButton} title="Notifications">
+              <Icon name="bell" size={20} color="#1A3A2A" />
+              {nonLues > 0 && <span style={styles.bellBadge}>{nonLues > 9 ? '9+' : nonLues}</span>}
+            </button>
+            {showNotifications && (
+              <div style={styles.notificationDropdown}>
+                <div style={styles.notificationDropdownHeader}>
+                  <div>
+                    <div style={styles.notificationDropdownTitle}>Notifications</div>
+                    <div style={styles.notificationDropdownSub}>{nonLues} non lue(s)</div>
+                  </div>
+                  {nonLues > 0 && <button onClick={marquerToutLu} style={styles.markReadBtn}>Tout lire</button>}
+                </div>
+                <div style={styles.notificationDropdownList}>
+                  {notifications.length === 0 ? (
+                    <div style={styles.emptyNotification}>Aucune notification pour le moment</div>
+                  ) : (
+                    notifications.slice(0, 8).map((notification) => (
+                      <div key={notification._id} style={{ ...styles.notificationItem, background: notification.lu ? '#fff' : '#FFF5F0' }}>
+                        <div style={styles.notificationTitle}>{notification.titre}</div>
+                        <div style={styles.notificationMessage}>{notification.message}</div>
+                        <div style={styles.notificationDate}>{new Date(notification.createdAt).toLocaleString('fr-FR')}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <div style={styles.userInfo}>
-            <img src={user?.photoProfil ? `http://localhost:5000${user.photoProfil}` : 'https://via.placeholder.com/40'} style={styles.avatar} alt="profil" />
+            <img src={user?.photoProfil ? mediaUrl(user.photoProfil) : 'https://via.placeholder.com/40'} style={styles.avatar} alt="profil" />
             <div><p style={styles.userName}>{user?.prenom} {user?.nom}</p><span style={{ ...styles.userStatus, color: peutPublier ? '#2ECC71' : '#C8410A' }}><span style={styles.statusDot}></span>{peutPublier ? 'Vendeur approuvé' : 'Validation en attente'}</span></div>
           </div>
           <button onClick={handleLogout} style={styles.logoutBtn} className="logout-btn">
@@ -229,7 +324,7 @@ export default function DashboardVendeur() {
             <div><div style={styles.statNumber}>{stat.value}</div><div style={styles.statLabel}>{stat.label}</div>{stat.suffix && <div style={styles.statSuffix}>{stat.suffix}</div>}</div>
           </div>
         ))}
-        <button onClick={() => setShowModal(true)} disabled={!peutPublier} style={{ ...styles.addBtnLarge, opacity: peutPublier ? 1 : 0.55, cursor: peutPublier ? 'pointer' : 'not-allowed' }} className="add-btn"><Icon name="plus" size={20} /> Nouveau produit</button>
+        <button onClick={() => { setEditingProduit(null); setFormData(formVide); setImages([]); setShowModal(true); }} disabled={!peutPublier} style={{ ...styles.addBtnLarge, opacity: peutPublier ? 1 : 0.55, cursor: peutPublier ? 'pointer' : 'not-allowed' }} className="add-btn"><Icon name="plus" size={20} /> Nouveau produit</button>
       </div>
 
       {/* Diagrammes */}
@@ -262,12 +357,12 @@ export default function DashboardVendeur() {
         </div>
         <div style={styles.productsGrid}>
           {produits.length === 0 ? (
-            <div style={styles.emptyState}><Icon name="package" size={48} color="#ccc" /><p>Aucun produit</p><button onClick={() => setShowModal(true)} style={styles.emptyStateBtn}>Ajouter mon premier produit</button></div>
+            <div style={styles.emptyState}><Icon name="package" size={48} color="#ccc" /><p>Aucun produit</p><button onClick={() => { setEditingProduit(null); setFormData(formVide); setImages([]); setShowModal(true); }} style={styles.emptyStateBtn}>Ajouter mon premier produit</button></div>
           ) : (
             produits.map(p => (
               <div key={p._id} style={styles.productCard} className="product-card" onClick={() => { setSelectedProduit(p); setShowDetailModal(true); }}>
                 <div style={styles.productImage}>
-                  {p.images?.[0] ? <img src={`http://localhost:5000${p.images[0]}`} alt={p.nom} /> : <div style={styles.productImagePlaceholder}><Icon name="image" size={32} color="#ccc" /></div>}
+                  {p.images?.[0] ? <img src={mediaUrl(p.images[0])} alt={p.nom} /> : <div style={styles.productImagePlaceholder}><Icon name="image" size={32} color="#ccc" /></div>}
                   <div style={{ ...styles.productStatus, background: p.actif ? '#2ECC71' : '#E74C3C' }}>{p.actif ? 'En ligne' : 'Hors ligne'}</div>
                 </div>
                 <div style={styles.productInfo}>
@@ -350,14 +445,14 @@ export default function DashboardVendeur() {
       {showModal && (
         <div style={styles.overlay} onClick={() => setShowModal(false)}>
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
-            <div style={styles.modalHeader}><h3 style={styles.modalTitle}>Nouveau produit</h3><button style={styles.modalClose} onClick={() => setShowModal(false)}>✕</button></div>
+            <div style={styles.modalHeader}><h3 style={styles.modalTitle}>{editingProduit ? 'Modifier le produit' : 'Nouveau produit'}</h3><button style={styles.modalClose} onClick={() => { setShowModal(false); setEditingProduit(null); setFormData(formVide); }}>✕</button></div>
             <form onSubmit={handleSubmit}>
               <div style={styles.formGroup}><label style={styles.formLabel}>Nom du produit</label><input name="nom" placeholder="Ex: iPhone 13 Pro" value={formData.nom} onChange={handleChange} required style={styles.input} /></div>
               <div style={styles.formRow}><div style={styles.formGroup}><label>Marque</label><input name="marque" placeholder="Apple, Samsung..." value={formData.marque} onChange={handleChange} required style={styles.input} /></div><div style={styles.formGroup}><label>Catégorie</label><select name="categorie" value={formData.categorie} onChange={handleChange} required style={styles.input}><option value="">Sélectionner</option>{['Electronique','Vetements','Alimentation','Electromenager','Beaute','Immobilier','Sport','Autre'].map(c => <option key={c}>{c}</option>)}</select></div></div>
               <div style={styles.formRow}><div style={styles.formGroup}><label>Prix (FCFA)</label><input name="prix" type="number" min="0" placeholder="0" value={formData.prix} onChange={handleChange} required style={styles.input} /></div><div style={styles.formGroup}><label>Quantité en stock</label><input name="stock" type="number" min="0" placeholder="0" value={formData.stock} onChange={handleChange} required style={styles.input} /></div></div>
               <div style={styles.formGroup}><label>Description</label><textarea name="description" placeholder="Description détaillée du produit..." value={formData.description} onChange={handleChange} required style={{ ...styles.input, height: '80px', resize: 'vertical' }} /></div>
               <div style={styles.formGroup}><label>Images du produit</label><div style={styles.fileUploadArea}><Icon name="image" size={24} color="#C8410A" /><p>Cliquez ou glissez des images</p><input type="file" multiple accept="image/*" onChange={e => setImages(e.target.files)} style={styles.fileInput} /></div>{images.length > 0 && <div style={styles.imagePreview}>{Array.from(images).map((img, idx) => <span key={idx} style={styles.imagePreviewItem}>{img.name}</span>)}</div>}</div>
-              <div style={styles.modalActions}><button type="button" onClick={() => setShowModal(false)} style={styles.cancelBtn}>Annuler</button><button type="submit" style={styles.confirmBtn}>Publier le produit</button></div>
+              <div style={styles.modalActions}><button type="button" onClick={() => { setShowModal(false); setEditingProduit(null); setFormData(formVide); }} style={styles.cancelBtn}>Annuler</button><button type="submit" style={styles.confirmBtn}>{editingProduit ? 'Enregistrer' : 'Publier le produit'}</button></div>
             </form>
           </div>
         </div>
@@ -368,7 +463,7 @@ export default function DashboardVendeur() {
           <div style={styles.modalDetail} onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}><h3 style={styles.modalTitle}>{selectedProduit.nom}</h3><button style={styles.modalClose} onClick={() => setShowDetailModal(false)}>✕</button></div>
             <div style={styles.productDetailContent}>
-              {selectedProduit.images?.[0] && <img src={`http://localhost:5000${selectedProduit.images[0]}`} alt={selectedProduit.nom} style={styles.productDetailImage} />}
+              {selectedProduit.images?.[0] && <img src={mediaUrl(selectedProduit.images[0])} alt={selectedProduit.nom} style={styles.productDetailImage} />}
               <div style={styles.productDetailInfo}>
                 <p><strong>Marque:</strong> {selectedProduit.marque}</p>
                 <p><strong>Catégorie:</strong> {selectedProduit.categorie}</p>
@@ -376,6 +471,11 @@ export default function DashboardVendeur() {
                 <p><strong>Stock:</strong> {selectedProduit.stock}</p>
                 <p><strong>Description:</strong> {selectedProduit.description}</p>
                 <p><strong>Statut:</strong> <span style={{ ...styles.productDetailStatus, background: selectedProduit.actif ? '#2ECC71' : '#E74C3C' }}>{selectedProduit.actif ? 'En ligne' : 'Hors ligne'}</span></p>
+                <div style={styles.detailActions}>
+                  <button disabled={produitEstCommande(selectedProduit._id)} onClick={() => ouvrirEdition(selectedProduit)} style={{ ...styles.editBtn, opacity: produitEstCommande(selectedProduit._id) ? 0.55 : 1, cursor: produitEstCommande(selectedProduit._id) ? 'not-allowed' : 'pointer' }}>Modifier</button>
+                  <button disabled={produitEstCommande(selectedProduit._id)} onClick={() => supprimerProduit(selectedProduit)} style={{ ...styles.deleteBtn, opacity: produitEstCommande(selectedProduit._id) ? 0.55 : 1, cursor: produitEstCommande(selectedProduit._id) ? 'not-allowed' : 'pointer' }}>Supprimer</button>
+                </div>
+                {produitEstCommande(selectedProduit._id) && <p style={styles.lockHint}>Ce produit a deja ete commande.</p>}
               </div>
             </div>
           </div>
@@ -389,8 +489,8 @@ const styles = {
   container: { background: 'linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%)', minHeight: '100vh', fontFamily: "'Inter', 'Poppins', -apple-system, sans-serif" },
   header: { background: '#fff', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', position: 'sticky', top: 0, zIndex: 100 },
   headerLeft: { display: 'flex', alignItems: 'center', gap: '16px' },
-  logoWrapper: { width: '48px', height: '48px', background: 'linear-gradient(135deg, #1A3A2A, #0E251B)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  logoIcon: { fontSize: '24px' },
+  logoWrapper: { width: '48px', height: '48px', background: '#fff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #E9ECEF' },
+  logoImageHeader: { width: '100%', height: '100%', objectFit: 'cover' },
   headerTitle: { fontSize: '1.5rem', fontWeight: '700', color: '#1A3A2A', margin: 0 },
   headerSubtitle: { fontSize: '0.8rem', color: '#6C757D', margin: '2px 0 0' },
   userSection: { display: 'flex', alignItems: 'center', gap: '20px' },
@@ -428,9 +528,6 @@ const styles = {
   pieChartBody: { display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' },
   pieSvgWrapper: { position: 'relative', width: '180px', height: '180px', flexShrink: 0 },
   pieSvg: { width: '100%', height: '100%', transform: 'rotate(-90deg)' },
-  pieCenterTotal: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' },
-  pieCenterValue: { fontSize: '1.2rem', fontWeight: '800', color: '#2C3E50' },
-  pieCenterLabel: { fontSize: '0.6rem', color: '#6C757D' },
   pieLegendList: { flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '160px', overflowY: 'auto' },
   pieLegendItem: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.7rem', padding: '6px 8px', borderRadius: '8px', transition: 'all 0.2s ease', cursor: 'pointer' },
   pieLegendColor: { width: '10px', height: '10px', borderRadius: '3px', flexShrink: 0 },
@@ -488,7 +585,25 @@ const styles = {
   productDetailContent: { padding: '24px' },
   productDetailImage: { width: '100%', height: '250px', objectFit: 'cover', borderRadius: '16px', marginBottom: '20px' },
   productDetailInfo: { lineHeight: '1.8', fontSize: '0.85rem' },
-  productDetailStatus: { display: 'inline-block', padding: '2px 12px', borderRadius: '20px', fontSize: '0.7rem', color: '#fff', marginLeft: '8px' }
+  productDetailStatus: { display: 'inline-block', padding: '2px 12px', borderRadius: '20px', fontSize: '0.7rem', color: '#fff', marginLeft: '8px' },
+  notificationWrapper: { position: 'relative' },
+  bellButton: { width: '42px', height: '42px', borderRadius: '50%', border: '1px solid #E9ECEF', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', boxShadow: '0 3px 12px rgba(0,0,0,0.06)' },
+  bellBadge: { position: 'absolute', top: '-5px', right: '-5px', minWidth: '18px', height: '18px', padding: '0 5px', borderRadius: '999px', background: '#E74C3C', color: '#fff', fontSize: '0.65rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff' },
+  notificationDropdown: { position: 'absolute', top: '52px', right: 0, width: '340px', maxWidth: 'calc(100vw - 32px)', background: '#fff', borderRadius: '16px', boxShadow: '0 18px 45px rgba(0,0,0,0.18)', border: '1px solid #E9ECEF', overflow: 'hidden', zIndex: 200 },
+  notificationDropdownHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #F0F0F0' },
+  notificationDropdownTitle: { fontWeight: '800', color: '#1A3A2A', fontSize: '0.95rem' },
+  notificationDropdownSub: { color: '#6C757D', fontSize: '0.72rem', marginTop: '2px' },
+  notificationDropdownList: { maxHeight: '340px', overflowY: 'auto' },
+  markReadBtn: { border: 'none', background: '#FFF5F0', color: '#C8410A', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.72rem', fontWeight: '700' },
+  notificationItem: { padding: '12px 14px', borderBottom: '1px solid #F0F0F0' },
+  notificationTitle: { fontWeight: '700', color: '#1A3A2A', fontSize: '0.85rem' },
+  notificationMessage: { color: '#495057', fontSize: '0.78rem', marginTop: '3px' },
+  notificationDate: { color: '#ADB5BD', fontSize: '0.68rem', marginTop: '5px' },
+  emptyNotification: { color: '#ADB5BD', textAlign: 'center', padding: '24px' },
+  detailActions: { display: 'flex', gap: '10px', marginTop: '18px' },
+  editBtn: { border: 'none', background: '#1A3A2A', color: '#fff', padding: '9px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: '600' },
+  deleteBtn: { border: 'none', background: '#E74C3C', color: '#fff', padding: '9px 16px', borderRadius: '10px', cursor: 'pointer', fontWeight: '600' },
+  lockHint: { marginTop: '8px', color: '#C8410A', fontSize: '0.75rem', fontWeight: '600' }
 };
 
 // Animations globales
