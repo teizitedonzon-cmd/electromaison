@@ -13,6 +13,21 @@ export const AuthProvider = ({ children }) => {
     if (userSauvegarde && token) {
       try {
         setUser(JSON.parse(userSauvegarde));
+        api.get('/auth/refresh')
+          .then(({ data }) => {
+            if (data.token) localStorage.setItem('token', data.token);
+            if (data.user) {
+              localStorage.setItem('user', JSON.stringify(data.user));
+              setUser(data.user);
+            }
+          })
+          .catch(() => {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            setUser(null);
+          })
+          .finally(() => setChargement(false));
+        return;
       } catch (e) {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
