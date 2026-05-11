@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { mediaUrl } from '../../utils/media';
 import Icon from '../../components/Icon';
 import logot from '../../assets/images/logot.jpg';
 
@@ -39,7 +40,7 @@ export default function AdminProduits() {
   const chargerProduits = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/produits');
+      const { data } = await api.get('/produits/admin/tous');
       const produitsData = data.produits || [];
       setProduits(produitsData);
       
@@ -314,7 +315,7 @@ export default function AdminProduits() {
                       <tr key={p._id} className="product-row" onMouseEnter={() => setHoveredProduct(p._id)} onMouseLeave={() => setHoveredProduct(null)}>
                         <td style={styles.imageCell}>
                           {p.images?.[0] ? (
-                            <img src={p.images[0]?.startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0]}`} alt={p.nom} style={styles.productImage} />
+                            <img src={mediaUrl(p.images[0])} alt={p.nom} style={styles.productImage} />
                           ) : (
                             <div style={styles.imagePlaceholder}>📷</div>
                           )}
@@ -466,7 +467,7 @@ export default function AdminProduits() {
                   <p style={styles.existingImagesLabel}>Images actuelles :</p>
                   <div style={styles.existingImagesList}>
                     {selectedProduit.images.map((img, idx) => (
-                      <img key={idx} src={`http://localhost:5000${img}`} alt={`Image ${idx + 1}`} style={styles.existingImage} />
+                      <img key={idx} src={mediaUrl(img)} alt={`Image ${idx + 1}`} style={styles.existingImage} />
                     ))}
                   </div>
                 </div>
