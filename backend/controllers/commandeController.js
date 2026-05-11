@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Commande = require('../models/Commande');
 const Produit = require('../models/Produit');
+const Notification = require('../models/Notification');
 
 exports.passerCommande = async (req, res) => {
   const session = await mongoose.startSession();
@@ -39,6 +40,7 @@ exports.passerCommande = async (req, res) => {
           produit: produit._id,
           vendeur: produit.vendeur,
           nomProduit: produit.nom,
+          categorie: produit.categorie,
           prixUnitaire: produit.prix,
           quantite,
           sousTotal,
@@ -55,6 +57,23 @@ exports.passerCommande = async (req, res) => {
       }], { session });
 
       commande = commandes[0];
+
+      await Notification.create(
+        lignesVerifiees.map((ligne) => ({
+          vendeurId: ligne.vendeur,
+          type: 'produit_vendu',
+          titre: 'Produit vendu',
+          message: `${ligne.nomProduit} a ete commande en ${ligne.quantite} exemplaire(s).`,
+          data: {
+            commandeId: commande._id,
+            produitId: ligne.produit,
+            nomProduit: ligne.nomProduit,
+            quantite: ligne.quantite,
+            montant: ligne.sousTotal,
+          },
+        })),
+        { session }
+      );
     });
 
     res.status(201).json({ message: 'Commande passee avec succes !', commande });
@@ -172,7 +191,31 @@ exports.statistiques = async (req, res) => {
       { $project: { _id: 0, label: { $concat: [{ $ifNull: ['$vendeur.prenom', 'Vendeur'] }, ' ', { $ifNull: ['$vendeur.nom', ''] }] }, total: 1, quantite: 1 } }
     ]);
 
-    res.json({ totalCommandes, enAttente, livrees, revenus, parCategorie, parVendeur });
+    const parMois = await Commande.aggregate([
+      { $match: { statut: { $ne: 'annulee' } } },
+      {
+        $group: {
+          _id: { annee: { $year: '$createdAt' }, mois: { $month: '$createdAt' } },
+          total: { $sum: '$montantTotal' },
+        },
+      },
+      { $sort: { '_id.annee': 1, '_id.mois': 1 } },
+      {
+        $project: {
+          _id: 0,
+          label: {
+            $concat: [
+              { $toString: '$_id.mois' },
+              '/',
+              { $toString: '$_id.annee' },
+            ],
+          },
+          total: 1,
+        },
+      },
+    ]);
+
+    res.json({ totalCommandes, enAttente, livrees, revenus, parCategorie, parVendeur, parMois });
   } catch (error) {
     res.status(500).json({ message: 'Erreur.', error: error.message });
   }
