@@ -4,20 +4,46 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config(); // Charge les variables du fichier .env
 
 const app = express();
 
 // ── MIDDLEWARES GLOBAUX ──────────────────────
+const defaultLocalOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5000',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:5000',
+];
+
+const normalizeOrigin = (origin) => origin.trim().replace(/\/+$/, '');
+
+const configuredOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(normalizeOrigin)
+  .filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultLocalOrigins.map(normalizeOrigin), ...configuredOrigins]));
+
 app.use(cors({
-  origin: 'http://localhost:3001', // Adresse du frontend React
+  origin: (origin, callback) => {
+    const normalizedOrigin = origin ? normalizeOrigin(origin) : '';
+    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
+    console.warn(`Origine CORS refusee: ${normalizedOrigin}`);
+    return callback(null, false);
+  },
   credentials: true,
 }));
 app.use(express.json()); // Permet de lire le JSON dans les requêtes
 app.use(express.urlencoded({ extended: true }));
 
 // Dossier pour les images uploadées (accessibles via /uploads/...)
-app.use('/uploads', express.static('uploads'));
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+app.use('/uploads', express.static(uploadsDir));
 
 // ── CONNEXION À MONGODB ──────────────────────
 mongoose.connect(process.env.MONGO_URI)
@@ -29,11 +55,26 @@ app.use('/api/auth',      require('./routes/authRoutes'));
 app.use('/api/produits',  require('./routes/produitRoutes'));
 app.use('/api/commandes', require('./routes/commandeRoutes'));
 app.use('/api/users',     require('./routes/userRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // Route de test (pour vérifier que le serveur tourne)
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ message: '🚀 API ElectroMaison opérationnelle !' });
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/', (req, res) => {
+    res.json({ message: '🚀 API ElectroMaison opérationnelle !' });
+  });
+}
+
+const clientBuildDir = path.join(__dirname, '..', 'frontend', 'build');
+if (process.env.NODE_ENV === 'production' && fs.existsSync(clientBuildDir)) {
+  app.use(express.static(clientBuildDir));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildDir, 'index.html'));
+  });
+}
 
 // ── GESTION DES ERREURS ──────────────────────
 app.use((err, req, res, next) => {
