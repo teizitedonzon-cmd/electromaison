@@ -6,6 +6,7 @@ const commandeSchema = new mongoose.Schema({
     produit: { type: mongoose.Schema.Types.ObjectId, ref: 'Produit', required: true },
     vendeur: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     nomProduit: String,
+    categorie: String,
     prixUnitaire: Number,
     quantite: { type: Number, required: true },
     sousTotal: Number
