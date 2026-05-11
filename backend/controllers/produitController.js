@@ -1,4 +1,7 @@
 const Produit = require('../models/Produit');
+const Commande = require('../models/Commande');
+
+const produitDejaCommande = (produitId) => Commande.exists({ 'lignes.produit': produitId });
 
 // Lister les produits (Public)
 exports.listerProduits = async (req, res) => {
@@ -95,7 +98,11 @@ exports.modifierProduit = async (req, res) => {
     if (req.files && req.files.length > 0) {
       updates.images = req.files.map((f) => `/uploads/${f.filename}`);
     }
-    const produitModifie = await Produit.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (req.user.role !== 'admin' && (await produitDejaCommande(produit._id))) {
+      return res.status(400).json({ message: 'Ce produit a deja ete commande. Vous ne pouvez plus le modifier.' });
+    }
+
+    const produitModifie = await Produit.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
     res.json(produitModifie);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -111,9 +118,19 @@ exports.supprimerProduit = async (req, res) => {
       return res.status(403).json({ message: 'Action non autorisee.' });
     }
 
-    produit.actif = !produit.actif;
-    await produit.save();
-    res.json({ message: 'Statut mis à jour.' });
+    const dejaCommande = await produitDejaCommande(produit._id);
+    if (dejaCommande && req.user.role !== 'admin') {
+      return res.status(400).json({ message: 'Ce produit a deja ete commande. Vous ne pouvez plus le supprimer.' });
+    }
+
+    if (dejaCommande && req.user.role === 'admin') {
+      produit.actif = false;
+      await produit.save();
+      return res.json({ message: 'Produit desactive car il est lie a une commande.' });
+    }
+
+    await Produit.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Produit supprime.' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
