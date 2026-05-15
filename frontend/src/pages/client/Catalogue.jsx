@@ -1,773 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import { Link, useLocation } from 'react-router-dom';
-// import { toast } from 'react-toastify';
-// import api from '../../utils/api';
-// import { useCart } from '../../context/CartContext';
-// import { useAuth } from '../../context/AuthContext';
-// import Icon from '../../components/Icon';
-
-// // 1. Mise à jour de la liste des catégories
-// const CATEGORIES = [
-//   { id: '', label: 'Tous les produits' },
-//   { id: 'Électronique',  label: '📱 Électronique' },
-//   { id: 'Vêtements',     label: '👕 Vêtements' },
-//   { id: 'Alimentation',  label: '🍎 Alimentation' },
-//   { id: 'electromenager', label: 'Electromenager' },
-//   { id: 'Beauté',        label: '💄 Beauté' },
-//   { id: 'immobilier',    label: '🏠 Immobilier' },
-//   { id: 'Sport',         label: '⚽ Sport' },
-//   { id: 'Autre',         label: 'Autre' },
-// ];
-
-// export default function Catalogue() {
-//   const { ajouterAuPanier, nombreArticles } = useCart();
-//   const { deconnexion } = useAuth();
-//   const location = useLocation();
-  
-//   const [produits, setProduits] = useState([]);
-//   const [categorie, setCategorie] = useState('');
-//   const [recherche, setRecherche] = useState('');
-//   const [minPrix, setMinPrix] = useState('');
-//   const [maxPrix, setMaxPrix] = useState('');
-//   const [hoveredLink, setHoveredLink] = useState(null);
-
-//   // 2. Écoute de l'URL pour filtrer automatiquement (ex: /catalogue?categorie=immobilier)
-//   useEffect(() => {
-//     const params = new URLSearchParams(location.search);
-//     const catDepuisUrl = params.get('categorie');
-//     if (catDepuisUrl) {
-//       setCategorie(catDepuisUrl);
-//     } else {
-//       setCategorie('');
-//     }
-//   }, [location.search]);
-
-//   // 3. Appel API avec filtres
-//   const charger = async () => {
-//     try {
-//       const params = new URLSearchParams();
-//       if (categorie) params.append('categorie', categorie);
-//       if (recherche) params.append('recherche', recherche);
-//       if (minPrix) params.append('minPrix', minPrix);
-//       if (maxPrix) params.append('maxPrix', maxPrix);
-//       const { data } = await api.get(`/produits?${params}`);
-//       setProduits(data.produits);
-//     } catch (err) { 
-//       toast.error('Erreur lors du chargement des produits.'); 
-//     }
-//   };
-
-//   useEffect(() => {
-//     charger();
-//   }, [categorie, recherche, minPrix, maxPrix]);
-
-//   const getNavLinkStyle = (id) => ({
-//     ...styles.navLink,
-//     color: hoveredLink === id ? '#F4A76A' : 'rgba(255,255,255,0.8)',
-//     transform: hoveredLink === id ? 'translateY(-2px)' : 'translateY(0)',
-//   });
-
-//   return (
-//     <div style={{ fontFamily: "'Inter', sans-serif", minHeight: '100vh', background: '#F8F9FA' }}>
-//       <nav style={styles.nav}>
-//         <Link to="/" style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></Link>
-//         <div style={styles.navLinks}>
-//           <Link to="/" style={getNavLinkStyle('home')} onMouseEnter={() => setHoveredLink('home')} onMouseLeave={() => setHoveredLink(null)}>Accueil</Link>
-//           <Link to="/catalogue" style={getNavLinkStyle('cat')} onMouseEnter={() => setHoveredLink('cat')} onMouseLeave={() => setHoveredLink(null)}>Catalogue</Link>
-//           <Link to="/mes-commandes" style={getNavLinkStyle('cmd')} onMouseEnter={() => setHoveredLink('cmd')} onMouseLeave={() => setHoveredLink(null)}>Commandes</Link>
-//         </div>
-//         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-//           <Link to="/panier" style={styles.cartBtn}>
-//             <Icon name="cart" size={17} /> Panier {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
-//           </Link>
-//           <button onClick={deconnexion} style={styles.decoBtn}>Déconnexion</button>
-//         </div>
-//       </nav>
-
-//       <div style={{ padding: '60px 8%' }}>
-//         <header style={{ marginBottom: '50px' }}>
-//           <h1 style={styles.sectionTitre}>Notre Catalogue</h1>
-//           <div style={styles.dividerLeft}></div>
-//           <div style={{ marginTop: '30px', position: 'relative', maxWidth: '600px' }}>
-//             <input 
-//               type="text" 
-//               placeholder="Rechercher un produit..." 
-//               value={recherche}
-//               onChange={e => setRecherche(e.target.value)}
-//               style={styles.searchInput} 
-//             />
-//             <Icon name="eye" size={17} style={{ position: 'absolute', right: '20px', top: '15px', color: '#777' }} />
-//           </div>
-//         </header>
-
-//         {/* Boutons de filtres mis à jour */}
-//         <div style={styles.filtres}>
-//           {CATEGORIES.map(c => (
-//             <button 
-//               key={c.id} 
-//               onClick={() => setCategorie(c.id)}
-//               style={{ ...styles.filtrBtn, ...(categorie === c.id ? styles.filtrActif : {}) }}
-//             >
-//               {c.label}
-//             </button>
-//           ))}
-//         </div>
-
-//         <div style={styles.priceFilters}>
-//           <input
-//             type="number"
-//             min="0"
-//             placeholder="Prix min"
-//             value={minPrix}
-//             onChange={e => setMinPrix(e.target.value)}
-//             style={styles.priceInput}
-//           />
-//           <input
-//             type="number"
-//             min="0"
-//             placeholder="Prix max"
-//             value={maxPrix}
-//             onChange={e => setMaxPrix(e.target.value)}
-//             style={styles.priceInput}
-//           />
-//           <button onClick={() => { setMinPrix(''); setMaxPrix(''); }} style={styles.resetBtn}>
-//             Reinitialiser
-//           </button>
-//         </div>
-
-//         {produits.length === 0 && (
-//           <div style={styles.emptyState}>
-//             Aucun produit ne correspond a votre recherche.
-//           </div>
-//         )}
-
-//         <div style={styles.grid}>
-//           {produits.map((p) => (
-//             <div key={p._id} style={styles.card}>
-//               <div style={styles.imgZone}>
-//                 {p.badge && <span style={styles.badge}>{p.badge}</span>}
-//                 {p.images && p.images.length > 0 ? (
-//                   <img src={p.images?.[0]?.startsWith('http')  ? p.images[0] : `http://localhost:5000${p.images[0]}`} alt={p.nom} style={styles.productImg} onError={(e) => { e.target.src = "https://via.placeholder.com/300?text=Image+Indisponible"; }} />
-//                 ) : (
-//                   <Icon name="package" size={58} color="#d8d0c6" />
-//                 )}
-//               </div>
-//               <div style={styles.info}>
-//                 <div style={styles.catLabel}>{p.marque || p.categorie}</div>
-//                 <h3 style={styles.nomProduit}>{p.nom}</h3>
-//                 <p style={styles.desc}>{p.description?.substring(0, 80)}...</p>
-//                 <div style={styles.footer}>
-//                   <div style={styles.prix}>{Number(p.prix).toLocaleString('fr-FR')} FCFA</div>
-//                   <button onClick={() => { ajouterAuPanier(p); toast.success('Ajouté !'); }} style={styles.addBtn} disabled={p.stock === 0}>
-//                     {p.stock === 0 ? 'Rupture' : '+ Ajouter'}
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// const styles = {
-//   nav: { background: '#112219', padding: '0 8%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '80px', position: 'sticky', top: 0, zIndex: 100 },
-//   logo: { fontSize: '1.6rem', fontWeight: '900', color: '#fff', textDecoration: 'none' },
-//   navLinks: { display: 'flex', gap: '25px' },
-//   navLink: { color: 'rgba(255,255,255,0.8)', textDecoration: 'none', fontWeight: '600', transition: '0.3s' },
-//   cartBtn: { background: '#C8410A', color: '#fff', padding: '12px 20px', borderRadius: '10px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold' },
-//   cartBadge: { background: '#fff', color: '#C8410A', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' },
-//   decoBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '10px 18px', borderRadius: '8px', cursor: 'pointer' },
-//   sectionTitre: { fontSize: '2.5rem', fontWeight: '900', color: '#112219' },
-//   dividerLeft: { width: '60px', height: '5px', background: '#F4A76A', borderRadius: '10px' },
-//   searchInput: { width: '100%', padding: '16px 25px', borderRadius: '15px', border: 'none', background: '#fff', boxShadow: '0 5px 20px rgba(0,0,0,0.05)', outline: 'none' },
-//   filtres: { display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '40px' },
-//   filtrBtn: { padding: '12px 24px', borderRadius: '12px', border: 'none', background: '#fff', cursor: 'pointer', fontWeight: '600', color: '#555', transition: '0.3s' },
-//   filtrActif: { background: '#112219', color: '#fff' },
-//   priceFilters: { display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '30px', alignItems: 'center' },
-//   priceInput: { width: '150px', padding: '12px 14px', borderRadius: '10px', border: '1px solid #E2DAD0', outline: 'none' },
-//   resetBtn: { padding: '12px 18px', borderRadius: '10px', border: 'none', background: '#EDE8E0', color: '#112219', fontWeight: '700', cursor: 'pointer' },
-//   emptyState: { background: '#fff', borderRadius: '14px', padding: '30px', color: '#666', marginBottom: '24px', textAlign: 'center' },
-//   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '35px' },
-//   card: { background: '#fff', borderRadius: '25px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.03)' },
-//   imgZone: { height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', background: '#fff' },
-//   productImg: { maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' },
-//   badge: { position: 'absolute', top: '20px', left: '20px', background: '#C8410A', color: '#fff', fontSize: '0.7rem', fontWeight: '900', padding: '6px 14px', borderRadius: '8px' },
-//   info: { padding: '25px' },
-//   catLabel: { fontSize: '0.75rem', fontWeight: '800', color: '#C8410A', textTransform: 'uppercase' },
-//   nomProduit: { fontSize: '1.3rem', fontWeight: '800', color: '#112219' },
-//   desc: { fontSize: '0.9rem', color: '#666', marginBottom: '20px' },
-//   footer: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-//   prix: { fontSize: '1.4rem', fontWeight: '900', color: '#112219' },
-//   addBtn: { background: '#112219', color: '#fff', border: 'none', padding: '12px 22px', borderRadius: '12px', cursor: 'pointer' }
-// };
-
-
-// import React, { useEffect, useState } from 'react';
-// import { Link, useLocation } from 'react-router-dom';
-// import { toast } from 'react-toastify';
-// import api from '../../utils/api';
-// import { useCart } from '../../context/CartContext';
-// import { useAuth } from '../../context/AuthContext';
-// import Icon from '../../components/Icon';
-
-// const CATEGORIES = [
-//   { id: '', label: 'Tous les produits' },
-//   { id: 'Électronique',  label: '📱 Électronique' },
-//   { id: 'Vêtements',     label: '👕 Vêtements' },
-//   { id: 'Alimentation',  label: '🍎 Alimentation' },
-//   { id: 'electromenager', label: '🔌 Électroménager' },
-//   { id: 'Beauté',        label: '💄 Beauté' },
-//   { id: 'immobilier',    label: '🏠 Immobilier' },
-//   { id: 'Sport',         label: '⚽ Sport' },
-//   { id: 'Autre',         label: '📦 Autre' },
-// ];
-
-// export default function Catalogue() {
-//   const { user, deconnexion } = useAuth();
-//   const { ajouterAuPanier, nombreArticles } = useCart();
-//   const location = useLocation();
-  
-//   const [produits, setProduits] = useState([]);
-//   const [categorie, setCategorie] = useState('');
-//   const [recherche, setRecherche] = useState('');
-//   const [minPrix, setMinPrix] = useState('');
-//   const [maxPrix, setMaxPrix] = useState('');
-//   const [hoveredLink, setHoveredLink] = useState(null);
-
-//   useEffect(() => {
-//     const params = new URLSearchParams(location.search);
-//     const catDepuisUrl = params.get('categorie');
-//     if (catDepuisUrl) setCategorie(catDepuisUrl);
-//     else setCategorie('');
-//   }, [location.search]);
-
-//   const charger = async () => {
-//     try {
-//       const params = new URLSearchParams();
-//       if (categorie) params.append('categorie', categorie);
-//       if (recherche) params.append('recherche', recherche);
-//       if (minPrix) params.append('minPrix', minPrix);
-//       if (maxPrix) params.append('maxPrix', maxPrix);
-//       const { data } = await api.get(`/produits?${params}`);
-//       setProduits(data.produits);
-//     } catch (err) { 
-//       toast.error('Erreur lors du chargement des produits.'); 
-//     }
-//   };
-
-//   useEffect(() => {
-//     charger();
-//   }, [categorie, recherche, minPrix, maxPrix]);
-
-//   const getNavLinkStyle = (id) => ({
-//     ...styles.navLink,
-//     color: hoveredLink === id ? '#F4A76A' : 'rgba(255,255,255,0.85)',
-//     transform: hoveredLink === id ? 'translateY(-2px)' : 'translateY(0)',
-//   });
-
-//   return (
-//     <div style={styles.container}>
-//       {/* Navigation */}
-//       <nav style={styles.nav}>
-//         <Link to="/" style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></Link>
-//         <div style={styles.navLinks}>
-//           <Link to="/" style={getNavLinkStyle('home')} onMouseEnter={() => setHoveredLink('home')} onMouseLeave={() => setHoveredLink(null)}>Accueil</Link>
-//           <Link to="/catalogue" style={getNavLinkStyle('cat')} onMouseEnter={() => setHoveredLink('cat')} onMouseLeave={() => setHoveredLink(null)}>Catalogue</Link>
-          
-//           {user ? (
-//             <>
-//               <Link to="/mes-commandes" style={getNavLinkStyle('cmd')} onMouseEnter={() => setHoveredLink('cmd')} onMouseLeave={() => setHoveredLink(null)}>Mes commandes</Link>
-//               <Link to="/panier" style={styles.cartBtn}>
-//                 <Icon name="cart" size={17} />
-//                 <span>Panier</span>
-//                 {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
-//               </Link>
-//               <button onClick={deconnexion} style={styles.decoBtn}>Déconnexion</button>
-//             </>
-//           ) : (
-//             <>
-//               <Link to="/panier" style={styles.cartBtn}>
-//                 <Icon name="cart" size={17} />
-//                 <span>Panier</span>
-//                 {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
-//               </Link>
-//               <Link to="/connexion" style={styles.navLink}>Connexion</Link>
-//               <Link to="/inscription" style={styles.navLink}>Inscription</Link>
-//             </>
-//           )}
-//         </div>
-//       </nav>
-
-//       {/* Contenu principal */}
-//       <div style={styles.main}>
-//         <div style={styles.headerSection}>
-//           <h1 style={styles.title}>Notre Catalogue</h1>
-//           <div style={styles.divider}></div>
-          
-//           {/* Barre de recherche */}
-//           <div style={styles.searchWrapper}>
-//             <Icon name="search" size={18} style={styles.searchIcon} />
-//             <input 
-//               type="text" 
-//               placeholder="Rechercher un produit..." 
-//               value={recherche}
-//               onChange={e => setRecherche(e.target.value)}
-//               style={styles.searchInput} 
-//             />
-//           </div>
-//         </div>
-
-//         {/* Filtres catégories */}
-//         <div style={styles.filtres}>
-//           {CATEGORIES.map(c => (
-//             <button 
-//               key={c.id} 
-//               onClick={() => setCategorie(c.id)}
-//               style={{ ...styles.filtrBtn, ...(categorie === c.id ? styles.filtrActif : {}) }}
-//             >
-//               {c.label}
-//             </button>
-//           ))}
-//         </div>
-
-//         {/* Filtres prix */}
-//         <div style={styles.priceFilters}>
-//           <input
-//             type="number"
-//             min="0"
-//             placeholder="Prix min"
-//             value={minPrix}
-//             onChange={e => setMinPrix(e.target.value)}
-//             style={styles.priceInput}
-//           />
-//           <span style={styles.priceSeparator}>—</span>
-//           <input
-//             type="number"
-//             min="0"
-//             placeholder="Prix max"
-//             value={maxPrix}
-//             onChange={e => setMaxPrix(e.target.value)}
-//             style={styles.priceInput}
-//           />
-//           <button onClick={() => { setMinPrix(''); setMaxPrix(''); setRecherche(''); setCategorie(''); }} style={styles.resetBtn}>
-//             Réinitialiser
-//           </button>
-//         </div>
-
-//         {/* Résultats */}
-//         {produits.length === 0 && (
-//           <div style={styles.emptyState}>
-//             <Icon name="package" size={48} color="#ccc" />
-//             <p>Aucun produit ne correspond à votre recherche.</p>
-//           </div>
-//         )}
-
-//         {/* Grille produits */}
-//         <div style={styles.grid}>
-//           {produits.map((p, idx) => (
-//             <div key={p._id} style={{ ...styles.card, animationDelay: `${idx * 0.05}s` }} className="product-card">
-//               <div style={styles.imgZone}>
-//                 {p.badge && <span style={styles.badge}>{p.badge}</span>}
-//                 {p.images && p.images.length > 0 ? (
-//                   <img 
-//                     src={p.images?.[0]?.startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0]}`} 
-//                     alt={p.nom} 
-//                     style={styles.productImg} 
-//                     onError={(e) => { e.target.src = "https://via.placeholder.com/300?text=Image+Indisponible"; }} 
-//                   />
-//                 ) : (
-//                   <div style={styles.noImage}><Icon name="package" size={48} color="#ccc" /></div>
-//                 )}
-//               </div>
-//               <div style={styles.info}>
-//                 <div style={styles.catLabel}>{p.marque || p.categorie}</div>
-//                 <h3 style={styles.nomProduit}>{p.nom}</h3>
-//                 <p style={styles.desc}>{p.description?.substring(0, 80)}...</p>
-//                 <div style={styles.footer}>
-//                   <div style={styles.prix}>{Number(p.prix).toLocaleString('fr-FR')} FCFA</div>
-//                   <button 
-//                     onClick={() => { ajouterAuPanier(p); toast.success(`${p.nom} ajouté au panier !`); }} 
-//                     style={styles.addBtn} 
-//                     disabled={p.stock === 0}
-//                   >
-//                     {p.stock === 0 ? 'Rupture' : '+ Ajouter'}
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// const styles = {
-//   container: {
-//     fontFamily: "'Inter', -apple-system, sans-serif",
-//     minHeight: '100vh',
-//     background: 'linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%)',
-//   },
-  
-//   // Navigation
-//   nav: {
-//     background: '#112219',
-//     padding: '0 8%',
-//     display: 'flex',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//     height: '80px',
-//     position: 'sticky',
-//     top: 0,
-//     zIndex: 100,
-//     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-//   },
-//   logo: {
-//     fontSize: '1.8rem',
-//     fontWeight: '900',
-//     color: '#fff',
-//     textDecoration: 'none',
-//     letterSpacing: '-0.5px',
-//   },
-//   navLinks: {
-//     display: 'flex',
-//     gap: '8px',
-//     alignItems: 'center',
-//   },
-//   navLink: {
-//     color: 'rgba(255,255,255,0.85)',
-//     textDecoration: 'none',
-//     fontSize: '0.9rem',
-//     fontWeight: '600',
-//     transition: 'all 0.3s ease',
-//     padding: '10px 18px',
-//     borderRadius: '12px',
-//   },
-//   cartBtn: {
-//     background: '#C8410A',
-//     color: '#fff',
-//     padding: '10px 20px',
-//     borderRadius: '40px',
-//     textDecoration: 'none',
-//     fontSize: '0.9rem',
-//     fontWeight: '600',
-//     display: 'flex',
-//     alignItems: 'center',
-//     gap: '8px',
-//     transition: 'all 0.3s ease',
-//   },
-//   cartBadge: {
-//     background: '#fff',
-//     color: '#C8410A',
-//     borderRadius: '50%',
-//     width: '22px',
-//     height: '22px',
-//     display: 'inline-flex',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     fontSize: '0.7rem',
-//     fontWeight: '800',
-//   },
-//   decoBtn: {
-//     background: 'rgba(255,255,255,0.08)',
-//     border: '1px solid rgba(255,255,255,0.2)',
-//     color: '#fff',
-//     padding: '10px 18px',
-//     borderRadius: '40px',
-//     cursor: 'pointer',
-//     fontSize: '0.9rem',
-//     fontWeight: '600',
-//     transition: 'all 0.3s ease',
-//   },
-  
-//   // Main content
-//   main: {
-//     padding: '60px 8%',
-//   },
-//   headerSection: {
-//     marginBottom: '50px',
-//   },
-//   title: {
-//     fontSize: '2.5rem',
-//     fontWeight: '900',
-//     color: '#112219',
-//     marginBottom: '16px',
-//   },
-//   divider: {
-//     width: '60px',
-//     height: '4px',
-//     background: 'linear-gradient(90deg, #C8410A, #F4A76A)',
-//     borderRadius: '10px',
-//     marginBottom: '30px',
-//   },
-  
-//   // Search
-//   searchWrapper: {
-//     position: 'relative',
-//     maxWidth: '500px',
-//   },
-//   searchIcon: {
-//     position: 'absolute',
-//     left: '16px',
-//     top: '50%',
-//     transform: 'translateY(-50%)',
-//     color: '#999',
-//   },
-//   searchInput: {
-//     width: '100%',
-//     padding: '14px 20px 14px 45px',
-//     borderRadius: '50px',
-//     border: 'none',
-//     background: '#fff',
-//     boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-//     outline: 'none',
-//     fontSize: '0.9rem',
-//     transition: 'all 0.3s ease',
-//   },
-  
-//   // Filters
-//   filtres: {
-//     display: 'flex',
-//     gap: '10px',
-//     flexWrap: 'wrap',
-//     marginBottom: '30px',
-//   },
-//   filtrBtn: {
-//     padding: '10px 22px',
-//     borderRadius: '40px',
-//     border: 'none',
-//     background: '#fff',
-//     cursor: 'pointer',
-//     fontWeight: '600',
-//     color: '#555',
-//     fontSize: '0.85rem',
-//     transition: 'all 0.3s ease',
-//     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-//   },
-//   filtrActif: {
-//     background: '#112219',
-//     color: '#fff',
-//     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-//   },
-  
-//   // Price filters
-//   priceFilters: {
-//     display: 'flex',
-//     gap: '12px',
-//     flexWrap: 'wrap',
-//     alignItems: 'center',
-//     marginBottom: '40px',
-//     padding: '16px',
-//     background: '#fff',
-//     borderRadius: '60px',
-//     boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-//   },
-//   priceInput: {
-//     width: '130px',
-//     padding: '12px 16px',
-//     borderRadius: '40px',
-//     border: '1px solid #E0E0E0',
-//     outline: 'none',
-//     fontSize: '0.85rem',
-//     textAlign: 'center',
-//   },
-//   priceSeparator: {
-//     color: '#999',
-//     fontWeight: '600',
-//   },
-//   resetBtn: {
-//     padding: '12px 24px',
-//     borderRadius: '40px',
-//     border: 'none',
-//     background: '#F0F0F0',
-//     color: '#555',
-//     fontWeight: '600',
-//     cursor: 'pointer',
-//     transition: 'all 0.3s ease',
-//   },
-  
-//   // Empty state
-//   emptyState: {
-//     textAlign: 'center',
-//     padding: '80px 20px',
-//     background: '#fff',
-//     borderRadius: '24px',
-//     color: '#999',
-//   },
-  
-//   // Product grid
-//   grid: {
-//     display: 'grid',
-//     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-//     gap: '30px',
-//   },
-//   card: {
-//     background: '#fff',
-//     borderRadius: '20px',
-//     overflow: 'hidden',
-//     boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-//     transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-//     animation: 'fadeInUp 0.5s ease-out backwards',
-//   },
-//   imgZone: {
-//     height: '250px',
-//     display: 'flex',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     position: 'relative',
-//     background: '#FAFAFA',
-//   },
-//   productImg: {
-//     maxWidth: '90%',
-//     maxHeight: '90%',
-//     objectFit: 'contain',
-//   },
-//   noImage: {
-//     display: 'flex',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     width: '100%',
-//     height: '100%',
-//   },
-//   badge: {
-//     position: 'absolute',
-//     top: '16px',
-//     left: '16px',
-//     background: '#C8410A',
-//     color: '#fff',
-//     fontSize: '0.7rem',
-//     fontWeight: '800',
-//     padding: '4px 12px',
-//     borderRadius: '20px',
-//   },
-//   info: {
-//     padding: '20px',
-//   },
-//   catLabel: {
-//     fontSize: '0.7rem',
-//     fontWeight: '700',
-//     color: '#C8410A',
-//     textTransform: 'uppercase',
-//     letterSpacing: '1px',
-//     marginBottom: '8px',
-//   },
-//   nomProduit: {
-//     fontSize: '1.1rem',
-//     fontWeight: '700',
-//     color: '#112219',
-//     marginBottom: '8px',
-//   },
-//   desc: {
-//     fontSize: '0.85rem',
-//     color: '#666',
-//     marginBottom: '16px',
-//     lineHeight: 1.4,
-//   },
-//   footer: {
-//     display: 'flex',
-//     alignItems: 'center',
-//     justifyContent: 'space-between',
-//   },
-//   prix: {
-//     fontSize: '1.3rem',
-//     fontWeight: '800',
-//     color: '#C8410A',
-//   },
-//   addBtn: {
-//     background: '#112219',
-//     color: '#fff',
-//     border: 'none',
-//     padding: '10px 20px',
-//     borderRadius: '40px',
-//     cursor: 'pointer',
-//     fontWeight: '600',
-//     fontSize: '0.8rem',
-//     transition: 'all 0.3s ease',
-//   },
-// };
-
-// // Injection des animations globales
-// const styleSheet = document.createElement("style");
-// styleSheet.textContent = `
-//   @keyframes fadeInUp {
-//     from {
-//       opacity: 0;
-//       transform: translateY(30px);
-//     }
-//     to {
-//       opacity: 1;
-//       transform: translateY(0);
-//     }
-//   }
-  
-//   .product-card {
-//     animation: fadeInUp 0.5s ease-out backwards;
-//   }
-  
-//   .product-card:hover {
-//     transform: translateY(-8px);
-//     box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-//   }
-  
-//   .product-card:hover .add-btn {
-//     background: #C8410A;
-//     transform: scale(1.02);
-//   }
-  
-//   .cart-btn:hover, .hero-btn:hover, .add-btn:hover {
-//     transform: translateY(-2px);
-//     box-shadow: 0 8px 20px rgba(200, 65, 10, 0.3);
-//   }
-  
-//   .filtr-btn:hover {
-//     background: #112219;
-//     color: #fff;
-//     transform: translateY(-2px);
-//   }
-  
-//   .reset-btn:hover {
-//     background: #E0E0E0;
-//     transform: translateY(-2px);
-//   }
-  
-//   .deco-btn:hover {
-//     background: rgba(255,255,255,0.15);
-//     transform: translateY(-2px);
-//   }
-  
-//   .nav-link:hover {
-//     background: rgba(255,255,255,0.08);
-//     transform: translateY(-2px);
-//   }
-  
-//   .search-input:focus {
-//     box-shadow: 0 4px 15px rgba(200, 65, 10, 0.15);
-//     border: 1px solid #C8410A;
-//   }
-  
-//   .category-card:hover .card-arrow {
-//     transform: translateX(8px);
-//   }
-  
-//   /* Scrollbar */
-//   ::-webkit-scrollbar {
-//     width: 8px;
-//   }
-//   ::-webkit-scrollbar-track {
-//     background: #F1F1F1;
-//   }
-//   ::-webkit-scrollbar-thumb {
-//     background: #C8410A;
-//     border-radius: 10px;
-//   }
-//   ::-webkit-scrollbar-thumb:hover {
-//     background: #E8622A;
-//   }
-// `;
-// document.head.appendChild(styleSheet);
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -803,6 +33,21 @@ export default function Catalogue() {
   const [hoveredProduct, setHoveredProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('recent');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Détecter les changements de taille d'écran
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setMobileFiltersOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -855,12 +100,13 @@ export default function Catalogue() {
     setRecherche('');
     setCategorie('');
     setSortBy('recent');
+    setMobileFiltersOpen(false);
   };
 
   return (
     <div style={styles.container}>
       
-      {/* Navigation */}
+      {/* Navigation avec menu burger */}
       <nav style={styles.nav}>
         <Link to="/" style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></Link>
         
@@ -868,18 +114,17 @@ export default function Catalogue() {
           <div style={styles.searchWrapper}>
             <input 
               type="text" 
-              placeholder="Rechercher un produit..." 
+              placeholder="Rechercher..." 
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
               style={styles.searchInput} 
             />
-            <button style={styles.searchBtn}>
-              🔍
-            </button>
+            <button style={styles.searchBtn}>🔍</button>
           </div>
         </div>
 
-        <div style={styles.navRight}>
+        {/* Menu Desktop - SANS le bouton Catalogue */}
+        <div className="desktop-menu" style={styles.desktopMenu}>
           <Link to="/" style={getNavLinkStyle('home')} onMouseEnter={() => setHoveredLink('home')} onMouseLeave={() => setHoveredLink(null)}>Accueil</Link>
           
           {user ? (
@@ -904,13 +149,63 @@ export default function Catalogue() {
             </>
           )}
         </div>
+
+        {/* Bouton Menu Mobile */}
+        <button className="mobile-menu-btn" onClick={() => setMenuOpen(!menuOpen)} style={styles.mobileMenuBtn}>
+          <Icon name={menuOpen ? "x" : "menu"} size={24} color="#fff" />
+        </button>
       </nav>
+
+      {/* Menu Mobile Déroulant - SANS le bouton Catalogue */}
+      {menuOpen && (
+        <div style={styles.mobileMenu}>
+          <Link to="/" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Accueil</Link>
+          {user ? (
+            <>
+              <Link to="/mes-commandes" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Commandes</Link>
+              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
+              </Link>
+              <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn}>Déconnexion</button>
+            </>
+          ) : (
+            <>
+              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
+              </Link>
+              <Link to="/connexion" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Connexion</Link>
+              <Link to="/inscription" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Inscription</Link>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Bouton Filtres Mobile (visible uniquement sur mobile) */}
+      {isMobile && (
+        <div style={styles.mobileFilterBar}>
+          <button onClick={() => setMobileFiltersOpen(true)} style={styles.mobileFilterBtn}>
+            🔍 Filtres
+            {(categorie || minPrix || maxPrix) && <span style={styles.filterActiveDot}></span>}
+          </button>
+          <div style={styles.filterInfo}>
+            {(categorie || minPrix || maxPrix) && <span style={styles.filterActiveText}>Filtres actifs</span>}
+          </div>
+        </div>
+      )}
 
       {/* Layout : Sidebar + Contenu */}
       <div style={styles.mainLayout}>
         
-        {/* Sidebar */}
-        <aside style={styles.sidebar}>
+        {/* Sidebar - Visible en desktop, overlay en mobile */}
+        <aside style={{ 
+          ...styles.sidebar,
+          transform: isMobile ? (mobileFiltersOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+          position: isMobile ? 'fixed' : 'sticky',
+        }}>
+          <div style={styles.sidebarHeader}>
+            <h3 style={styles.sidebarHeaderTitle}>Filtres</h3>
+            <button onClick={() => setMobileFiltersOpen(false)} style={styles.closeSidebarBtn}>✕</button>
+          </div>
           
           {/* Section Catégories */}
           <div style={styles.sidebarSection}>
@@ -919,7 +214,7 @@ export default function Catalogue() {
               {CATEGORIES.map(c => (
                 <button 
                   key={c.id} 
-                  onClick={() => setCategorie(c.id)}
+                  onClick={() => { setCategorie(c.id); if(isMobile) setMobileFiltersOpen(false); }}
                   className="category-btn"
                   style={{ ...styles.categoryBtn, ...(categorie === c.id ? styles.categoryBtnActive : {}) }}
                 >
@@ -967,6 +262,9 @@ export default function Catalogue() {
           )}
         </aside>
 
+        {/* Overlay pour mobile */}
+        {isMobile && mobileFiltersOpen && <div style={styles.overlay} onClick={() => setMobileFiltersOpen(false)}></div>}
+
         {/* Contenu principal */}
         <main style={styles.content}>
           <div style={styles.resultsHeader}>
@@ -974,22 +272,22 @@ export default function Catalogue() {
               <span>{produits.length} résultats</span>
             </div>
             <div style={styles.sortSection}>
-              <span style={styles.sortLabel}>Trier par :</span>
+              <span style={styles.sortLabel}>Trier :</span>
               <select 
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)}
                 style={styles.sortSelect}
               >
                 <option value="recent">Plus récents</option>
-                <option value="price_asc">Prix : croissant</option>
-                <option value="price_desc">Prix : décroissant</option>
+                <option value="price_asc">Prix croissant</option>
+                <option value="price_desc">Prix décroissant</option>
               </select>
             </div>
           </div>
 
           {loading && (
             <div style={styles.loadingGrid}>
-              {[1,2,3,4,5,6,7,8].map(i => (
+              {[1,2,3,4,5,6].map(i => (
                 <div key={i} style={styles.skeletonCard}>
                   <div style={styles.skeletonImage}></div>
                   <div style={styles.skeletonInfo}>
@@ -1006,7 +304,7 @@ export default function Catalogue() {
             <div style={styles.emptyState}>
               <div style={styles.emptyIcon}>🔍</div>
               <h3 style={styles.emptyTitle}>Aucun résultat trouvé</h3>
-              <p style={styles.emptyText}>Essayez d'autres mots-clés ou consultez nos meilleures ventes</p>
+              <p style={styles.emptyText}>Essayez d'autres mots-clés</p>
               <button onClick={resetFilters} style={styles.emptyBtn}>Voir tous les produits</button>
             </div>
           )}
@@ -1067,6 +365,89 @@ export default function Catalogue() {
           )}
         </main>
       </div>
+
+      {/* Styles responsives injectés */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 768px) {
+          .desktop-menu {
+            display: none !important;
+          }
+          .mobile-menu-btn {
+            display: flex !important;
+          }
+          .search-container {
+            max-width: 160px !important;
+          }
+          .search-input {
+            padding: 8px 10px !important;
+            font-size: 0.7rem !important;
+          }
+          .search-btn {
+            padding: 0 10px !important;
+          }
+          .main-layout {
+            padding: 12px !important;
+          }
+          .grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+          }
+          .card-image-wrapper {
+            height: 130px !important;
+          }
+          .card-title {
+            font-size: 0.7rem !important;
+          }
+          .price-amount {
+            font-size: 0.85rem !important;
+          }
+          .add-btn {
+            padding: 4px 6px !important;
+            font-size: 0.6rem !important;
+          }
+          .results-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 10px !important;
+          }
+          .cart-btn span {
+            display: none;
+          }
+          .cart-btn {
+            padding: 6px 8px !important;
+          }
+          .logo {
+            font-size: 1.1rem !important;
+          }
+        }
+        
+        @media (min-width: 769px) {
+          .mobile-filter-bar {
+            display: none !important;
+          }
+          .sidebar-header {
+            display: none !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .card-image-wrapper {
+            height: 110px !important;
+          }
+          .card-content {
+            padding: 8px !important;
+          }
+          .search-container {
+            max-width: 120px !important;
+          }
+          .hero-titre {
+            font-size: 1rem !important;
+          }
+        }
+      ` }} />
     </div>
   );
 }
@@ -1127,6 +508,104 @@ const styles = {
     justifyContent: 'center',
     fontSize: '1.1rem',
     transition: 'all 0.2s ease',
+  },
+  desktopMenu: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center',
+  },
+  mobileMenuBtn: {
+    display: 'none',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileMenu: {
+    position: 'absolute',
+    top: '60px',
+    left: 0,
+    right: 0,
+    background: '#112219',
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    zIndex: 99,
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+  },
+  mobileMenuItem: {
+    color: '#fff',
+    textDecoration: 'none',
+    padding: '12px 16px',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    background: 'rgba(255,255,255,0.05)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mobileBadge: {
+    background: '#C8410A',
+    color: '#fff',
+    padding: '2px 8px',
+    borderRadius: '20px',
+    fontSize: '0.7rem',
+  },
+  mobileDecoBtn: {
+    width: '100%',
+    textAlign: 'left',
+    background: 'rgba(231, 76, 60, 0.2)',
+    border: 'none',
+    color: '#E74C3C',
+    padding: '12px 16px',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    cursor: 'pointer',
+  },
+  mobileFilterBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 16px',
+    background: '#fff',
+    borderBottom: '1px solid #E8E8E8',
+    marginBottom: '12px',
+  },
+  mobileFilterBtn: {
+    background: '#C8410A',
+    color: '#fff',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '20px',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    position: 'relative',
+  },
+  filterActiveDot: {
+    width: '8px',
+    height: '8px',
+    background: '#2ECC71',
+    borderRadius: '50%',
+    position: 'absolute',
+    top: '-2px',
+    right: '-2px',
+  },
+  filterActiveText: {
+    fontSize: '0.7rem',
+    color: '#C8410A',
+    fontWeight: '500',
+  },
+  filterInfo: {
+    display: 'flex',
+    alignItems: 'center',
   },
   navRight: {
     display: 'flex',
@@ -1193,10 +672,33 @@ const styles = {
     borderRadius: '12px',
     padding: '20px 0',
     height: 'fit-content',
-    position: 'sticky',
     top: '80px',
     boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
     border: '1px solid #E8E8E8',
+    transition: 'transform 0.3s ease',
+    zIndex: 1000,
+    overflowY: 'auto',
+  },
+  sidebarHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0 20px 16px 20px',
+    borderBottom: '1px solid #E8E8E8',
+    marginBottom: '16px',
+  },
+  sidebarHeaderTitle: {
+    fontSize: '1rem',
+    fontWeight: '700',
+    color: '#112219',
+    margin: 0,
+  },
+  closeSidebarBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: '1.2rem',
+    cursor: 'pointer',
+    color: '#666',
   },
   sidebarSection: {
     padding: '0 20px 20px 20px',
@@ -1210,8 +712,6 @@ const styles = {
     marginBottom: '15px',
     letterSpacing: '0.3px',
   },
-  
-  // Boutons de catégories simplifiés (effet zoom + ombre)
   categoryList: {
     display: 'flex',
     flexDirection: 'column',
@@ -1241,8 +741,6 @@ const styles = {
     fontWeight: 'bold',
     fontSize: '0.8rem',
   },
-  
-  // Prix
   priceRange: {
     display: 'flex',
     alignItems: 'center',
@@ -1292,6 +790,15 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
   },
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.5)',
+    zIndex: 999,
+  },
   
   // Content
   content: {
@@ -1305,6 +812,8 @@ const styles = {
     alignItems: 'center',
     marginBottom: '20px',
     padding: '10px 0',
+    flexWrap: 'wrap',
+    gap: '10px',
   },
   resultsCount: {
     fontSize: '0.85rem',
@@ -1336,7 +845,7 @@ const styles = {
   // Loading
   loadingGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
     gap: '20px',
   },
   skeletonCard: {
@@ -1345,7 +854,7 @@ const styles = {
     overflow: 'hidden',
   },
   skeletonImage: {
-    height: '200px',
+    height: '180px',
     background: 'linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
@@ -1409,7 +918,7 @@ const styles = {
   // Product Grid
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
     gap: '20px',
   },
   card: {
@@ -1427,7 +936,7 @@ const styles = {
   },
   cardImageWrapper: {
     position: 'relative',
-    height: '200px',
+    height: '180px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1461,7 +970,7 @@ const styles = {
     padding: '15px',
   },
   cardTitle: {
-    fontSize: '0.9rem',
+    fontSize: '0.85rem',
     fontWeight: '600',
     color: '#112219',
     marginBottom: '8px',
@@ -1475,12 +984,12 @@ const styles = {
     marginBottom: '8px',
   },
   priceAmount: {
-    fontSize: '1.2rem',
+    fontSize: '1.1rem',
     fontWeight: '700',
     color: '#C8410A',
   },
   priceCurrency: {
-    fontSize: '0.7rem',
+    fontSize: '0.65rem',
     fontWeight: '500',
     color: '#C8410A',
     marginLeft: '2px',
@@ -1502,7 +1011,7 @@ const styles = {
     color: '#E74C3C',
   },
   addBtn: {
-    margin: '0 15px 15px 15px',
+    margin: '0 12px 12px 12px',
     padding: '8px',
     background: '#112219',
     border: 'none',
@@ -1541,7 +1050,6 @@ styleSheet.textContent = `
     transform: translateY(-1px);
   }
   
-  /* Effet zoom + ombre au survol des boutons catégories */
   .category-btn:hover {
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -1566,8 +1074,23 @@ styleSheet.textContent = `
     box-shadow: 0 0 0 2px rgba(200, 65, 10, 0.1);
   }
   
+  .mobile-menu {
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
   ::-webkit-scrollbar-track {
     background: #F1F1F1;
