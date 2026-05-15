@@ -97,6 +97,7 @@ export default function Accueil() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isHoveringHero, setIsHoveringHero] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const intervalRef = useRef(null);
 
   // Fonction pour passer à l'image suivante
@@ -162,7 +163,7 @@ export default function Accueil() {
 
   return (
     <div style={styles.container}>
-      {/* Navigation */}
+      {/* Navigation avec menu burger */}
       <nav style={styles.nav}>
         <div style={styles.logoContainer}>
           <Link to="/" style={styles.logoLink}>
@@ -172,7 +173,9 @@ export default function Accueil() {
             TEY<span style={{ color: '#F4A76A' }}>SHOP</span>
           </Link>
         </div>
-        <div style={styles.navLinks}>
+        
+        {/* Menu Desktop */}
+        <div className="desktop-menu" style={styles.desktopMenu}>
           <Link to="/catalogue" style={getNavLinkStyle('cat')} onMouseEnter={() => setHoveredLink('cat')} onMouseLeave={() => setHoveredLink(null)}>Catalogue</Link>
           
           {user ? (
@@ -198,7 +201,37 @@ export default function Accueil() {
             </>
           )}
         </div>
+
+        {/* Bouton Menu Mobile */}
+        <button className="mobile-menu-btn" onClick={() => setMenuOpen(!menuOpen)} style={styles.mobileMenuBtn}>
+          <Icon name={menuOpen ? "x" : "menu"} size={24} color="#fff" />
+        </button>
       </nav>
+
+      {/* Menu Mobile Déroulant */}
+      {menuOpen && (
+        <div style={styles.mobileMenu}>
+          <Link to="/catalogue" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Catalogue</Link>
+          {user ? (
+            <>
+              <Link to="/mes-commandes" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Mes commandes</Link>
+              <Link to="/profil" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Mon profil</Link>
+              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
+              </Link>
+              <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn}>Déconnexion</button>
+            </>
+          ) : (
+            <>
+              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
+              </Link>
+              <Link to="/connexion" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Connexion</Link>
+              <Link to="/inscription" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Inscription</Link>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Hero Section - Texte de bienvenue visible sur toutes les images */}
       <div 
@@ -291,6 +324,146 @@ export default function Accueil() {
           ))}
         </div>
       </section>
+
+      {/* Styles responsives injectés */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* ===== MEDIA QUERIES RESPONSIVES ===== */
+        
+        /* Tablette et mobile */
+        @media (max-width: 992px) {
+          .cat-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 20px !important;
+          }
+          .section {
+            padding: 50px 5% !important;
+          }
+          .section-titre {
+            font-size: 1.8rem !important;
+          }
+        }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+          /* Menu desktop caché */
+          .desktop-menu {
+            display: none !important;
+          }
+          .mobile-menu-btn {
+            display: flex !important;
+          }
+          
+          /* Navbar */
+          .nav {
+            padding: 0 16px !important;
+            height: 65px !important;
+          }
+          .logo-image {
+            height: 35px !important;
+          }
+          .logo-text {
+            font-size: 1.2rem !important;
+          }
+          
+          /* Hero */
+          .hero-wrapper {
+            min-height: 50vh !important;
+          }
+          .hero-badge {
+            font-size: 1.2rem !important;
+            margin-bottom: 10px !important;
+          }
+          .hero-titre {
+            font-size: 1.5rem !important;
+          }
+          .hero-sub {
+            font-size: 0.85rem !important;
+          }
+          
+          /* Section */
+          .section {
+            padding: 40px 16px !important;
+          }
+          .section-titre {
+            font-size: 1.4rem !important;
+          }
+          .section-sub {
+            font-size: 0.85rem !important;
+          }
+          
+          /* Catégories */
+          .cat-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 15px !important;
+          }
+          .card-image-wrapper {
+            height: 140px !important;
+          }
+          .card-label {
+            font-size: 0.85rem !important;
+          }
+          .card-desc {
+            font-size: 0.65rem !important;
+          }
+          .card-arrow {
+            font-size: 0.7rem !important;
+          }
+          .card-info {
+            padding: 12px !important;
+          }
+          .icon-badge {
+            width: 30px !important;
+            height: 30px !important;
+          }
+          .icon-badge svg {
+            width: 14px !important;
+            height: 14px !important;
+          }
+          
+          /* Bouton panier */
+          .cart-btn span {
+            display: none;
+          }
+          .cart-btn {
+            padding: 8px 12px !important;
+          }
+        }
+        
+        /* Très petit mobile */
+        @media (max-width: 480px) {
+          .cat-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .card-image-wrapper {
+            height: 180px !important;
+          }
+          .hero-wrapper {
+            min-height: 40vh !important;
+          }
+          .hero-titre {
+            font-size: 1.2rem !important;
+          }
+          .progress-bar-container {
+            display: none !important;
+          }
+        }
+        
+        /* Animation menu mobile */
+        .mobile-menu {
+          animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      ` }} />
     </div>
   );
 }
@@ -336,6 +509,63 @@ const styles = {
     color: '#fff',
     textDecoration: 'none',
     letterSpacing: '-0.5px',
+  },
+  desktopMenu: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+  },
+  mobileMenuBtn: {
+    display: 'none',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileMenu: {
+    position: 'absolute',
+    top: '80px',
+    left: 0,
+    right: 0,
+    background: '#112219',
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    zIndex: 99,
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+  },
+  mobileMenuItem: {
+    color: '#fff',
+    textDecoration: 'none',
+    padding: '12px 16px',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    background: 'rgba(255,255,255,0.05)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mobileBadge: {
+    background: '#C8410A',
+    color: '#fff',
+    padding: '2px 8px',
+    borderRadius: '20px',
+    fontSize: '0.7rem',
+  },
+  mobileDecoBtn: {
+    width: '100%',
+    textAlign: 'left',
+    background: 'rgba(231, 76, 60, 0.2)',
+    border: 'none',
+    color: '#E74C3C',
+    padding: '12px 16px',
+    borderRadius: '10px',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    cursor: 'pointer',
   },
   navLinks: {
     display: 'flex',
@@ -444,7 +674,7 @@ const styles = {
     opacity: 0.9,
   },
   heroTitre: {
-    fontSize: 'clamp(2rem, 5vw, 3.8rem)',
+    fontSize: 'clamp(1.5rem, 5vw, 3.8rem)',
     fontWeight: '800',
     marginBottom: '16px',
     lineHeight: 1.2,
@@ -468,7 +698,7 @@ const styles = {
     animation: 'pulse 2s ease-in-out infinite',
   },
   heroSub: {
-    fontSize: '1.15rem',
+    fontSize: 'clamp(0.85rem, 3vw, 1.15rem)',
     fontWeight: '400',
     color: 'rgba(255,255,255,0.95)',
     textShadow: '1px 1px 4px rgba(0,0,0,0.3)',
@@ -500,10 +730,10 @@ const styles = {
   },
   sectionHeader: {
     textAlign: 'center',
-    marginBottom: '60px',
+    marginBottom: 'clamp(30px, 5vw, 60px)',
   },
   sectionTitre: {
-    fontSize: '2.2rem',
+    fontSize: 'clamp(1.4rem, 4vw, 2.2rem)',
     fontWeight: '900',
     color: '#112219',
     marginBottom: '16px',
@@ -517,13 +747,13 @@ const styles = {
   },
   sectionSub: {
     color: '#666',
-    fontSize: '1rem',
+    fontSize: 'clamp(0.8rem, 3vw, 1rem)',
   },
   
   // Catégories Grid
   catGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
     gap: '30px',
   },
   catCard: {
