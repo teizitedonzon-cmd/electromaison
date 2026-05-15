@@ -1156,7 +1156,7 @@ export default function Accueil() {
                 </>
               ) : (
                 <>
-                  Bienvenue chez <span style={styles.brandName}>TEYSHOP</span>
+                  Bienvenue chef <span style={styles.brandName}>TEYSHOP</span>
                 </>
               )}
             </h1>
