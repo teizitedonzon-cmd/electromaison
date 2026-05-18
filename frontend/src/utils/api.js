@@ -6,8 +6,20 @@ const normalizeApiUrl = (url) => {
   return rawUrl.endsWith('/api') ? rawUrl : `${rawUrl}/api`;
 };
 
+const getApiBaseUrl = () => {
+  const configuredUrl = normalizeApiUrl(process.env.REACT_APP_API_URL);
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isVercelApp = hostname === 'electromaison.vercel.app' || hostname.endsWith('.vercel.app');
+
+  if (isVercelApp && configuredUrl.includes('onrender.com')) {
+    return '/api';
+  }
+
+  return configuredUrl;
+};
+
 const api = axios.create({
-  baseURL: normalizeApiUrl(process.env.REACT_APP_API_URL),
+  baseURL: getApiBaseUrl(),
 });
 
 api.interceptors.request.use(
