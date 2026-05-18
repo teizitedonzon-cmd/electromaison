@@ -52,7 +52,7 @@ export default function Inscription() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.card}>
+      <div style={styles.card} className="card">
         {/* Logo centré avec nom en dessous - Titre "Inscription" supprimé */}
         <Link to="/" style={styles.logoLink}>
           <div style={styles.logoContainer}>
@@ -68,7 +68,7 @@ export default function Inscription() {
         <form onSubmit={handleSubmit}>
           {/* Photo de profil */}
           <div style={styles.photoSection}>
-            <div style={styles.photoWrapper} onClick={() => document.getElementById('photoInput').click()}>
+            <div style={styles.photoWrapper} className="photo-wrapper" onClick={() => document.getElementById('photoInput').click()}>
               {preview ? (
                 <img src={preview} alt="Profil" style={styles.photoPreview} />
               ) : (
@@ -87,19 +87,19 @@ export default function Inscription() {
             <p style={styles.photoHint}>Cliquez pour ajouter une photo</p>
           </div>
 
-          <div style={styles.formRow}>
+          <div style={styles.formRow} className="formRow">
             <div style={styles.champ}>
               <label style={styles.label}>Prénom</label>
               <div style={styles.inputWrapper}>
-                <Icon name="user" size={16} style={styles.inputIcon} />
-                <input name="prenom" placeholder="Jean" onChange={handleChange} required style={styles.input} />
+                <Icon name="user" size={16} style={styles.inputIcon} className="inputIcon" />
+                <input name="prenom" placeholder="Jean" onChange={handleChange} required style={styles.input} className="input" />
               </div>
             </div>
             <div style={styles.champ}>
               <label style={styles.label}>Nom</label>
               <div style={styles.inputWrapper}>
-                <Icon name="user" size={16} style={styles.inputIcon} />
-                <input name="nom" placeholder="Dupont" onChange={handleChange} required style={styles.input} />
+                <Icon name="user" size={16} style={styles.inputIcon} className="inputIcon" />
+                <input name="nom" placeholder="Dupont" onChange={handleChange} required style={styles.input} className="input" />
               </div>
             </div>
           </div>
@@ -107,23 +107,23 @@ export default function Inscription() {
           <div style={styles.champ}>
             <label style={styles.label}>Email</label>
             <div style={styles.inputWrapper}>
-              <Icon name="mail" size={16} style={styles.inputIcon} />
-              <input name="email" type="email" placeholder="jean@exemple.com" onChange={handleChange} required style={styles.input} />
+              <Icon name="mail" size={16} style={styles.inputIcon} className="inputIcon" />
+              <input name="email" type="email" placeholder="jean@exemple.com" onChange={handleChange} required style={styles.input} className="input" />
             </div>
           </div>
 
           <div style={styles.champ}>
             <label style={styles.label}>Téléphone</label>
             <div style={styles.inputWrapper}>
-              <Icon name="phone" size={16} style={styles.inputIcon} />
-              <input name="telephone" placeholder="+225 XX XX XX XX" onChange={handleChange} style={styles.input} />
+              <Icon name="phone" size={16} style={styles.inputIcon} className="inputIcon" />
+              <input name="telephone" placeholder="+225 XX XX XX XX" onChange={handleChange} style={styles.input} className="input" />
             </div>
           </div>
 
           <div style={styles.champ}>
             <label style={styles.label}>Mot de passe</label>
             <div style={styles.inputWrapper}>
-              <Icon name="lock" size={16} style={styles.inputIcon} />
+              <Icon name="lock" size={16} style={styles.inputIcon} className="inputIcon" />
               <input
                 name="motDePasse"
                 type={showPassword ? "text" : "password"}
@@ -131,6 +131,7 @@ export default function Inscription() {
                 onChange={handleChange}
                 required
                 style={styles.input}
+                className="input"
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
                 <Icon name={showPassword ? "eye-off" : "eye"} size={16} color="#999" />
@@ -140,11 +141,12 @@ export default function Inscription() {
 
           <div style={styles.champ}>
             <label style={styles.label}>Je suis un :</label>
-            <div style={styles.roleContainer}>
+            <div style={styles.roleContainer} className="roleContainer">
               <button
                 type="button"
                 onClick={() => setForm({ ...form, role: 'client' })}
                 style={{ ...styles.roleBtn, ...(form.role === 'client' ? styles.roleActif : {}) }}
+                className="role-btn"
               >
                 <Icon name="user" size={16} />
                 <span>Client</span>
@@ -153,6 +155,7 @@ export default function Inscription() {
                 type="button"
                 onClick={() => setForm({ ...form, role: 'vendeur' })}
                 style={{ ...styles.roleBtn, ...(form.role === 'vendeur' ? styles.roleActif : {}) }}
+                className="role-btn"
               >
                 <Icon name="store" size={16} />
                 <span>Vendeur</span>
