@@ -37,7 +37,7 @@ export default function Connexion() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.card}>
+      <div style={styles.card} className="card">
         {/* Logo centré avec nom en dessous */}
         <Link to="/" style={styles.logoLink}>
           <div style={styles.logoContainer}>
@@ -54,11 +54,11 @@ export default function Connexion() {
           <div style={styles.champ}>
             <label style={styles.label}>Email</label>
             <div style={styles.inputWrapper}>
-              <Icon name="mail" size={18} style={styles.inputIcon} />
+              <Icon name="mail" size={18} style={styles.inputIcon} className="inputIcon" />
               <input
                 type="email" name="email" required
                 value={form.email} onChange={handleChange}
-                style={styles.input} placeholder="vous@exemple.com"
+                style={styles.input} className="input" placeholder="vous@exemple.com"
               />
             </div>
           </div>
@@ -66,13 +66,13 @@ export default function Connexion() {
           <div style={styles.champ}>
             <label style={styles.label}>Mot de passe</label>
             <div style={styles.inputWrapper}>
-              <Icon name="lock" size={18} style={styles.inputIcon} />
+              <Icon name="lock" size={18} style={styles.inputIcon} className="inputIcon" />
               <input
                 type={showPassword ? "text" : "password"} name="motDePasse" required
                 value={form.motDePasse} onChange={handleChange}
                 style={styles.input} placeholder="••••••••"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+              <button type="button" onClick={() => setShowPassword(!showPassword)} style={styles.eyeBtn} className="eye-btn">
                 <Icon name={showPassword ? "eye-off" : "eye"} size={18} color="#999" />
               </button>
             </div>
