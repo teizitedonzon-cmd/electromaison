@@ -39,20 +39,22 @@ export default function AdminCommandes() {
   };
 
   return (
-    <div style={styles.layout}>
-      <aside style={styles.sidebar}>
+    <div style={styles.layout} className="admin-responsive-layout">
+      <aside style={styles.sidebar} className="admin-responsive-sidebar">
         <h2 style={styles.sidebarLogo}>TeyShop Admin</h2>
-        {[
-          ['dashboard', 'Tableau de bord', '/admin/dashboard'],
-          ['package', 'Produits', '/admin/produits'],
-          ['cart', 'Commandes', '/admin/commandes'],
-          ['users', 'Utilisateurs', '/admin/clients']
-        ].map(([ic, lb, pt]) => (
-          <Link key={pt} to={pt} style={styles.menuItem}><Icon name={ic} size={18} /> {lb}</Link>
-        ))}
+        <nav style={styles.nav} className="admin-responsive-nav">
+          {[
+            ['dashboard', 'Tableau de bord', '/admin/dashboard'],
+            ['package', 'Produits', '/admin/produits'],
+            ['cart', 'Commandes', '/admin/commandes'],
+            ['users', 'Utilisateurs', '/admin/clients']
+          ].map(([ic, lb, pt]) => (
+            <Link key={pt} to={pt} style={styles.menuItem}><Icon name={ic} size={18} /> {lb}</Link>
+          ))}
+        </nav>
       </aside>
 
-      <main style={styles.main}>
+      <main style={styles.main} className="admin-responsive-main">
         <h1 style={styles.titre}>Gestion des commandes</h1>
 
         <div style={styles.filtres}>
@@ -64,7 +66,7 @@ export default function AdminCommandes() {
           ))}
         </div>
 
-        <div style={styles.tableWrap}>
+        <div style={styles.tableWrap} className="responsive-table">
           <table style={styles.table}>
             <thead>
               <tr style={styles.thead}>
@@ -93,7 +95,7 @@ export default function AdminCommandes() {
 
         {detail && (
           <div style={styles.overlay} onClick={() => setDetail(null)}>
-            <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modal} className="responsive-modal" onClick={(e) => e.stopPropagation()}>
               <h2 style={styles.modalTitre}>Commande #{detail._id.slice(-6).toUpperCase()}</h2>
               <p><strong>Client :</strong> {detail.client?.prenom} {detail.client?.nom}</p>
               <p><strong>Email :</strong> {detail.client?.email}</p>
@@ -101,7 +103,7 @@ export default function AdminCommandes() {
               <p>{detail.adresseLivraison?.rue}, {detail.adresseLivraison?.ville}</p>
               <p style={{ marginTop: '16px' }}><strong>Articles :</strong></p>
               {detail.lignes?.map((l, i) => (
-                <div key={i} style={styles.ligneDetail}>
+                <div key={i} style={styles.ligneDetail} className="responsive-card-row">
                   <span>{l.nomProduit}</span>
                   <span>x{l.quantite}</span>
                   <span>{Number(l.sousTotal).toLocaleString('fr-FR')} FCFA</span>
@@ -121,14 +123,15 @@ const styles = {
   layout: { display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans',sans-serif" },
   sidebar: { width: '240px', background: '#1A3A2A', padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'sticky', top: 0, height: '100vh' },
   sidebarLogo: { color: '#fff', fontSize: '1.25rem', marginBottom: '32px', paddingLeft: '8px' },
+  nav: { display: 'flex', flexDirection: 'column', gap: '8px' },
   menuItem: { display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', color: 'rgba(255,255,255,0.8)', textDecoration: 'none', borderRadius: '10px', fontSize: '0.93rem', marginBottom: '4px' },
-  main: { flex: 1, padding: '40px', background: '#F5F0E8', overflowY: 'auto' },
-  titre: { fontSize: '1.8rem', fontWeight: '700', marginBottom: '24px', color: '#1C1C1C' },
+  main: { flex: 1, minWidth: 0, padding: 'clamp(20px, 4vw, 40px)', background: '#F5F0E8', overflowY: 'auto' },
+  titre: { fontSize: 'clamp(1.35rem, 5vw, 1.8rem)', fontWeight: '700', marginBottom: '24px', color: '#1C1C1C' },
   filtres: { display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' },
   filtrBtn: { padding: '8px 18px', borderRadius: '50px', border: '1.5px solid #E2DAD0', background: '#fff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600' },
   filtrActif: { background: '#1A3A2A', color: '#fff', borderColor: '#1A3A2A' },
   tableWrap: { background: '#fff', borderRadius: '16px', overflow: 'auto', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' },
-  table: { width: '100%', borderCollapse: 'collapse' },
+  table: { width: '100%', minWidth: '720px', borderCollapse: 'collapse' },
   thead: { background: '#f8f6f2' },
   th: { padding: '14px 16px', textAlign: 'left', fontSize: '0.82rem', fontWeight: '700', color: '#888', textTransform: 'uppercase' },
   tr: { borderBottom: '1px solid #F0EDE8' },
@@ -139,6 +142,6 @@ const styles = {
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
   modal: { background: '#fff', borderRadius: '20px', padding: '36px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' },
   modalTitre: { fontSize: '1.3rem', fontWeight: '700', marginBottom: '20px' },
-  ligneDetail: { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee', fontSize: '0.9rem' },
+  ligneDetail: { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee', fontSize: '0.9rem', gap: '12px' },
   totalDetail: { fontWeight: '800', fontSize: '1.1rem', marginTop: '12px', textAlign: 'right', color: '#C8410A' },
 };
