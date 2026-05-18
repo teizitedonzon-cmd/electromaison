@@ -176,9 +176,9 @@ export default function AdminProduits() {
   };
 
   return (
-    <div style={styles.layout}>
+    <div style={styles.layout} className="admin-responsive-layout">
       {/* Sidebar */}
-      <aside style={styles.sidebar}>
+      <aside style={styles.sidebar} className="admin-responsive-sidebar sidebar">
         <div style={styles.sidebarHeader}>
           <div style={styles.logoWrapper}>
             <img src={logot} alt="TeyShop" style={styles.logoImage} />
@@ -189,7 +189,7 @@ export default function AdminProduits() {
           </div>
         </div>
         
-        <nav style={styles.nav}>
+        <nav style={styles.nav} className="admin-responsive-nav">
           <Link to="/admin/dashboard" style={getNavLinkStyle('dashboard')} onMouseEnter={() => setHoveredLink('dashboard')} onMouseLeave={() => setHoveredLink(null)}>
             <Icon name="dashboard" size={18} color="#fff" /> Tableau de bord
           </Link>
@@ -222,34 +222,34 @@ export default function AdminProduits() {
       </aside>
 
       {/* Main Content */}
-      <main style={styles.main}>
-        <div style={styles.header}>
+      <main style={styles.main} className="admin-responsive-main main">
+        <div style={styles.header} className="responsive-header-row">
           <div>
             <h1 style={styles.titre}>Gestion des produits</h1>
             <p style={styles.sousTitre}>Gérez votre catalogue par catégorie</p>
           </div>
-          <button onClick={() => { setSelectedProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', actif: true }); setImages([]); setShowModal(true); }} style={styles.addBtn}>
+          <button onClick={() => { setSelectedProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', actif: true }); setImages([]); setShowModal(true); }} style={styles.addBtn} className="responsive-full-button">
             <Icon name="plus" size={18} /> Nouveau produit
           </button>
         </div>
 
         {/* Statistiques */}
-        <div style={styles.statsBar}>
-          <div style={styles.statItem}>
+        <div style={styles.statsBar} className="stats-bar">
+          <div style={styles.statItem} className="stat-item">
             <div style={styles.statIcon}>📦</div>
             <div>
               <div style={styles.statValue}>{totalProduits}</div>
               <div style={styles.statLabel}>Total produits</div>
             </div>
           </div>
-          <div style={styles.statItem}>
+          <div style={styles.statItem} className="stat-item">
             <div style={styles.statIcon}>✅</div>
             <div>
               <div style={styles.statValue}>{produitsActifs}</div>
               <div style={styles.statLabel}>Actifs</div>
             </div>
           </div>
-          <div style={styles.statItem}>
+          <div style={styles.statItem} className="stat-item">
             <div style={styles.statIcon}>📊</div>
             <div>
               <div style={styles.statValue}>{totalStockGeneral.toLocaleString('fr-FR')}</div>
@@ -285,7 +285,7 @@ export default function AdminProduits() {
               </div>
             </div>
 
-            <div style={styles.tableContainer}>
+            <div style={styles.tableContainer} className="table-container responsive-table">
               {loading ? (
                 <div style={styles.loadingState}>
                   <div style={styles.spinnerLarge}></div>
@@ -357,7 +357,7 @@ export default function AdminProduits() {
               <p style={styles.categoriesSubtitle}>Cliquez sur une catégorie pour gérer ses produits</p>
             </div>
 
-            <div style={styles.categoriesGrid}>
+            <div style={styles.categoriesGrid} className="categories-grid responsive-grid">
               {categories.map((cat, idx) => (
                 <div 
                   key={idx} 
@@ -397,7 +397,7 @@ export default function AdminProduits() {
       {/* Modal */}
       {showModal && (
         <div style={styles.overlay} onClick={() => setShowModal(false)}>
-          <div style={styles.modal} onClick={e => e.stopPropagation()}>
+          <div style={styles.modal} className="responsive-modal" onClick={e => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>{selectedProduit ? '✏️ Modifier le produit' : '➕ Nouveau produit'}</h3>
               <button style={styles.modalClose} onClick={() => setShowModal(false)}>✕</button>
@@ -407,7 +407,7 @@ export default function AdminProduits() {
                 <label style={styles.formLabel}>Nom du produit</label>
                 <input name="nom" placeholder="Ex: iPhone 13 Pro" value={formData.nom} onChange={handleChange} required style={styles.input} />
               </div>
-              <div style={styles.formRow}>
+              <div style={styles.formRow} className="form-row responsive-two-grid">
                 <div style={styles.formGroup}>
                   <label style={styles.formLabel}>Marque</label>
                   <input name="marque" placeholder="Apple, Samsung..." value={formData.marque} onChange={handleChange} required style={styles.input} />
@@ -420,7 +420,7 @@ export default function AdminProduits() {
                   </select>
                 </div>
               </div>
-              <div style={styles.formRow}>
+              <div style={styles.formRow} className="form-row responsive-two-grid">
                 <div style={styles.formGroup}>
                   <label style={styles.formLabel}>Prix (FCFA)</label>
                   <input name="prix" type="number" min="0" placeholder="0" value={formData.prix} onChange={handleChange} required style={styles.input} />
@@ -472,7 +472,7 @@ export default function AdminProduits() {
                   </div>
                 </div>
               )}
-              <div style={styles.modalActions}>
+              <div style={styles.modalActions} className="responsive-actions-row">
                 <button type="button" onClick={() => setShowModal(false)} style={styles.cancelBtn}>Annuler</button>
                 <button type="submit" style={styles.confirmBtn}>{selectedProduit ? 'Modifier' : 'Créer'}</button>
               </div>
@@ -614,7 +614,7 @@ export default function AdminProduits() {
         
         @media (max-width: 768px) {
           .sidebar {
-            display: none;
+            display: flex;
           }
           .main {
             padding: 16px;
@@ -780,7 +780,8 @@ const styles = {
   },
   main: {
     flex: 1,
-    padding: '28px 36px',
+    minWidth: 0,
+    padding: 'clamp(18px, 4vw, 28px) clamp(16px, 4vw, 36px)',
     overflowY: 'auto'
   },
   header: {
@@ -829,7 +830,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
-    minWidth: '160px',
+    minWidth: 'min(160px, 100%)',
     boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
     border: '1px solid #E8E8E8'
   },
@@ -851,7 +852,8 @@ const styles = {
   },
   searchWrapper: {
     position: 'relative',
-    maxWidth: '380px'
+    maxWidth: '380px',
+    width: '100%'
   },
   searchIcon: {
     position: 'absolute',
@@ -911,7 +913,7 @@ const styles = {
   tableContainer: {
     background: '#fff',
     borderRadius: '20px',
-    overflow: 'hidden',
+    overflow: 'auto',
     boxShadow: '0 2px 12px rgba(0,0,0,0.04)'
   },
   table: {
@@ -1001,7 +1003,7 @@ const styles = {
   },
   categoriesGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px, 100%), 1fr))',
     gap: '20px'
   },
   categoryCard: {
@@ -1045,6 +1047,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
+    padding: '16px',
     backdropFilter: 'blur(4px)'
   },
   modal: {
