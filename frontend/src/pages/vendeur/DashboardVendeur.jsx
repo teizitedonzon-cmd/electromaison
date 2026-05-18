@@ -327,7 +327,7 @@ export default function DashboardVendeur() {
       </header>
 
       {/* Statistiques */}
-      <div style={styles.statsGrid}>
+      <div style={styles.statsGrid} className="stats-grid">
         {[
           { label: 'Mes produits', value: produits.length, icon: 'package', color: '#667eea', suffix: '' },
           { label: isMobile ? 'Commandes' : 'Commandes reçues', value: totalCommandes, icon: 'shopping-cart', color: '#4facfe', suffix: '' },
@@ -378,17 +378,17 @@ export default function DashboardVendeur() {
           </div>
           <div style={styles.sectionBadge}>{produits.filter(p => p.actif).length} actifs</div>
         </div>
-        <div style={{ ...styles.productsGrid, gridTemplateColumns: isSmallMobile ? '1fr' : (isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(260px, 1fr)') }}>
+        <div style={{ ...styles.productsGrid, gridTemplateColumns: isSmallMobile ? '1fr' : (isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(260px, 1fr)') }} className="products-grid">
           {produits.length === 0 ? (
             <div style={styles.emptyState}><Icon name="package" size={48} color="#ccc" /><p>Aucun produit</p><button onClick={() => { setEditingProduit(null); setFormData(formVide); setImages([]); setShowModal(true); }} style={styles.emptyStateBtn}>Ajouter mon premier produit</button></div>
           ) : (
             produits.map(p => (
               <div key={p._id} style={styles.productCard} className="product-card" onClick={() => { setSelectedProduit(p); setShowDetailModal(true); }}>
-                <div style={styles.productImage}>
+                <div style={styles.productImage} className="product-image">
                   {p.images?.[0] ? <img src={mediaUrl(p.images[0])} alt={p.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={styles.productImagePlaceholder}><Icon name="image" size={32} color="#ccc" /></div>}
                   <div style={{ ...styles.productStatus, background: p.actif ? '#2ECC71' : '#E74C3C' }}>{p.actif ? 'En ligne' : 'Hors ligne'}</div>
                 </div>
-                <div style={styles.productInfo}>
+                <div style={styles.productInfo} className="product-info">
                   <h3 style={{ ...styles.productName, fontSize: isMobile ? '0.85rem' : '1rem' }}>{p.nom}</h3>
                   {!isSmallMobile && <p style={styles.productCategory}>{p.categorie}</p>}
                   <div style={styles.productDetails}>
@@ -716,7 +716,7 @@ styleSheet.textContent = `
   }
   
   @media (max-width: 480px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .stats-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
     .products-grid { gap: 12px !important; }
     .product-image { height: 120px !important; }
     .product-info { padding: 10px !important; }
