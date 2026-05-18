@@ -127,11 +127,24 @@ const configuredOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL 
 const allowedOrigins = Array.from(
   new Set([...defaultLocalOrigins.map(normalizeOrigin), ...configuredOrigins])
 );
+const allowVercelPreviews = process.env.ALLOW_VERCEL_PREVIEWS === 'true';
+
+const isAllowedOrigin = (origin) => {
+  if (!origin || allowedOrigins.includes(origin)) return true;
+  if (allowVercelPreviews) {
+    try {
+      return new URL(origin).hostname.endsWith('.vercel.app');
+    } catch {
+      return false;
+    }
+  }
+  return false;
+};
 
 app.use(cors({
   origin: (origin, callback) => {
     const normalizedOrigin = origin ? normalizeOrigin(origin) : '';
-    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin))
+    if (isAllowedOrigin(normalizedOrigin))
       return callback(null, true);
     console.warn(`Origine CORS refusee: ${normalizedOrigin}`);
     return callback(null, false);
