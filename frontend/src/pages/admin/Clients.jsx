@@ -38,8 +38,8 @@ export default function AdminClients() {
   const filtres = utilisateurs.filter((u) => u.role === vue);
 
   return (
-    <div style={styles.page}>
-      <div style={styles.header}>
+    <div style={styles.page} className="responsive-page-padding">
+      <div style={styles.header} className="responsive-header-row">
         <h1 style={styles.title}>Gestion des utilisateurs</h1>
         <div style={styles.tabs}>
           <button onClick={() => setVue('client')} style={{ ...styles.tab, ...(vue === 'client' ? styles.tabActive : {}) }}>
@@ -51,7 +51,7 @@ export default function AdminClients() {
         </div>
       </div>
 
-      <div style={styles.tableCard}>
+      <div style={styles.tableCard} className="responsive-table">
         <table style={styles.table}>
           <thead>
             <tr style={styles.thead}>
@@ -74,6 +74,7 @@ export default function AdminClients() {
                   </td>
                 )}
                 <td style={styles.td}>
+                  <div style={styles.actions}>
                   <button onClick={() => toggleStatut(u._id, u.actif)} style={{ ...styles.btn, background: u.actif ? '#e74c3c' : '#2ecc71' }}>
                     {u.actif ? 'Bannir' : 'Activer'}
                   </button>
@@ -83,6 +84,7 @@ export default function AdminClients() {
                       <button onClick={() => changerStatutVendeur(u._id, 'rejete')} style={{ ...styles.btn, background: '#B03A2E', marginLeft: '8px' }}>Rejeter</button>
                     </>
                   )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -100,20 +102,21 @@ const badgeVendeur = (statut) => {
 };
 
 const styles = {
-  page: { padding: '30px', background: '#F5F0E8', minHeight: '100vh' },
+  page: { padding: 'clamp(18px, 4vw, 30px)', background: '#F5F0E8', minHeight: '100vh', fontFamily: "'DM Sans',sans-serif" },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, marginBottom: 26 },
-  title: { margin: 0, color: '#1C1C1C', fontSize: '1.7rem' },
-  tabs: { display: 'flex', gap: 12 },
+  title: { margin: 0, color: '#1C1C1C', fontSize: 'clamp(1.3rem, 5vw, 1.7rem)' },
+  tabs: { display: 'flex', gap: 12, flexWrap: 'wrap' },
   tab: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', background: '#ddd', color: '#333' },
   tabActive: { background: '#1A3A2A', color: '#fff' },
   tabActiveOrange: { background: '#C8410A', color: '#fff' },
-  tableCard: { background: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'hidden' },
-  table: { width: '100%', borderCollapse: 'collapse' },
+  tableCard: { background: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', overflow: 'auto' },
+  table: { width: '100%', minWidth: '640px', borderCollapse: 'collapse' },
   thead: { background: '#f4f4f4' },
   th: { padding: '15px', textAlign: 'left' },
   tr: { borderBottom: '1px solid #eee' },
   td: { padding: '15px' },
   avatar: { width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' },
   badge: { padding: '5px 10px', borderRadius: '999px', fontSize: '0.78rem', fontWeight: '700' },
-  btn: { color: '#fff', border: 'none', padding: '7px 12px', borderRadius: '5px', cursor: 'pointer' }
+  actions: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' },
+  btn: { color: '#fff', border: 'none', padding: '7px 12px', borderRadius: '5px', cursor: 'pointer', marginLeft: 0 }
 };
