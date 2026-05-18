@@ -79,29 +79,29 @@ export default function Panier() {
   );
 
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="container">
       <div style={styles.wrapper}>
         
         {/* Header avec progression */}
         <div style={styles.header}>
-          <div style={styles.titleSection}>
+          <div style={styles.titleSection} className="title-section">
             <h1 style={styles.title}>
               {etape === 1 ? 'Mon panier' : etape === 2 ? 'Livraison' : 'Confirmation'}
             </h1>
-            <div style={styles.steps}>
+            <div style={styles.steps} className="steps">
               <div style={{ ...styles.step, ...(etape >= 1 ? styles.stepActive : {}) }}>
                 <span style={styles.stepNum}>1</span>
-                <span style={styles.stepLabel}>Panier</span>
+                <span style={styles.stepLabel} className="step-label">Panier</span>
               </div>
-              <div style={styles.stepLine}></div>
+              <div style={styles.stepLine} className="step-line"></div>
               <div style={{ ...styles.step, ...(etape >= 2 ? styles.stepActive : {}) }}>
                 <span style={styles.stepNum}>2</span>
-                <span style={styles.stepLabel}>Livraison</span>
+                <span style={styles.stepLabel} className="step-label">Livraison</span>
               </div>
-              <div style={styles.stepLine}></div>
+              <div style={styles.stepLine} className="step-line"></div>
               <div style={{ ...styles.step, ...(etape >= 3 ? styles.stepActive : {}) }}>
                 <span style={styles.stepNum}>3</span>
-                <span style={styles.stepLabel}>Confirmation</span>
+                <span style={styles.stepLabel} className="step-label">Confirmation</span>
               </div>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function Panier() {
                   className="cart-item"
                 >
                   {/* Image produit */}
-                  <div style={styles.itemImage}>
+                  <div style={styles.itemImage} className="item-image">
                     {item.images?.[0] ? (
                       <img src={mediaUrl(item.images[0])} alt={item.nom} style={styles.itemImg} />
                     ) : (
@@ -136,10 +136,10 @@ export default function Panier() {
                   
                   {/* Détails produit */}
                   <div style={styles.itemDetails}>
-                    <h3 style={styles.itemName}>{item.nom}</h3>
+                    <h3 style={styles.itemName} className="item-name">{item.nom}</h3>
                     <p style={styles.itemPrice}>{item.prix.toLocaleString('fr-FR')} FCFA / unité</p>
                     <div style={styles.itemActions}>
-                      <div style={styles.quantityControl}>
+                      <div style={styles.quantityControl} className="quantity-control">
                         <button 
                           style={styles.qtyBtn} 
                           onClick={() => changerQuantite(item._id, -1)}
@@ -162,14 +162,14 @@ export default function Panier() {
                       </button>
                     </div>
                     {/* Total mobile (visible uniquement sur petits écrans) */}
-                    <div style={styles.itemTotalMobile}>
+                    <div style={styles.itemTotalMobile} className="item-total-mobile">
                       <span style={styles.totalLabelMobile}>Total : </span>
                       <span style={styles.totalValueMobile}>{(item.prix * item.quantite).toLocaleString('fr-FR')} FCFA</span>
                     </div>
                   </div>
                   
                   {/* Total desktop */}
-                  <div style={styles.itemTotalDesktop}>
+                  <div style={styles.itemTotalDesktop} className="item-total-desktop">
                     <span style={styles.totalLabel}>Total</span>
                     <span style={styles.totalValue}>{(item.prix * item.quantite).toLocaleString('fr-FR')} FCFA</span>
                   </div>
@@ -263,14 +263,15 @@ export default function Panier() {
               </div>
             </div>
 
-            <div style={styles.formActions}>
-              <button onClick={() => setEtape(1)} style={styles.backBtn}>
+            <div style={styles.formActions} className="form-actions">
+              <button onClick={() => setEtape(1)} style={styles.backBtn} className="back-btn">
                 ← Retour au panier
               </button>
               <button 
                 onClick={passerCommande} 
                 disabled={chargement || !adresse.rue || !adresse.ville}
                 style={{...styles.confirmBtn, opacity: (chargement || !adresse.rue || !adresse.ville) ? 0.6 : 1}}
+                className="confirm-btn"
               >
                 {chargement ? 'Traitement en cours...' : 'Confirmer la commande →'}
               </button>
