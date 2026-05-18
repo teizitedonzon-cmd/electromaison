@@ -321,8 +321,8 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={styles.layout}>
-      <aside style={styles.sidebar}>
+    <div style={styles.layout} className="admin-responsive-layout">
+      <aside style={styles.sidebar} className="admin-responsive-sidebar">
         <div style={styles.sidebarHeader}>
           <div style={styles.logoWrapper}>
             <img src={logot} alt="TeyShop" style={styles.logoImage} />
@@ -331,9 +331,9 @@ export default function AdminDashboard() {
           <span style={styles.sidebarBadge}>Admin</span>
         </div>
         
-        <nav style={styles.nav}>
+        <nav style={styles.nav} className="admin-responsive-nav">
           {menuItems.map((item) => (
-            <Link key={item.path} to={item.path} style={styles.menuItem}>
+            <Link key={item.path} to={item.path} style={styles.menuItem} className="menu-item">
               <div style={styles.menuIcon}>
                 <Icon name={item.icon} size={18} color="#fff" />
               </div>
@@ -382,8 +382,8 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      <main style={styles.main}>
-        <div style={styles.header}>
+      <main style={styles.main} className="admin-responsive-main">
+        <div style={styles.header} className="responsive-header-row">
           <div>
             <h1 style={styles.titre}>
               Tableau de bord
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div style={styles.statsGrid}>
+        <div style={styles.statsGrid} className="stats-grid responsive-grid">
           {cartes.map((c, idx) => (
             <div 
               key={c.label} 
@@ -431,7 +431,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Graphiques compacts */}
-        <div style={styles.chartsGridCompact}>
+        <div style={styles.chartsGridCompact} className="charts-grid-compact responsive-grid">
           <PieChart title="Répartition des ventes" data={repartitionData} />
           <LineChart title="Évolution des ventes" data={evolutionData} />
         </div>
@@ -441,7 +441,7 @@ export default function AdminDashboard() {
             Actions rapides
             <span style={styles.sectionBadgeCompact}>3</span>
           </h2>
-          <div style={styles.actionsGridCompact}>
+          <div style={styles.actionsGridCompact} className="actions-grid-compact responsive-grid">
             <Link to="/admin/produits" className="action-card" style={styles.actionCardCompact}>
               <div style={styles.actionIconCompact}>
                 <Icon name="plus" size={18} color="#C8410A" />
@@ -666,8 +666,9 @@ const styles = {
   },
   
   main: { 
-    flex: 1, 
-    padding: '24px 32px', 
+    flex: 1,
+    minWidth: 0,
+    padding: 'clamp(18px, 4vw, 24px) clamp(16px, 4vw, 32px)', 
     overflowY: 'auto' 
   },
   
@@ -734,7 +735,7 @@ const styles = {
   
   statsGrid: { 
     display: 'grid', 
-    gridTemplateColumns: 'repeat(4, 1fr)', 
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(190px, 100%), 1fr))', 
     gap: '16px', 
     marginBottom: '32px' 
   },
@@ -788,7 +789,7 @@ const styles = {
   // Graphiques compacts
   chartsGridCompact: { 
     display: 'grid', 
-    gridTemplateColumns: 'repeat(2, 1fr)', 
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', 
     gap: '20px', 
     marginBottom: '32px' 
   },
@@ -973,7 +974,7 @@ const styles = {
   
   actionsGridCompact: { 
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
     gap: '12px' 
   },
   
