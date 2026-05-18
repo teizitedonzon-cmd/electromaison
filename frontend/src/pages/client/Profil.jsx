@@ -30,20 +30,20 @@ export default function Profil() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'DM Sans',sans-serif" }}>
-      <nav style={styles.nav}>
+      <nav style={styles.nav} className="responsive-nav">
         <Link to="/" style={styles.logo}>Tey<span style={{color:'#F4A76A'}}>Shop</span></Link>
-        <div style={{display:'flex', gap:'20px'}}>
+        <div style={{display:'flex', gap:'20px'}} className="responsive-nav-links">
           <Link to="/" style={styles.navLink}>Accueil</Link>
           <Link to="/mes-commandes" style={styles.navLink}>Commandes</Link>
           <button onClick={deconnexion} style={styles.decoBtn}>Déconnexion</button>
         </div>
       </nav>
 
-      <div style={{maxWidth:'500px', margin:'0 auto', padding:'40px 20px'}}>
-        <h1 style={{fontSize:'1.8rem', fontWeight:'700', marginBottom:'10px'}}>Mon Profil</h1>
+      <div style={styles.content}>
+        <h1 style={styles.title}>Mon Profil</h1>
         <p style={{marginBottom:'28px', color:'#666'}}>Ravie de vous revoir, {user?.prenom}</p>
 
-        <div style={{background:'#fff', borderRadius:'20px', padding:'32px', boxShadow:'0 2px 12px rgba(0,0,0,0.06)'}}>
+        <div style={styles.card}>
           <div style={{textAlign:'center', marginBottom:'28px'}}>
             <div style={{width:'80px', height:'80px', borderRadius:'50%', background:'#1A3A2A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2rem', margin:'0 auto 12px'}}>
               {user?.prenom?.[0]?.toUpperCase()}{user?.nom?.[0]?.toUpperCase()}
@@ -79,6 +79,9 @@ const styles = {
   logo: { fontFamily:'Georgia,serif', fontSize:'1.5rem', color:'#fff', textDecoration:'none', fontWeight:'bold' },
   navLink: { color:'rgba(255,255,255,0.75)', textDecoration:'none', fontSize:'0.9rem' },
   decoBtn: { background:'transparent', border:'1px solid rgba(255,255,255,0.3)', color:'#fff', padding:'8px 16px', borderRadius:'50px', cursor:'pointer' },
+  content: { maxWidth:'500px', margin:'0 auto', padding:'clamp(24px, 6vw, 40px) 20px' },
+  title: { fontSize:'clamp(1.35rem, 5vw, 1.8rem)', fontWeight:'700', marginBottom:'10px' },
+  card: { background:'#fff', borderRadius:'20px', padding:'clamp(22px, 6vw, 32px)', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' },
   label: { display:'block', marginBottom:'6px', fontSize:'0.88rem', fontWeight:'600' },
   input: { width:'100%', padding:'11px', borderRadius:'10px', border:'1.5px solid #E2DAD0', boxSizing:'border-box' },
   btnAction: { width:'100%', padding:'14px', background:'#C8410A', color:'#fff', border:'none', borderRadius:'50px', fontWeight:'700', cursor:'pointer' }
