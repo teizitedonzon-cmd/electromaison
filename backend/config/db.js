@@ -1,5 +1,3 @@
-// config/db.js — Configuration de la connexion MongoDB
-// (Déjà intégré dans server.js, ce fichier est optionnel pour séparer la logique)
 
 const mongoose = require('mongoose');
 
