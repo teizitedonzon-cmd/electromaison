@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const normalizeApiUrl = (url) => {
+  const rawUrl = (url || '/api').trim().replace(/\/+$/, '');
+  if (rawUrl === '/api') return rawUrl;
+  return rawUrl.endsWith('/api') ? rawUrl : `${rawUrl}/api`;
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api',
+  baseURL: normalizeApiUrl(process.env.REACT_APP_API_URL),
 });
 
 api.interceptors.request.use(
