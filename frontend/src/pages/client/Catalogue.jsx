@@ -111,23 +111,24 @@ export default function Catalogue() {
     <div style={styles.container}>
       
       {/* Navigation avec menu burger amélioré */}
-      <nav style={styles.nav}>
+      <nav className="nav" style={styles.nav}>
         <div style={styles.logoContainer}>
           <Link to="/" style={styles.logoLink}>
-            <span style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></span>
+            <span className="logo" style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></span>
           </Link>
         </div>
         
-        <div style={styles.searchContainer}>
+        <div className="search-container" style={styles.searchContainer}>
           <div style={styles.searchWrapper}>
             <input 
+              className="search-input"
               type="text" 
               placeholder={isSmallMobile ? "Rechercher..." : (isMobile ? "Rechercher..." : "Rechercher un produit...")} 
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
               style={styles.searchInput} 
             />
-            <button style={styles.searchBtn}>
+            <button className="search-btn" style={styles.searchBtn}>
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -146,7 +147,7 @@ export default function Catalogue() {
               <Link to="/panier" style={styles.cartBtn}>
                 <Icon name="cart" size={17} />
                 <span>Panier</span>
-                {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
+                {nombreArticles > 0 && <span className="cart-badge" style={styles.cartBadge}>{nombreArticles}</span>}
               </Link>
               <button onClick={deconnexion} style={styles.decoBtn}>Déconnexion</button>
             </>
@@ -155,7 +156,7 @@ export default function Catalogue() {
               <Link to="/panier" style={styles.cartBtn}>
                 <Icon name="cart" size={17} />
                 <span>Panier</span>
-                {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
+                {nombreArticles > 0 && <span className="cart-badge" style={styles.cartBadge}>{nombreArticles}</span>}
               </Link>
               <Link to="/connexion" style={styles.navLink}>Connexion</Link>
               <Link to="/inscription" style={styles.navLink}>Inscription</Link>
@@ -191,7 +192,7 @@ export default function Catalogue() {
 
       {/* Menu Mobile Déroulant */}
       {menuOpen && (
-        <div style={styles.mobileMenu}>
+        <div className="mobile-menu" style={styles.mobileMenu}>
           <Link to="/" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
             <span style={styles.mobileMenuIcon}>🏠</span>
             Accueil
@@ -232,7 +233,7 @@ export default function Catalogue() {
 
       {/* Bouton Filtres Mobile - Amélioré et plus attrayant */}
       {isMobile && (
-        <div style={styles.mobileFilterBar}>
+        <div className="mobile-filter-bar" style={styles.mobileFilterBar}>
           <button 
             onClick={() => setMobileFiltersOpen(true)} 
             className="filter-btn"
@@ -268,10 +269,10 @@ export default function Catalogue() {
       )}
 
       {/* Layout : Sidebar + Contenu */}
-      <div style={styles.mainLayout}>
+      <div className="main-layout" style={styles.mainLayout}>
         
         {/* Sidebar */}
-        <aside style={{ 
+        <aside className="sidebar" style={{ 
           ...styles.sidebar,
           display: isMobile ? (mobileFiltersOpen ? 'block' : 'none') : 'block',
           position: isMobile ? 'fixed' : 'sticky',
@@ -343,13 +344,14 @@ export default function Catalogue() {
 
         {/* Contenu principal */}
         <main style={styles.content}>
-          <div style={styles.resultsHeader}>
-            <div style={styles.resultsCount}>
+          <div className="results-header" style={styles.resultsHeader}>
+            <div className="results-count" style={styles.resultsCount}>
               <span>{produits.length} résultat{produits.length > 1 ? 's' : ''}</span>
             </div>
             <div style={styles.sortSection}>
               <span style={styles.sortLabel}>Trier :</span>
               <select 
+                className="sort-select"
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)}
                 style={styles.sortSelect}
@@ -381,12 +383,12 @@ export default function Catalogue() {
               <div style={styles.emptyIcon}>🔍</div>
               <h3 style={styles.emptyTitle}>Aucun résultat trouvé</h3>
               <p style={styles.emptyText}>Essayez d'autres mots-clés ou ajustez vos filtres</p>
-              <button onClick={resetFilters} style={styles.emptyBtn}>Voir tous les produits</button>
+              <button className="empty-btn" onClick={resetFilters} style={styles.emptyBtn}>Voir tous les produits</button>
             </div>
           )}
 
           {!loading && produits.length > 0 && (
-            <div style={styles.grid}>
+            <div className="grid" style={styles.grid}>
               {produits.map((p) => (
                 <div 
                   key={p._id} 
@@ -396,7 +398,7 @@ export default function Catalogue() {
                   onMouseLeave={() => setHoveredProduct(null)}
                 >
                   <Link to={`/produit/${p._id}`} style={styles.cardLink}>
-                    <div style={styles.cardImageWrapper}>
+                    <div className="card-image-wrapper" style={styles.cardImageWrapper}>
                       {p.badge && <span style={styles.badge}>{p.badge}</span>}
                       {p.images && p.images.length > 0 ? (
                         <img 
@@ -413,13 +415,13 @@ export default function Catalogue() {
                       )}
                     </div>
                     <div style={styles.cardContent}>
-                      <h3 style={styles.cardTitle}>{p.nom}</h3>
+                      <h3 className="card-title" style={styles.cardTitle}>{p.nom}</h3>
                       <div style={styles.cardPrice}>
-                        <span style={styles.priceAmount}>{Number(p.prix).toLocaleString('fr-FR')}</span>
-                        <span style={styles.priceCurrency}>FCFA</span>
+                        <span className="price-amount" style={styles.priceAmount}>{Number(p.prix).toLocaleString('fr-FR')}</span>
+                        <span className="price-currency" style={styles.priceCurrency}>FCFA</span>
                       </div>
                       {!isSmallMobile && (
-                        <p style={styles.cardDesc}>{p.description?.substring(0, 60)}...</p>
+                        <p className="card-desc" style={styles.cardDesc}>{p.description?.substring(0, 60)}...</p>
                       )}
                       <p style={styles.stockInfo}>
                         {p.stock > 0 ? (
@@ -431,6 +433,7 @@ export default function Catalogue() {
                     </div>
                   </Link>
                   <button 
+                    className="add-btn"
                     onClick={() => { ajouterAuPanier(p); toast.success(`${p.nom} ajouté au panier !`); }} 
                     style={{ ...styles.addBtn, opacity: p.stock === 0 ? 0.5 : 1 }} 
                     disabled={p.stock === 0}
