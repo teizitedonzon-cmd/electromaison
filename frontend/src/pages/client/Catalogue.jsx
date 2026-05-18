@@ -36,11 +36,13 @@ export default function Catalogue() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
 
   // Détecter les changements de taille d'écran
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
+      setIsSmallMobile(window.innerWidth <= 480);
       if (window.innerWidth > 768) {
         setMobileFiltersOpen(false);
       }
@@ -103,27 +105,38 @@ export default function Catalogue() {
     setMobileFiltersOpen(false);
   };
 
+  const hasActiveFilters = !!(categorie || minPrix || maxPrix || recherche);
+
   return (
     <div style={styles.container}>
       
-      {/* Navigation avec menu burger */}
+      {/* Navigation avec menu burger amélioré */}
       <nav style={styles.nav}>
-        <Link to="/" style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></Link>
+        <div style={styles.logoContainer}>
+          <Link to="/" style={styles.logoLink}>
+            <span style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></span>
+          </Link>
+        </div>
         
         <div style={styles.searchContainer}>
           <div style={styles.searchWrapper}>
             <input 
               type="text" 
-              placeholder="Rechercher..." 
+              placeholder={isSmallMobile ? "Rechercher..." : (isMobile ? "Rechercher..." : "Rechercher un produit...")} 
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
               style={styles.searchInput} 
             />
-            <button style={styles.searchBtn}>🔍</button>
+            <button style={styles.searchBtn}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
           </div>
         </div>
 
-        {/* Menu Desktop - SANS le bouton Catalogue */}
+        {/* Menu Desktop */}
         <div className="desktop-menu" style={styles.desktopMenu}>
           <Link to="/" style={getNavLinkStyle('home')} onMouseEnter={() => setHoveredLink('home')} onMouseLeave={() => setHoveredLink(null)}>Accueil</Link>
           
@@ -131,7 +144,7 @@ export default function Catalogue() {
             <>
               <Link to="/mes-commandes" style={getNavLinkStyle('cmd')} onMouseEnter={() => setHoveredLink('cmd')} onMouseLeave={() => setHoveredLink(null)}>Commandes</Link>
               <Link to="/panier" style={styles.cartBtn}>
-                🛒
+                <Icon name="cart" size={17} />
                 <span>Panier</span>
                 {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
               </Link>
@@ -140,7 +153,7 @@ export default function Catalogue() {
           ) : (
             <>
               <Link to="/panier" style={styles.cartBtn}>
-                🛒
+                <Icon name="cart" size={17} />
                 <span>Panier</span>
                 {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
               </Link>
@@ -150,61 +163,124 @@ export default function Catalogue() {
           )}
         </div>
 
-        {/* Bouton Menu Mobile */}
-        <button className="mobile-menu-btn" onClick={() => setMenuOpen(!menuOpen)} style={styles.mobileMenuBtn}>
-          <Icon name={menuOpen ? "x" : "menu"} size={24} color="#fff" />
+        {/* Bouton Menu Mobile Professionnel */}
+        <button 
+          className="mobile-menu-btn" 
+          onClick={() => setMenuOpen(!menuOpen)} 
+          style={{
+            ...styles.mobileMenuBtn,
+            display: isMobile ? 'flex' : 'none',
+            transform: menuOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+          }}
+          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+        >
+          {menuOpen ? (
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          )}
         </button>
       </nav>
 
-      {/* Menu Mobile Déroulant - SANS le bouton Catalogue */}
+      {/* Menu Mobile Déroulant */}
       {menuOpen && (
         <div style={styles.mobileMenu}>
-          <Link to="/" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Accueil</Link>
+          <Link to="/" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+            <span style={styles.mobileMenuIcon}>🏠</span>
+            Accueil
+          </Link>
           {user ? (
             <>
-              <Link to="/mes-commandes" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Commandes</Link>
+              <Link to="/mes-commandes" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                <span style={styles.mobileMenuIcon}>📋</span>
+                Commandes
+              </Link>
               <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                <span style={styles.mobileMenuIcon}>🛒</span>
                 Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
               </Link>
-              <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn}>Déconnexion</button>
+              <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn}>
+                <span style={styles.mobileMenuIcon}>🚪</span>
+                Déconnexion
+              </button>
             </>
           ) : (
             <>
               <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                <span style={styles.mobileMenuIcon}>🛒</span>
                 Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
               </Link>
-              <Link to="/connexion" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Connexion</Link>
-              <Link to="/inscription" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>Inscription</Link>
+              <Link to="/connexion" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                <span style={styles.mobileMenuIcon}>🔑</span>
+                Connexion
+              </Link>
+              <Link to="/inscription" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
+                <span style={styles.mobileMenuIcon}>✨</span>
+                Inscription
+              </Link>
             </>
           )}
         </div>
       )}
 
-      {/* Bouton Filtres Mobile (visible uniquement sur mobile) */}
+      {/* Bouton Filtres Mobile - Amélioré et plus attrayant */}
       {isMobile && (
         <div style={styles.mobileFilterBar}>
-          <button onClick={() => setMobileFiltersOpen(true)} style={styles.mobileFilterBtn}>
-            🔍 Filtres
-            {(categorie || minPrix || maxPrix) && <span style={styles.filterActiveDot}></span>}
+          <button 
+            onClick={() => setMobileFiltersOpen(true)} 
+            className="filter-btn"
+            style={{
+              ...styles.mobileFilterBtn,
+              ...(hasActiveFilters ? styles.mobileFilterBtnActive : {})
+            }}
+          >
+            <span className="filter-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+                <line x1="10" y1="18" x2="14" y2="18"></line>
+              </svg>
+            </span>
+            <span>Filtres</span>
+            {hasActiveFilters && (
+              <span className="filter-badge">
+                <span className="filter-dot"></span>
+              </span>
+            )}
           </button>
-          <div style={styles.filterInfo}>
-            {(categorie || minPrix || maxPrix) && <span style={styles.filterActiveText}>Filtres actifs</span>}
-          </div>
+          {hasActiveFilters && (
+            <button onClick={resetFilters} className="reset-filter-btn" style={styles.mobileResetBtn}>
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Réinit.
+            </button>
+          )}
         </div>
       )}
 
       {/* Layout : Sidebar + Contenu */}
       <div style={styles.mainLayout}>
         
-        {/* Sidebar - Visible en desktop, overlay en mobile */}
+        {/* Sidebar */}
         <aside style={{ 
           ...styles.sidebar,
-          transform: isMobile ? (mobileFiltersOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+          display: isMobile ? (mobileFiltersOpen ? 'block' : 'none') : 'block',
           position: isMobile ? 'fixed' : 'sticky',
         }}>
           <div style={styles.sidebarHeader}>
             <h3 style={styles.sidebarHeaderTitle}>Filtres</h3>
-            <button onClick={() => setMobileFiltersOpen(false)} style={styles.closeSidebarBtn}>✕</button>
+            {isMobile && (
+              <button onClick={() => setMobileFiltersOpen(false)} style={styles.closeSidebarBtn}>✕</button>
+            )}
           </div>
           
           {/* Section Catégories */}
@@ -255,7 +331,7 @@ export default function Catalogue() {
             </div>
           </div>
 
-          {(categorie || recherche || minPrix || maxPrix) && (
+          {hasActiveFilters && (
             <button onClick={resetFilters} style={styles.resetSidebarBtn}>
               Réinitialiser les filtres
             </button>
@@ -269,7 +345,7 @@ export default function Catalogue() {
         <main style={styles.content}>
           <div style={styles.resultsHeader}>
             <div style={styles.resultsCount}>
-              <span>{produits.length} résultats</span>
+              <span>{produits.length} résultat{produits.length > 1 ? 's' : ''}</span>
             </div>
             <div style={styles.sortSection}>
               <span style={styles.sortLabel}>Trier :</span>
@@ -304,7 +380,7 @@ export default function Catalogue() {
             <div style={styles.emptyState}>
               <div style={styles.emptyIcon}>🔍</div>
               <h3 style={styles.emptyTitle}>Aucun résultat trouvé</h3>
-              <p style={styles.emptyText}>Essayez d'autres mots-clés</p>
+              <p style={styles.emptyText}>Essayez d'autres mots-clés ou ajustez vos filtres</p>
               <button onClick={resetFilters} style={styles.emptyBtn}>Voir tous les produits</button>
             </div>
           )}
@@ -342,7 +418,9 @@ export default function Catalogue() {
                         <span style={styles.priceAmount}>{Number(p.prix).toLocaleString('fr-FR')}</span>
                         <span style={styles.priceCurrency}>FCFA</span>
                       </div>
-                      <p style={styles.cardDesc}>{p.description?.substring(0, 60)}...</p>
+                      {!isSmallMobile && (
+                        <p style={styles.cardDesc}>{p.description?.substring(0, 60)}...</p>
+                      )}
                       <p style={styles.stockInfo}>
                         {p.stock > 0 ? (
                           <span style={styles.inStock}>✓ En stock</span>
@@ -357,7 +435,7 @@ export default function Catalogue() {
                     style={{ ...styles.addBtn, opacity: p.stock === 0 ? 0.5 : 1 }} 
                     disabled={p.stock === 0}
                   >
-                    {p.stock === 0 ? 'Rupture' : 'Ajouter au panier'}
+                    {p.stock === 0 ? 'Rupture' : (isSmallMobile ? 'Ajouter' : 'Ajouter au panier')}
                   </button>
                 </div>
               ))}
@@ -366,49 +444,260 @@ export default function Catalogue() {
         </main>
       </div>
 
-      {/* Styles responsives injectés */}
+      {/* Styles responsives améliorés */}
       <style dangerouslySetInnerHTML={{ __html: `
+        /* ===== ANIMATIONS ===== */
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideInRight {
+          from { transform: translateX(-100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-2px); }
+          75% { transform: translateX(2px); }
+        }
+        
+        /* ===== BOUTON MENU MOBILE ===== */
+        .mobile-menu-btn {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          backdrop-filter: blur(10px);
+        }
+        
+        .mobile-menu-btn:hover {
+          background: rgba(244, 167, 106, 0.3) !important;
+          transform: scale(1.05);
+        }
+        
+        @keyframes pulse-ring {
+          0% { box-shadow: 0 0 0 0 rgba(244, 167, 106, 0.4); }
+          70% { box-shadow: 0 0 0 10px rgba(244, 167, 106, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(244, 167, 106, 0); }
+        }
+        
+        .mobile-menu-btn {
+          animation: pulse-ring 2s infinite;
+        }
+        
+        /* ===== BOUTON FILTRE AMÉLIORÉ ===== */
+        .filter-btn {
+          position: relative;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .filter-btn:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 4px 15px rgba(200, 65, 10, 0.4) !important;
+        }
+        
+        .filter-btn:active {
+          transform: translateY(0) scale(0.98) !important;
+        }
+        
+        .filter-icon {
+          transition: transform 0.3s ease;
+          display: inline-flex;
+        }
+        
+        .filter-btn:hover .filter-icon {
+          transform: rotate(90deg);
+        }
+        
+        .filter-badge {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+        }
+        
+        .filter-dot {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          background: #2ECC71;
+          border-radius: 50%;
+          animation: pulse 1.5s ease-in-out infinite;
+          box-shadow: 0 0 0 2px #fff;
+        }
+        
+        /* Animation d'attraction */
+        @keyframes bounce-attention {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        
+        .filter-btn {
+          animation: bounce-attention 2s ease-in-out infinite;
+        }
+        
+        /* ===== PRODUITS ===== */
+        .product-card {
+          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .product-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+        
+        .product-card:hover .add-btn {
+          background: #C8410A;
+          transform: translateY(-2px);
+        }
+        
+        /* ===== BOUTONS ===== */
+        .search-btn:hover {
+          background: #E8622A;
+          transform: scale(1.02);
+        }
+        
+        .cart-btn:hover, .add-btn:hover:not(:disabled), .empty-btn:hover {
+          background: #C0392B;
+          transform: translateY(-2px);
+        }
+        
+        .category-btn:hover {
+          transform: translateX(5px);
+          color: #C8410A;
+        }
+        
+        .reset-filter-btn:hover {
+          background: #E74C3C !important;
+          color: white !important;
+          transform: translateY(-1px);
+        }
+        
+        /* ===== MENU MOBILE ===== */
+        .mobile-menu {
+          animation: slideDown 0.3s ease-out;
+        }
+        
+        .mobile-menu-item {
+          transition: all 0.3s ease;
+        }
+        
+        .mobile-menu-item:hover {
+          transform: translateX(8px);
+          background: rgba(244, 167, 106, 0.2) !important;
+        }
+        
+        /* ===== RESPONSIVE DESKTOP ===== */
+        @media (min-width: 769px) {
+          .mobile-filter-bar {
+            display: none !important;
+          }
+        }
+        
+        /* ===== RESPONSIVE TABLETTE ===== */
+        @media (max-width: 992px) and (min-width: 769px) {
+          .main-layout {
+            padding: 16px !important;
+            gap: 16px !important;
+          }
+          .sidebar {
+            width: 240px !important;
+          }
+          .grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 16px !important;
+          }
+          .search-container {
+            max-width: 300px !important;
+          }
+        }
+        
+        /* ===== RESPONSIVE MOBILE ===== */
         @media (max-width: 768px) {
           .desktop-menu {
             display: none !important;
           }
           .mobile-menu-btn {
             display: flex !important;
+            background: rgba(244, 167, 106, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 8px 10px;
+            border: 1px solid rgba(244, 167, 106, 0.4);
+          }
+          .nav {
+            padding: 0 12px !important;
+            height: 60px !important;
+            gap: 10px !important;
+          }
+          .logo {
+            font-size: 1.1rem !important;
           }
           .search-container {
-            max-width: 160px !important;
+            max-width: 150px !important;
           }
           .search-input {
-            padding: 8px 10px !important;
+            padding: 6px 8px !important;
             font-size: 0.7rem !important;
           }
           .search-btn {
             padding: 0 10px !important;
           }
           .main-layout {
-            padding: 12px !important;
+            padding: 10px !important;
+            gap: 0 !important;
+          }
+          .sidebar {
+            width: 85% !important;
+            max-width: 300px !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            z-index: 1001 !important;
+            animation: slideInRight 0.3s ease-out !important;
           }
           .grid {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
+            gap: 10px !important;
           }
           .card-image-wrapper {
-            height: 130px !important;
+            height: 110px !important;
           }
           .card-title {
             font-size: 0.7rem !important;
           }
           .price-amount {
-            font-size: 0.85rem !important;
+            font-size: 0.8rem !important;
           }
           .add-btn {
-            padding: 4px 6px !important;
-            font-size: 0.6rem !important;
+            padding: 6px 8px !important;
+            font-size: 0.65rem !important;
           }
           .results-header {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 10px !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-bottom: 12px !important;
+          }
+          .results-count {
+            font-size: 0.7rem !important;
+            padding: 4px 10px !important;
+          }
+          .sort-label {
+            font-size: 0.7rem !important;
+          }
+          .sort-select {
+            font-size: 0.7rem !important;
+            padding: 4px 8px !important;
           }
           .cart-btn span {
             display: none;
@@ -416,36 +705,122 @@ export default function Catalogue() {
           .cart-btn {
             padding: 6px 8px !important;
           }
-          .logo {
-            font-size: 1.1rem !important;
+          .cart-btn svg {
+            width: 14px !important;
+            height: 14px !important;
           }
-        }
-        
-        @media (min-width: 769px) {
-          .mobile-filter-bar {
+          .cart-badge {
+            width: 14px !important;
+            height: 14px !important;
+            font-size: 0.55rem !important;
+          }
+          .card-desc {
             display: none !important;
-          }
-          .sidebar-header {
-            display: none !important;
-          }
-        }
-        
-        @media (max-width: 480px) {
-          .grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .card-image-wrapper {
-            height: 110px !important;
           }
           .card-content {
             padding: 8px !important;
           }
-          .search-container {
-            max-width: 120px !important;
+          .stock-info {
+            font-size: 0.6rem !important;
           }
-          .hero-titre {
+        }
+        
+        /* ===== TRÈS PETIT MOBILE (<= 480px) ===== */
+        @media (max-width: 480px) {
+          .grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+          }
+          .card-image-wrapper {
+            height: 95px !important;
+          }
+          .card-title {
+            font-size: 0.6rem !important;
+          }
+          .price-amount {
+            font-size: 0.7rem !important;
+          }
+          .search-container {
+            max-width: 110px !important;
+          }
+          .search-input {
+            font-size: 0.6rem !important;
+            padding: 5px 6px !important;
+          }
+          .search-btn svg {
+            width: 12px !important;
+            height: 12px !important;
+          }
+          .mobile-filter-btn {
+            padding: 6px 12px !important;
+            font-size: 0.7rem !important;
+          }
+          .mobile-reset-btn {
+            padding: 6px 10px !important;
+            font-size: 0.65rem !important;
+          }
+          .results-count {
+            font-size: 0.6rem !important;
+            padding: 3px 8px !important;
+          }
+          .sort-select {
+            font-size: 0.6rem !important;
+            padding: 3px 6px !important;
+          }
+          .add-btn {
+            padding: 5px 6px !important;
+            font-size: 0.6rem !important;
+          }
+          .card-content {
+            padding: 6px !important;
+          }
+          .stock-info {
+            font-size: 0.55rem !important;
+          }
+          .price-currency {
+            font-size: 0.55rem !important;
+          }
+          .logo {
             font-size: 1rem !important;
           }
+        }
+        
+        /* ===== ÉCRANS TRÈS ÉTROITS (<= 360px) ===== */
+        @media (max-width: 360px) {
+          .grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .card-image-wrapper {
+            height: 140px !important;
+          }
+          .search-container {
+            max-width: 100px !important;
+          }
+          .mobile-filter-btn {
+            padding: 5px 10px !important;
+            font-size: 0.65rem !important;
+          }
+          .mobile-reset-btn {
+            padding: 5px 8px !important;
+            font-size: 0.6rem !important;
+          }
+        }
+        
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+          width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #F1F1F1;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #C8410A;
+          border-radius: 10px;
+        }
+        ::selection {
+          background: #C8410A;
+          color: #fff;
         }
       ` }} />
     </div>
@@ -462,27 +837,34 @@ const styles = {
   // Navigation
   nav: {
     background: '#112219',
-    padding: '0 20px',
+    padding: '0 8%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: '60px',
+    height: '80px',
     position: 'sticky',
     top: 0,
     zIndex: 100,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
     gap: '20px',
   },
+  logoContainer: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  logoLink: {
+    textDecoration: 'none',
+  },
   logo: {
-    fontSize: '1.4rem',
+    fontSize: '1.5rem',
     fontWeight: '800',
     color: '#fff',
     textDecoration: 'none',
-    whiteSpace: 'nowrap',
+    letterSpacing: '-0.5px',
   },
   searchContainer: {
     flex: 1,
     maxWidth: '500px',
-    margin: '0 auto',
   },
   searchWrapper: {
     display: 'flex',
@@ -490,9 +872,9 @@ const styles = {
   },
   searchInput: {
     flex: 1,
-    padding: '10px 15px',
+    padding: '12px 16px',
     border: 'none',
-    borderRadius: '8px 0 0 8px',
+    borderRadius: '12px 0 0 12px',
     outline: 'none',
     fontSize: '0.9rem',
     background: '#fff',
@@ -500,160 +882,179 @@ const styles = {
   searchBtn: {
     background: '#F4A76A',
     border: 'none',
-    borderRadius: '0 8px 8px 0',
+    borderRadius: '0 12px 12px 0',
     padding: '0 20px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '1.1rem',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
+    color: '#fff',
   },
   desktopMenu: {
     display: 'flex',
-    gap: '10px',
+    gap: '8px',
     alignItems: 'center',
   },
   mobileMenuBtn: {
     display: 'none',
-    background: 'none',
-    border: 'none',
+    background: 'rgba(244, 167, 106, 0.2)',
+    border: '1px solid rgba(244, 167, 106, 0.3)',
+    backdropFilter: 'blur(10px)',
     cursor: 'pointer',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: '12px',
+    padding: '10px 12px',
+    transition: 'all 0.3s ease',
   },
   mobileMenu: {
     position: 'absolute',
-    top: '60px',
+    top: '80px',
     left: 0,
     right: 0,
-    background: '#112219',
+    background: 'linear-gradient(135deg, #112219 0%, #1a3324 100%)',
     padding: '16px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '8px',
     zIndex: 99,
-    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    borderBottom: '2px solid rgba(244, 167, 106, 0.3)',
+    backdropFilter: 'blur(20px)',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
   },
   mobileMenuItem: {
     color: '#fff',
     textDecoration: 'none',
-    padding: '12px 16px',
-    borderRadius: '10px',
-    fontSize: '0.9rem',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    fontSize: '0.95rem',
     fontWeight: '500',
-    background: 'rgba(255,255,255,0.05)',
+    background: 'rgba(255,255,255,0.08)',
     display: 'flex',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: '12px',
+    transition: 'all 0.3s ease',
+    border: '1px solid rgba(255,255,255,0.05)',
+  },
+  mobileMenuIcon: {
+    fontSize: '1.2rem',
   },
   mobileBadge: {
-    background: '#C8410A',
+    background: 'linear-gradient(135deg, #C8410A, #F4A76A)',
     color: '#fff',
     padding: '2px 8px',
     borderRadius: '20px',
     fontSize: '0.7rem',
+    marginLeft: 'auto',
+    fontWeight: 'bold',
   },
   mobileDecoBtn: {
     width: '100%',
     textAlign: 'left',
-    background: 'rgba(231, 76, 60, 0.2)',
-    border: 'none',
+    background: 'rgba(231, 76, 60, 0.15)',
+    border: '1px solid rgba(231, 76, 60, 0.3)',
     color: '#E74C3C',
-    padding: '12px 16px',
-    borderRadius: '10px',
-    fontSize: '0.9rem',
+    padding: '14px 16px',
+    borderRadius: '12px',
+    fontSize: '0.95rem',
     fontWeight: '500',
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    transition: 'all 0.3s ease',
   },
   mobileFilterBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '10px 16px',
+    padding: '10px 12px',
     background: '#fff',
     borderBottom: '1px solid #E8E8E8',
-    marginBottom: '12px',
+    marginBottom: '10px',
+    gap: '10px',
   },
   mobileFilterBtn: {
-    background: '#C8410A',
+    flex: 1,
+    background: 'linear-gradient(135deg, #C8410A, #E8622A)',
     color: '#fff',
     border: 'none',
-    padding: '8px 16px',
-    borderRadius: '20px',
+    padding: '8px 14px',
+    borderRadius: '25px',
     fontSize: '0.8rem',
     fontWeight: '600',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '8px',
     position: 'relative',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 8px rgba(200, 65, 10, 0.3)',
   },
-  filterActiveDot: {
-    width: '8px',
-    height: '8px',
-    background: '#2ECC71',
-    borderRadius: '50%',
-    position: 'absolute',
-    top: '-2px',
-    right: '-2px',
+  mobileFilterBtnActive: {
+    background: 'linear-gradient(135deg, #C8410A, #A03208)',
+    boxShadow: '0 0 0 2px rgba(200, 65, 10, 0.5)',
   },
-  filterActiveText: {
-    fontSize: '0.7rem',
+  mobileResetBtn: {
+    background: '#F5F5F5',
     color: '#C8410A',
-    fontWeight: '500',
-  },
-  filterInfo: {
+    border: '1px solid #E8E8E8',
+    padding: '8px 14px',
+    borderRadius: '25px',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
     display: 'flex',
     alignItems: 'center',
-  },
-  navRight: {
-    display: 'flex',
-    gap: '10px',
-    alignItems: 'center',
+    gap: '5px',
   },
   navLink: {
-    color: '#fff',
+    color: 'rgba(255,255,255,0.85)',
     textDecoration: 'none',
-    fontSize: '0.85rem',
-    padding: '8px 12px',
-    borderRadius: '6px',
-    transition: 'all 0.2s ease',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    padding: '10px 18px',
+    borderRadius: '12px',
   },
   cartBtn: {
-    background: '#E74C3C',
+    background: '#C8410A',
     color: '#fff',
-    padding: '8px 16px',
-    borderRadius: '8px',
+    padding: '10px 20px',
+    borderRadius: '40px',
     textDecoration: 'none',
-    fontSize: '0.85rem',
+    fontSize: '0.9rem',
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
   },
   cartBadge: {
     background: '#fff',
-    color: '#E74C3C',
+    color: '#C8410A',
     borderRadius: '50%',
-    width: '18px',
-    height: '18px',
+    width: '22px',
+    height: '22px',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '0.65rem',
-    fontWeight: '700',
+    fontSize: '0.7rem',
+    fontWeight: '800',
   },
   decoBtn: {
-    background: 'rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.08)',
     border: '1px solid rgba(255,255,255,0.2)',
     color: '#fff',
-    padding: '8px 16px',
-    borderRadius: '8px',
+    padding: '10px 18px',
+    borderRadius: '40px',
     cursor: 'pointer',
-    fontSize: '0.85rem',
-    transition: 'all 0.2s ease',
+    fontSize: '0.9rem',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
   },
   
   // Main Layout
@@ -661,21 +1062,21 @@ const styles = {
     display: 'flex',
     maxWidth: '1400px',
     margin: '0 auto',
-    padding: '20px',
-    gap: '25px',
+    padding: '24px',
+    gap: '24px',
   },
   
   // Sidebar
   sidebar: {
-    width: '260px',
+    width: '280px',
     background: '#fff',
-    borderRadius: '12px',
+    borderRadius: '16px',
     padding: '20px 0',
     height: 'fit-content',
-    top: '80px',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    top: '100px',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
     border: '1px solid #E8E8E8',
-    transition: 'transform 0.3s ease',
+    transition: 'all 0.3s ease',
     zIndex: 1000,
     overflowY: 'auto',
   },
@@ -688,7 +1089,7 @@ const styles = {
     marginBottom: '16px',
   },
   sidebarHeaderTitle: {
-    fontSize: '1rem',
+    fontSize: '1.1rem',
     fontWeight: '700',
     color: '#112219',
     margin: 0,
@@ -699,6 +1100,7 @@ const styles = {
     fontSize: '1.2rem',
     cursor: 'pointer',
     color: '#666',
+    transition: 'all 0.2s ease',
   },
   sidebarSection: {
     padding: '0 20px 20px 20px',
@@ -715,11 +1117,11 @@ const styles = {
   categoryList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px',
+    gap: '8px',
   },
   categoryBtn: {
     width: '100%',
-    padding: '10px 0',
+    padding: '10px 12px',
     background: 'transparent',
     border: 'none',
     fontSize: '0.85rem',
@@ -731,10 +1133,12 @@ const styles = {
     justifyContent: 'space-between',
     transition: 'all 0.2s ease',
     textAlign: 'left',
+    borderRadius: '8px',
   },
   categoryBtnActive: {
     color: '#C8410A',
     fontWeight: '600',
+    background: 'rgba(200, 65, 10, 0.08)',
   },
   checkIcon: {
     color: '#C8410A',
@@ -753,8 +1157,9 @@ const styles = {
     gap: '5px',
     background: '#F8F9FA',
     padding: '8px 12px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: '1px solid #E8E8E8',
+    transition: 'all 0.2s ease',
   },
   priceLabel: {
     fontSize: '0.7rem',
@@ -810,7 +1215,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '20px',
+    marginBottom: '24px',
     padding: '10px 0',
     flexWrap: 'wrap',
     gap: '10px',
@@ -819,9 +1224,10 @@ const styles = {
     fontSize: '0.85rem',
     color: '#666',
     background: '#fff',
-    padding: '5px 14px',
+    padding: '6px 16px',
     borderRadius: '20px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    fontWeight: '500',
   },
   sortSection: {
     display: 'flex',
@@ -833,47 +1239,49 @@ const styles = {
     color: '#666',
   },
   sortSelect: {
-    padding: '6px 10px',
-    borderRadius: '6px',
+    padding: '8px 12px',
+    borderRadius: '8px',
     border: '1px solid #ddd',
     background: '#fff',
     fontSize: '0.8rem',
     cursor: 'pointer',
     outline: 'none',
+    transition: 'all 0.2s ease',
   },
   
   // Loading
   loadingGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+    gap: '24px',
   },
   skeletonCard: {
     background: '#fff',
-    borderRadius: '12px',
+    borderRadius: '16px',
     overflow: 'hidden',
+    border: '1px solid #E8E8E8',
   },
   skeletonImage: {
-    height: '180px',
+    height: '200px',
     background: 'linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%)',
     backgroundSize: '200% 100%',
     animation: 'shimmer 1.5s infinite',
   },
   skeletonInfo: {
-    padding: '15px',
+    padding: '16px',
   },
   skeletonLine: {
     height: '14px',
     background: '#f0f0f0',
     borderRadius: '6px',
-    marginBottom: '10px',
+    marginBottom: '12px',
     width: '80%',
   },
   skeletonLineShort: {
     height: '12px',
     background: '#f0f0f0',
     borderRadius: '6px',
-    marginBottom: '8px',
+    marginBottom: '10px',
     width: '60%',
   },
   skeletonPrice: {
@@ -886,9 +1294,10 @@ const styles = {
   // Empty state
   emptyState: {
     textAlign: 'center',
-    padding: '60px 20px',
+    padding: '80px 20px',
     background: '#fff',
-    borderRadius: '12px',
+    borderRadius: '16px',
+    border: '1px solid #E8E8E8',
   },
   emptyIcon: {
     fontSize: '4rem',
@@ -906,24 +1315,24 @@ const styles = {
   },
   emptyBtn: {
     padding: '10px 28px',
-    borderRadius: '8px',
+    borderRadius: '40px',
     border: 'none',
     background: '#C8410A',
     color: '#fff',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
   },
   
   // Product Grid
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-    gap: '20px',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+    gap: '24px',
   },
   card: {
     background: '#fff',
-    borderRadius: '12px',
+    borderRadius: '16px',
     overflow: 'hidden',
     transition: 'all 0.3s ease',
     border: '1px solid #E8E8E8',
@@ -936,7 +1345,7 @@ const styles = {
   },
   cardImageWrapper: {
     position: 'relative',
-    height: '180px',
+    height: '200px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -957,20 +1366,20 @@ const styles = {
   },
   badge: {
     position: 'absolute',
-    top: '10px',
-    left: '10px',
+    top: '12px',
+    left: '12px',
     background: '#C8410A',
     color: '#fff',
     fontSize: '0.65rem',
     fontWeight: '700',
-    padding: '3px 8px',
-    borderRadius: '4px',
+    padding: '4px 10px',
+    borderRadius: '6px',
   },
   cardContent: {
-    padding: '15px',
+    padding: '16px',
   },
   cardTitle: {
-    fontSize: '0.85rem',
+    fontSize: '0.9rem',
     fontWeight: '600',
     color: '#112219',
     marginBottom: '8px',
@@ -999,6 +1408,10 @@ const styles = {
     color: '#888',
     marginBottom: '8px',
     lineHeight: 1.3,
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
   },
   stockInfo: {
     fontSize: '0.7rem',
@@ -1011,20 +1424,20 @@ const styles = {
     color: '#E74C3C',
   },
   addBtn: {
-    margin: '0 12px 12px 12px',
-    padding: '8px',
+    margin: '0 16px 16px 16px',
+    padding: '10px',
     background: '#112219',
     border: 'none',
-    borderRadius: '20px',
-    fontSize: '0.75rem',
+    borderRadius: '40px',
+    fontSize: '0.8rem',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.3s ease',
     color: '#fff',
   },
 };
 
-// Animations
+// Animations globales
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   @keyframes shimmer {
@@ -1032,72 +1445,34 @@ styleSheet.textContent = `
     100% { background-position: 200% 0; }
   }
   
-  .product-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   
-  .product-card:hover .add-btn {
-    background: #C8410A;
+  @keyframes slideInRight {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
   
-  .search-btn:hover {
-    background: #E8622A;
-  }
-  
-  .cart-btn:hover, .add-btn:hover:not(:disabled), .empty-btn:hover, .reset-sidebar-btn:hover {
-    background: #C0392B;
-    transform: translateY(-1px);
-  }
-  
-  .category-btn:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    color: #C8410A;
-  }
-  
-  .category-btn:active {
-    transform: scale(0.98);
-  }
-  
-  .decoBtn:hover, .nav-link:hover {
-    background: rgba(255,255,255,0.1);
-  }
-  
-  .sort-select:focus {
-    border-color: #C8410A;
-    outline: none;
-  }
-  
-  .price-input-group:focus-within {
-    border-color: #C8410A;
-    box-shadow: 0 0 0 2px rgba(200, 65, 10, 0.1);
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
   }
   
   .mobile-menu {
     animation: slideDown 0.3s ease-out;
   }
   
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
   ::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
   ::-webkit-scrollbar-track {
     background: #F1F1F1;
   }
   ::-webkit-scrollbar-thumb {
     background: #C8410A;
-    border-radius: 4px;
+    border-radius: 10px;
   }
   
   ::selection {
