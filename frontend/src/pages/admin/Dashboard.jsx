@@ -82,7 +82,7 @@ function LineChart({ title, data = [] }) {
             </linearGradient>
           </defs>
           
-          {[0, 60, 120, 180].map((y, i) => (
+          {[0, 60, 120, 180].map((y) => (
             <line key={y} x1="0" y1={y} x2="500" y2={y} stroke="#E9ECEF" strokeWidth="1" strokeDasharray="3,3"/>
           ))}
           
@@ -266,6 +266,7 @@ export default function AdminDashboard() {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     api.get('/commandes/stats').then(({ data }) => setStats(data)).catch(console.error);
@@ -295,45 +296,43 @@ export default function AdminDashboard() {
   ];
 
   const evolutionData = stats?.parMois || [
-    { label: 'Jan', total: 120000 },
-    { label: 'Fév', total: 98000 },
-    { label: 'Mar', total: 145000 },
-    { label: 'Avr', total: 132000 },
-    { label: 'Mai', total: 189000 },
-    { label: 'Juin', total: 210000 },
-    { label: 'Juil', total: 198000 },
-    { label: 'Aoû', total: 225000 },
-    { label: 'Sep', total: 245000 },
-    { label: 'Oct', total: 267000 },
-    { label: 'Nov', total: 289000 },
-    { label: 'Déc', total: 310000 }
+    { label: 'Jan', total: 120000 }, { label: 'Fév', total: 98000 }, { label: 'Mar', total: 145000 },
+    { label: 'Avr', total: 132000 }, { label: 'Mai', total: 189000 }, { label: 'Juin', total: 210000 },
+    { label: 'Juil', total: 198000 }, { label: 'Aoû', total: 225000 }, { label: 'Sep', total: 245000 },
+    { label: 'Oct', total: 267000 }, { label: 'Nov', total: 289000 }, { label: 'Déc', total: 310000 }
   ];
 
   const repartitionData = stats?.parCategorie || [
-    { label: 'Électronique', total: 450000 },
-    { label: 'Vêtements', total: 320000 },
-    { label: 'Maison', total: 280000 },
-    { label: 'Beauté', total: 195000 },
-    { label: 'Sports', total: 170000 },
-    { label: 'Jouets', total: 125000 },
-    { label: 'Livres', total: 89000 },
-    { label: 'Autres', total: 67000 }
+    { label: 'Électronique', total: 450000 }, { label: 'Vêtements', total: 320000 },
+    { label: 'Maison', total: 280000 }, { label: 'Beauté', total: 195000 },
+    { label: 'Sports', total: 170000 }, 
+    { label: 'Livres', total: 89000 }, { label: 'Autres', total: 67000 }
   ];
 
   return (
-    <div style={styles.layout} className="admin-responsive-layout">
-      <aside style={styles.sidebar} className="admin-responsive-sidebar">
+    <div style={styles.layout}>
+      {/* Overlay pour mobile */}
+      {mobileMenuOpen && <div style={styles.overlay} onClick={() => setMobileMenuOpen(false)}></div>}
+      
+      {/* Sidebar - visible sur desktop, transformée en menu hamburger sur mobile */}
+      <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`} style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
           <div style={styles.logoWrapper}>
             <img src={logot} alt="TeyShop" style={styles.logoImage} />
           </div>
           <h2 style={styles.sidebarLogo}>TeyShop</h2>
           <span style={styles.sidebarBadge}>Admin</span>
+          <button onClick={() => setMobileMenuOpen(false)} className="close-sidebar-btn" style={styles.closeSidebarBtn}>✕</button>
         </div>
         
-        <nav style={styles.nav} className="admin-responsive-nav">
+        <nav style={styles.nav}>
           {menuItems.map((item) => (
-            <Link key={item.path} to={item.path} style={styles.menuItem} className="menu-item">
+            <Link 
+              key={item.path} 
+              to={item.path} 
+              style={styles.menuItem} 
+              onClick={() => setMobileMenuOpen(false)}
+            >
               <div style={styles.menuIcon}>
                 <Icon name={item.icon} size={18} color="#fff" />
               </div>
@@ -354,7 +353,6 @@ export default function AdminDashboard() {
             </div>
           </div>
           
-          {/* Bouton déconnexion amélioré */}
           <button 
             onClick={handleLogout} 
             style={{
@@ -362,7 +360,6 @@ export default function AdminDashboard() {
               opacity: isLoggingOut ? 0.7 : 1,
               pointerEvents: isLoggingOut ? 'none' : 'auto'
             }}
-            className="logout-btn"
           >
             <div style={styles.logoutIconWrapper}>
               <Icon name="log-out" size={18} color="#fff" />
@@ -370,9 +367,7 @@ export default function AdminDashboard() {
             <span style={styles.logoutText}>
               {isLoggingOut ? 'Déconnexion...' : 'Déconnexion'}
             </span>
-            {!isLoggingOut && (
-              <div style={styles.logoutArrow}>→</div>
-            )}
+            {!isLoggingOut && <div style={styles.logoutArrow}>→</div>}
             {isLoggingOut && (
               <div style={styles.logoutSpinner}>
                 <div style={styles.spinner}></div>
@@ -382,16 +377,30 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      <main style={styles.main} className="admin-responsive-main">
-        <div style={styles.header} className="responsive-header-row">
-          <div>
-            <h1 style={styles.titre}>
-              Tableau de bord
-              <span style={styles.titreBadge}>Dashboard</span>
-            </h1>
-            <p style={styles.sousTitre}>
-              Bonjour, {user?.prenom} 👋 Bienvenue
-            </p>
+      <main style={styles.main}>
+        {/* Header avec bouton hamburger pour mobile - AMÉLIORÉ ET VISIBLE */}
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <button 
+              onClick={() => setMobileMenuOpen(true)} 
+              className="hamburger-btn"
+              style={styles.hamburgerBtn}
+            >
+              <svg width="22" height="16" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="22" height="2" fill="#1A3A2A"/>
+                <rect y="7" width="22" height="2" fill="#1A3A2A"/>
+                <rect y="14" width="22" height="2" fill="#1A3A2A"/>
+              </svg>
+            </button>
+            <div>
+              <h1 style={styles.titre}>
+                Tableau de bord
+                <span style={styles.titreBadge}>Dashboard</span>
+              </h1>
+              <p style={styles.sousTitre}>
+                Bonjour, {user?.prenom} 👋 Bienvenue
+              </p>
+            </div>
           </div>
           <div style={styles.headerDate}>
             <div style={styles.dateCard}>
@@ -405,11 +414,10 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div style={styles.statsGrid} className="stats-grid responsive-grid">
+        <div style={styles.statsGrid}>
           {cartes.map((c, idx) => (
             <div 
               key={c.label} 
-              className="stat-card"
               style={{ 
                 ...styles.statCard, 
                 background: c.gradient,
@@ -430,8 +438,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Graphiques compacts */}
-        <div style={styles.chartsGridCompact} className="charts-grid-compact responsive-grid">
+        <div style={styles.chartsGridCompact}>
           <PieChart title="Répartition des ventes" data={repartitionData} />
           <LineChart title="Évolution des ventes" data={evolutionData} />
         </div>
@@ -441,8 +448,8 @@ export default function AdminDashboard() {
             Actions rapides
             <span style={styles.sectionBadgeCompact}>3</span>
           </h2>
-          <div style={styles.actionsGridCompact} className="actions-grid-compact responsive-grid">
-            <Link to="/admin/produits" className="action-card" style={styles.actionCardCompact}>
+          <div style={styles.actionsGridCompact}>
+            <Link to="/admin/produits" style={styles.actionCardCompact}>
               <div style={styles.actionIconCompact}>
                 <Icon name="plus" size={18} color="#C8410A" />
               </div>
@@ -452,7 +459,7 @@ export default function AdminDashboard() {
               </div>
               <div style={styles.actionArrowCompact}>→</div>
             </Link>
-            <Link to="/admin/commandes" className="action-card" style={styles.actionCardCompact}>
+            <Link to="/admin/commandes" style={styles.actionCardCompact}>
               <div style={styles.actionIconCompact}>
                 <Icon name="clipboard" size={18} color="#E8622A" />
               </div>
@@ -462,7 +469,7 @@ export default function AdminDashboard() {
               </div>
               <div style={styles.actionArrowCompact}>→</div>
             </Link>
-            <Link to="/admin/clients" className="action-card" style={styles.actionCardCompact}>
+            <Link to="/admin/clients" style={styles.actionCardCompact}>
               <div style={styles.actionIconCompact}>
                 <Icon name="users" size={18} color="#27AE60" />
               </div>
@@ -475,6 +482,113 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Styles CSS pour le menu hamburger */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* Styles par défaut (desktop) */
+        .sidebar {
+          transform: translateX(0) !important;
+        }
+        
+        .hamburger-btn {
+          display: none !important;
+        }
+        
+        .close-sidebar-btn {
+          display: none !important;
+        }
+        
+        .overlay {
+          display: none !important;
+        }
+        
+        /* Styles pour mobile */
+        @media (max-width: 768px) {
+          .sidebar {
+            position: fixed !important;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transform: translateX(-100%) !important;
+            transition: transform 0.3s ease-in-out !important;
+          }
+          
+          .sidebar.open {
+            transform: translateX(0) !important;
+          }
+          
+          .close-sidebar-btn {
+            display: flex !important;
+          }
+          
+          .hamburger-btn {
+            display: flex !important;
+            background: #C8410A !important;
+            border: none !important;
+            border-radius: 10px !important;
+            width: 42px !important;
+            height: 42px !important;
+            cursor: pointer !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+          }
+          
+          .hamburger-btn svg rect {
+            fill: white !important;
+          }
+          
+          .overlay {
+            display: block !important;
+          }
+          
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          
+          .charts-grid-compact {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .actions-grid-compact {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .pie-container-compact {
+            flex-direction: column !important;
+            align-items: center !important;
+          }
+          
+          .pie-legend-compact {
+            width: 100% !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .header-date {
+            width: 100%;
+            justify-content: space-between;
+          }
+          
+          .date-card, .time-card {
+            flex: 1;
+            justify-content: center;
+          }
+        }
+        
+        .hamburger-btn:hover {
+          transform: scale(1.02);
+          background: #E8622A !important;
+        }
+        
+        .close-sidebar-btn:hover {
+          background: rgba(255,255,255,0.2);
+        }
+      ` }} />
     </div>
   );
 }
@@ -487,16 +601,40 @@ const styles = {
     background: '#F5F7FA'
   },
   
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0,0,0,0.5)',
+    zIndex: 998,
+    backdropFilter: 'blur(4px)'
+  },
+  
   sidebar: { 
     width: '260px', 
     background: 'linear-gradient(180deg, #1A3A2A 0%, #0E251B 100%)', 
     padding: '24px 16px', 
     display: 'flex', 
     flexDirection: 'column', 
-    position: 'sticky', 
     top: 0, 
     height: '100vh',
-    boxShadow: '2px 0 20px rgba(0,0,0,0.08)'
+    boxShadow: '2px 0 20px rgba(0,0,0,0.08)',
+    zIndex: 1000
+  },
+  
+  closeSidebarBtn: {
+    background: 'rgba(255,255,255,0.1)',
+    border: 'none',
+    color: '#fff',
+    width: '30px',
+    height: '30px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto'
   },
   
   sidebarHeader: {
@@ -542,14 +680,16 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '2px'
+    gap: '2px',
+    overflowY: 'auto',
+    overflowX: 'hidden'
   },
   
   menuItem: { 
     display: 'flex', 
     alignItems: 'center', 
     gap: '10px', 
-    padding: '8px 12px', 
+    padding: '10px 12px', 
     color: 'rgba(255,255,255,0.8)', 
     textDecoration: 'none', 
     borderRadius: '8px', 
@@ -612,7 +752,6 @@ const styles = {
     fontSize: '0.65rem'
   },
   
-  // Bouton déconnexion amélioré
   deconnexionBtn: { 
     display: 'flex', 
     alignItems: 'center', 
@@ -624,8 +763,6 @@ const styles = {
     borderRadius: '10px', 
     cursor: 'pointer', 
     width: '100%',
-    position: 'relative',
-    overflow: 'hidden',
     transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
   },
   
@@ -679,6 +816,25 @@ const styles = {
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '12px'
+  },
+  
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  
+  hamburgerBtn: {
+    background: '#fff',
+    border: '1px solid #E2E8F0',
+    borderRadius: '10px',
+    width: '42px',
+    height: '42px',
+    cursor: 'pointer',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    transition: 'all 0.2s ease'
   },
   
   titre: { 
@@ -786,7 +942,6 @@ const styles = {
     color: 'rgba(255,255,255,0.7)'
   },
   
-  // Graphiques compacts
   chartsGridCompact: { 
     display: 'grid', 
     gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', 
@@ -855,7 +1010,6 @@ const styles = {
     color: '#ADB5BD'
   },
   
-  // Pie chart compact
   pieContainerCompact: {
     display: 'flex',
     gap: '16px',
@@ -936,7 +1090,6 @@ const styles = {
     marginTop: '4px'
   },
   
-  // Line chart compact
   lineContainerCompact: {
     marginTop: '8px'
   },
@@ -967,7 +1120,6 @@ const styles = {
     borderRadius: '50%'
   },
   
-  // Actions rapides compactes
   quickActions: {
     marginTop: '8px'
   },
@@ -1023,26 +1175,16 @@ const styles = {
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   
   @keyframes drawLine {
-    to {
-      stroke-dashoffset: 0;
-    }
+    to { stroke-dashoffset: 0; }
   }
   
   @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
   }
   
   .line-path {
@@ -1051,71 +1193,24 @@ styleSheet.textContent = `
     animation: drawLine 1.5s ease-out forwards;
   }
   
-  .area-fill {
-    animation: slideIn 0.8s ease-out;
-  }
+  .area-fill { animation: slideIn 0.8s ease-out; }
+  .data-point { animation: slideIn 0.5s ease-out backwards; }
+  .pie-slice { animation: slideIn 0.4s ease-out backwards; cursor: pointer; }
+  .pie-center { animation: slideIn 0.6s ease-out; }
   
-  .data-point {
-    animation: slideIn 0.5s ease-out backwards;
-  }
-  
-  .pie-slice {
-    animation: slideIn 0.4s ease-out backwards;
-    cursor: pointer;
-  }
-  
-  .pie-center {
-    animation: slideIn 0.6s ease-out;
-  }
-  
-  .stat-card:hover {
-    transform: translateY(-4px) scale(1.01) !important;
-  }
-  
-  .menu-item:hover {
-    background: rgba(255,255,255,0.1);
-    transform: translateX(4px);
-  }
+  .stat-card:hover { transform: translateY(-4px) scale(1.01) !important; }
+  .menu-item:hover { background: rgba(255,255,255,0.1); transform: translateX(4px); }
   
   .logout-btn:hover {
     background: rgba(255,255,255,0.15) !important;
     transform: translateX(4px);
   }
   
-  .logout-btn:hover .logout-arrow {
-    transform: translateX(4px);
-  }
-  
-  .logout-btn:hover .logout-icon-wrapper {
-    transform: scale(1.1);
-  }
-  
-  .action-card:hover {
-    transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  }
-  
-  .legend-item:hover {
-    transform: translateX(4px) !important;
-  }
-  
-  .chart-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-  }
-  
-  /* Responsive */
-  @media (max-width: 1000px) {
-    .stats-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
-    .charts-grid-compact {
-      grid-template-columns: 1fr !important;
-    }
-    .actions-grid-compact {
-      grid-template-columns: 1fr !important;
-    }
-  }
+  .logout-btn:hover .logout-arrow { transform: translateX(4px); }
+  .logout-btn:hover .logout-icon-wrapper { transform: scale(1.1); }
+  .action-card:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .legend-item:hover { transform: translateX(4px) !important; }
+  .chart-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
   
   ::-webkit-scrollbar {
     width: 5px;
