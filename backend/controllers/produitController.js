@@ -6,6 +6,44 @@ const { supprimerImage } = require('../config/cloudinary');
 const produitDejaCommande = (produitId) =>
   Commande.exists({ 'lignes.produit': produitId });
 
+const normaliserTexte = (value = '') =>
+  String(value)
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const categoriesCanon = [
+  { value: 'Électronique', aliases: ['electronique', 'electronics', 'lectron'] },
+  { value: 'Vêtements', aliases: ['vetements', 'vetement', 'mode', 'tement'] },
+  { value: 'Alimentation', aliases: ['alimentation', 'alimentaire'] },
+  { value: 'Electromenager', aliases: ['electromenager', 'menager'] },
+  { value: 'Beauté', aliases: ['beaute', 'beauty', 'beaut'] },
+  { value: 'Immobilier', aliases: ['immobilier', 'maison', 'appartement', 'villa', 'terrain', 'bureau', 'local', 'studio'] },
+  { value: 'Sport', aliases: ['sport', 'sports'] },
+  { value: 'Autre', aliases: ['autre', 'divers'] },
+];
+
+const categorieCanonique = (categorie) => {
+  const normalized = normaliserTexte(categorie);
+  const match = categoriesCanon.find((cat) =>
+    cat.aliases.some((alias) => normalized.includes(alias))
+  );
+  return match ? match.value : String(categorie || '').trim();
+};
+
+const regexCategorie = (categorie) => {
+  const normalized = normaliserTexte(categorie);
+  const match = categoriesCanon.find((cat) =>
+    cat.aliases.some((alias) => normalized.includes(alias))
+  );
+  const terms = match ? [match.value, ...match.aliases] : [String(categorie || '').trim()];
+  const escaped = terms
+    .filter(Boolean)
+    .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return { $regex: escaped.join('|'), $options: 'i' };
+};
+
 // ── LISTER LES PRODUITS (Public) ─────────────
 // ✅ Aucun changement
 exports.listerProduits = async (req, res) => {
@@ -13,12 +51,7 @@ exports.listerProduits = async (req, res) => {
     const { categorie, recherche, page = 1, limite = 12, minPrix, maxPrix } = req.query;
     const filtre = { actif: true };
     if (categorie) {
-      const cat = String(categorie).toLowerCase();
-      if      (cat.includes('lectron'))        filtre.categorie = { $regex: 'lectron',        $options: 'i' };
-      else if (cat.includes('tement'))         filtre.categorie = { $regex: 'tement',         $options: 'i' };
-      else if (cat.includes('beaut'))          filtre.categorie = { $regex: 'beaut',          $options: 'i' };
-      else if (cat.includes('electromenager')) filtre.categorie = { $regex: 'electromenager', $options: 'i' };
-      else filtre.categorie = categorie;
+      filtre.categorie = regexCategorie(categorie);
     }
     if (recherche) filtre.$text = { $search: recherche };
     if (minPrix || maxPrix) {
@@ -91,6 +124,7 @@ exports.creerProduit = async (req, res) => {
 
     const nouveauProduit = await Produit.create({
       ...req.body,
+      categorie: categorieCanonique(req.body.categorie),
       images,
       vendeur: req.user._id,
     });
@@ -115,6 +149,9 @@ exports.modifierProduit = async (req, res) => {
     }
 
     const updates = { ...req.body };
+    if (updates.categorie !== undefined) {
+      updates.categorie = categorieCanonique(updates.categorie);
+    }
 
     if (
       (updates.prix  !== undefined && Number(updates.prix)  < 0) ||
