@@ -27,9 +27,24 @@ router.put('/profil', proteger, async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
 
-    user.nom = req.body.nom || user.nom;
-    user.prenom = req.body.prenom || user.prenom;
-    user.telephone = req.body.telephone ?? user.telephone;
+    const telephoneBrute = String(req.body.telephone || '').trim();
+    let telephone = user.telephone;
+    if (telephoneBrute !== '') {
+      const chiffres = telephoneBrute.replace(/\D/g, '');
+      if (/^237\d{9}$/.test(chiffres)) {
+        telephone = `+${chiffres}`;
+      } else if (/^\d{9}$/.test(chiffres)) {
+        telephone = `+237${chiffres}`;
+      } else if (/^\+237\d{9}$/.test(telephoneBrute)) {
+        telephone = telephoneBrute;
+      } else {
+        return res.status(400).json({ message: 'Le téléphone doit être au format +237 suivi de 9 chiffres.' });
+      }
+    }
+
+    user.nom = String(req.body.nom || user.nom).trim();
+    user.prenom = String(req.body.prenom || user.prenom).trim();
+    user.telephone = telephone;
     if (req.body.motDePasse) user.motDePasse = req.body.motDePasse;
 
     const misAJour = await user.save();
