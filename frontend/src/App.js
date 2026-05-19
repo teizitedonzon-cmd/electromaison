@@ -102,8 +102,8 @@ function App() {
             <Route path="/connexion" element={<RouteAuth><Connexion /></RouteAuth>} />
             <Route path="/inscription" element={<RouteAuth><Inscription /></RouteAuth>} />
             
-            {/* Route de redirection après login */}
-            <Route path="/accueil" element={<RedirectionParRole />} />
+            {/* Route publique d'accueil */}
+            <Route path="/accueil" element={<RouteClientPublique><Accueil /></RouteClientPublique>} />
 
             {/* Routes Client Protégées (nécessitent connexion) */}
             <Route path="/mes-commandes" element={<RouteClient><MesCommandes /></RouteClient>} />
