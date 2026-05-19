@@ -232,7 +232,6 @@ export default function DashboardVendeur() {
   const [nonLues, setNonLues] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [isSmallMobile, setIsSmallMobile] = useState(window.innerWidth <= 480);
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedProduit, setSelectedProduit] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -257,7 +256,6 @@ export default function DashboardVendeur() {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
-      setIsSmallMobile(window.innerWidth <= 480);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -406,19 +404,17 @@ export default function DashboardVendeur() {
     return ordered.slice(0, currentMonthIndex + 1).map(m => ({ label: m, value: mois[m] || 0 }));
   };
   
-  // Fonction robuste pour récupérer toutes les catégories
   const ventesParCategorie = () => {
     const cats = {};
     
-    // Mapping pour standardiser les noms de catégories
     const categoryMapping = {
-      'Électronique': ['Électronique', 'Electronique', 'electronique', 'électronique', 'Electronique', 'Smartphone', 'Ordinateur', 'Tablette', 'iPhone', 'Samsung', 'Xiaomi', 'Huawei', 'Téléphone', 'Laptop', 'PC', 'Ordinateur portable'],
-      'Vêtements': ['Vêtements', 'Vetements', 'vêtements', 'vetements', 'Mode', 'Habillement', 'Accessoire', 'T-shirt', 'Chemise', 'Pantalon', 'Robe', 'Jupe', 'Veste', 'Manteau', 'Chaussure', 'Basket'],
-      'Alimentation': ['Alimentation', 'alimentation', 'Nourriture', 'nourriture', 'Riz', 'Pâtes', 'Farine', 'Sucre', 'Huile', 'Lait', 'Café', 'Thé', 'Jus', 'Eau', 'Fruit', 'Légume'],
-      'Electromenager': ['Electromenager', 'electromenager', 'Électroménager', 'électroménager', 'Appareil ménager', 'Réfrigérateur', 'Four', 'Micro-ondes', 'Lave-linge', 'Lave-vaisselle', 'Aspirateur', 'Fer à repasser', 'Cafetière'],
+      'Électronique': ['Électronique', 'Electronique', 'electronique', 'électronique', 'Smartphone', 'Ordinateur', 'Tablette', 'iPhone', 'Samsung', 'Xiaomi', 'Huawei', 'Téléphone', 'Laptop', 'PC'],
+      'Vêtements': ['Vêtements', 'Vetements', 'vêtements', 'vetements', 'Mode', 'Habillement', 'T-shirt', 'Chemise', 'Pantalon', 'Robe', 'Jupe', 'Veste', 'Manteau', 'Chaussure', 'Basket'],
+      'Alimentation': ['Alimentation', 'alimentation', 'Nourriture', 'Riz', 'Pâtes', 'Farine', 'Sucre', 'Huile', 'Lait', 'Café', 'Thé', 'Jus', 'Eau', 'Fruit', 'Légume'],
+      'Electromenager': ['Electromenager', 'electromenager', 'Électroménager', 'électroménager', 'Appareil ménager', 'Réfrigérateur', 'Four', 'Micro-ondes', 'Lave-linge', 'Lave-vaisselle', 'Aspirateur'],
       'Beauté': ['Beauté', 'Beaute', 'beauté', 'beaute', 'Cosmétique', 'Parfum', 'Soin', 'Crème', 'Maquillage', 'Rouge à lèvres', 'Shampooing', 'Savon'],
       'Immobilier': ['Immobilier', 'immobilier', 'Maison', 'Appartement', 'Villa', 'Terrain', 'Bureau', 'Local', 'Studio'],
-      'Sport': ['Sport', 'sport', 'Sports', 'Fitness', 'Vélo', 'Ballon', 'Tapis', 'Haltère', 'Gant', 'Maillot', 'Chaussure de sport'],
+      'Sport': ['Sport', 'sport', 'Sports', 'Fitness', 'Vélo', 'Ballon', 'Tapis', 'Haltère', 'Gant', 'Maillot'],
       'Autre': ['Autre', 'autre', 'Other', 'other', 'Divers', 'undefined', 'null', '']
     };
     
@@ -438,7 +434,6 @@ export default function DashboardVendeur() {
       vente.lignes.forEach(ligne => {
         let categorie = 'Autre';
         
-        // Essayer toutes les sources possibles pour trouver la catégorie
         if (ligne.categorie && typeof ligne.categorie === 'string' && ligne.categorie.trim() !== '' && ligne.categorie !== 'undefined') {
           categorie = ligne.categorie;
         }
@@ -454,15 +449,14 @@ export default function DashboardVendeur() {
           }
         }
         else if (ligne.nomProduit) {
-          // Déduire du nom du produit
           const nomLower = ligne.nomProduit.toLowerCase();
-          if (nomLower.includes('iphone') || nomLower.includes('samsung') || nomLower.includes('ordinateur') || nomLower.includes('laptop') || nomLower.includes('smartphone')) {
+          if (nomLower.includes('iphone') || nomLower.includes('samsung') || nomLower.includes('ordinateur') || nomLower.includes('laptop')) {
             categorie = 'Électronique';
-          } else if (nomLower.includes('t-shirt') || nomLower.includes('chemise') || nomLower.includes('pantalon') || nomLower.includes('robe')) {
+          } else if (nomLower.includes('t-shirt') || nomLower.includes('chemise') || nomLower.includes('pantalon')) {
             categorie = 'Vêtements';
-          } else if (nomLower.includes('riz') || nomLower.includes('pâtes') || nomLower.includes('farine') || nomLower.includes('sucre')) {
+          } else if (nomLower.includes('riz') || nomLower.includes('pâtes') || nomLower.includes('farine')) {
             categorie = 'Alimentation';
-          } else if (nomLower.includes('réfrigérateur') || nomLower.includes('four') || nomLower.includes('lave-linge') || nomLower.includes('micro-ondes')) {
+          } else if (nomLower.includes('réfrigérateur') || nomLower.includes('four') || nomLower.includes('lave-linge')) {
             categorie = 'Electromenager';
           } else if (nomLower.includes('parfum') || nomLower.includes('crème') || nomLower.includes('maquillage')) {
             categorie = 'Beauté';
@@ -473,15 +467,12 @@ export default function DashboardVendeur() {
           }
         }
         
-        // Normaliser la catégorie
         categorie = normalizeCategory(categorie);
         
-        // Calculer le montant
         const quantite = ligne.quantite || 1;
         const prixUnitaire = ligne.prixUnitaire || ligne.prix || 0;
         const montant = prixUnitaire * quantite;
         
-        // Fusionner les montants pour la même catégorie
         if (cats[categorie]) {
           cats[categorie] += montant;
         } else {
@@ -490,12 +481,10 @@ export default function DashboardVendeur() {
       });
     });
     
-    // Convertir en tableau, filtrer les valeurs nulles et trier
     let result = Object.entries(cats)
       .map(([label, value]) => ({ label, value }))
       .filter(item => item.value > 0);
     
-    // Trier par valeur décroissante
     result.sort((a, b) => b.value - a.value);
     
     return result;
@@ -541,19 +530,19 @@ export default function DashboardVendeur() {
             <div style={styles.headerLeft}>
               <div style={styles.logoWrapper}><img src={logot} alt="TeyShop" style={styles.logoImageHeader} /></div>
               <div>
-                <h1 style={{ ...styles.headerTitle, fontSize: isSmallMobile ? '1.1rem' : (isMobile ? '1.3rem' : '1.6rem') }}>Tableau de bord</h1>
-                {!isSmallMobile && <p style={styles.headerSubtitle}>Aperçu de votre activité</p>}
+                <h1 style={{ ...styles.headerTitle, fontSize: isMobile ? '1.3rem' : '1.6rem' }}>Tableau de bord</h1>
+                <p style={styles.headerSubtitle}>Aperçu de votre activité</p>
               </div>
             </div>
             <div style={styles.headerRight}>
               <div style={styles.userSection}>
                 <div className="notification-wrapper" style={styles.notificationWrapper}>
-                  <button onClick={ouvrirNotifications} style={{ ...styles.bellButton, width: isSmallMobile ? '36px' : (isMobile ? '38px' : '42px'), height: isSmallMobile ? '36px' : (isMobile ? '38px' : '42px') }} title="Notifications">
-                    <MdNotifications size={isSmallMobile ? 16 : (isMobile ? 18 : 20)} color="#475569" />
-                    {nonLues > 0 && (<span style={{ ...styles.bellBadge, minWidth: isSmallMobile ? '16px' : '20px', height: isSmallMobile ? '16px' : '20px', fontSize: isSmallMobile ? '0.55rem' : '0.65rem', top: isSmallMobile ? '-4px' : '-5px', right: isSmallMobile ? '-4px' : '-5px' }}>{nonLues > 9 ? '9+' : nonLues}</span>)}
+                  <button onClick={ouvrirNotifications} style={{ ...styles.bellButton, width: isMobile ? '38px' : '42px', height: isMobile ? '38px' : '42px' }} title="Notifications">
+                    <MdNotifications size={isMobile ? 18 : 20} color="#475569" />
+                    {nonLues > 0 && (<span style={{ ...styles.bellBadge, minWidth: '20px', height: '20px', fontSize: '0.65rem', top: '-5px', right: '-5px' }}>{nonLues > 9 ? '9+' : nonLues}</span>)}
                   </button>
                   {showNotifications && (
-                    <div style={{ ...styles.notificationDropdown, width: isSmallMobile ? '280px' : (isMobile ? '300px' : '360px'), right: isSmallMobile ? '-10px' : (isMobile ? '-15px' : '0') }}>
+                    <div style={{ ...styles.notificationDropdown, width: isMobile ? '300px' : '360px', right: isMobile ? '-15px' : '0' }}>
                       <div style={styles.notificationDropdownHeader}>
                         <div><div style={styles.notificationDropdownTitle}>Notifications</div><div style={styles.notificationDropdownSub}>{nonLues} non lue(s)</div></div>
                         {nonLues > 0 && (<button onClick={marquerToutLu} style={styles.markReadBtn}>Tout lire</button>)}
@@ -566,24 +555,33 @@ export default function DashboardVendeur() {
                     </div>
                   )}
                 </div>
-                {!isSmallMobile && (<div style={styles.userInfo}><img src={user?.photoProfil ? mediaUrl(user.photoProfil) : 'https://via.placeholder.com/40'} style={styles.avatar} alt="profil" /><div><p style={styles.userName}>{user?.prenom} {user?.nom}</p><span style={{ ...styles.userStatus, color: peutPublier ? '#10B981' : '#F59E0B' }}><span style={styles.statusDot}></span>{peutPublier ? 'Vendeur approuvé' : 'Validation en attente'}</span></div></div>)}
-                <button onClick={handleLogout} style={{ ...styles.logoutBtn, padding: isSmallMobile ? '6px 10px' : (isMobile ? '8px 14px' : '8px 16px'), gap: isSmallMobile ? '4px' : '8px' }} className="logout-btn"><MdLogout size={isSmallMobile ? 14 : (isMobile ? 16 : 18)} />{!isSmallMobile && <span>{isLoggingOut ? '...' : 'Déconnexion'}</span>}{isLoggingOut && <div style={styles.spinner}></div>}</button>
+                <div style={styles.userInfo}>
+                  <img src={user?.photoProfil ? mediaUrl(user.photoProfil) : 'https://via.placeholder.com/40'} style={styles.avatar} alt="profil" />
+                  <div>
+                    <p style={styles.userName}>{user?.prenom} {user?.nom}</p>
+                    <span style={{ ...styles.userStatus, color: peutPublier ? '#10B981' : '#F59E0B' }}>
+                      <span style={styles.statusDot}></span>
+                      {peutPublier ? 'Vendeur approuvé' : 'Validation en attente'}
+                    </span>
+                  </div>
+                </div>
+                <button onClick={handleLogout} style={{ ...styles.logoutBtn, padding: isMobile ? '8px 14px' : '8px 16px', gap: '8px' }} className="logout-btn"><MdLogout size={isMobile ? 16 : 18} /><span>{isLoggingOut ? '...' : 'Déconnexion'}</span>{isLoggingOut && <div style={styles.spinner}></div>}</button>
               </div>
             </div>
           </header>
 
-          <div style={{ ...styles.statsGrid, gridTemplateColumns: isSmallMobile ? '1fr' : (isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)') }}>
+          <div style={{ ...styles.statsGrid, gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)' }}>
             {[
               { label: 'Mes produits', value: produits.length, icon: MdInventory, color: '#6366F1', borderColor: '#6366F1', suffix: '', bg: '#EEF2FF', onClick: () => setCurrentView('produits') },
               { label: isMobile ? 'Commandes' : 'Commandes reçues', value: totalCommandes, icon: MdShoppingCart, color: '#06B6D4', borderColor: '#06B6D4', suffix: '', bg: '#ECFEFF', onClick: () => setCurrentView('commandes') },
               { label: 'Chiffre d\'affaires', value: revenu.toLocaleString('fr-FR'), icon: MdTrendingUp, color: '#10B981', borderColor: '#10B981', suffix: 'FCFA', bg: '#ECFDF5' }
             ].map((stat, idx) => (
-              <div key={idx} style={{ ...styles.statCard, transform: hoveredStat === idx ? 'translateY(-6px)' : 'translateY(0)', borderLeft: `4px solid ${stat.borderColor}`, padding: isSmallMobile ? '14px' : (isMobile ? '16px' : '20px'), cursor: 'pointer' }} onMouseEnter={() => setHoveredStat(idx)} onMouseLeave={() => setHoveredStat(null)} onClick={stat.onClick}>
-                <div style={{ ...styles.statIcon, width: isSmallMobile ? '44px' : (isMobile ? '48px' : '56px'), height: isSmallMobile ? '44px' : (isMobile ? '48px' : '56px') }}>{React.createElement(stat.icon, { size: isSmallMobile ? 20 : (isMobile ? 22 : 26), color: stat.color })}</div>
-                <div style={styles.statInfo}><div style={{ ...styles.statNumber, fontSize: isSmallMobile ? '1.2rem' : (isMobile ? '1.5rem' : '1.9rem') }}>{stat.value}</div><div style={{ ...styles.statLabel, fontSize: isSmallMobile ? '0.65rem' : (isMobile ? '0.7rem' : '0.8rem') }}>{stat.label}</div>{stat.suffix && <div style={styles.statSuffix}>{stat.suffix}</div>}</div>
+              <div key={idx} style={{ ...styles.statCard, transform: hoveredStat === idx ? 'translateY(-6px)' : 'translateY(0)', borderLeft: `4px solid ${stat.borderColor}`, padding: '16px', cursor: 'pointer' }} onMouseEnter={() => setHoveredStat(idx)} onMouseLeave={() => setHoveredStat(null)} onClick={stat.onClick}>
+                <div style={{ ...styles.statIcon, width: isMobile ? '48px' : '56px', height: isMobile ? '48px' : '56px' }}>{React.createElement(stat.icon, { size: isMobile ? 22 : 26, color: stat.color })}</div>
+                <div style={styles.statInfo}><div style={{ ...styles.statNumber, fontSize: isMobile ? '1.5rem' : '1.9rem' }}>{stat.value}</div><div style={{ ...styles.statLabel, fontSize: isMobile ? '0.7rem' : '0.8rem' }}>{stat.label}</div>{stat.suffix && <div style={styles.statSuffix}>{stat.suffix}</div>}</div>
               </div>
             ))}
-            <button onClick={() => { setEditingProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '' }); setImages([]); setShowModal(true); }} disabled={!peutPublier} style={{ ...styles.addBtnLarge, opacity: peutPublier ? 1 : 0.6, cursor: peutPublier ? 'pointer' : 'not-allowed', padding: isSmallMobile ? '16px 12px' : (isMobile ? '18px 14px' : '24px 20px'), minHeight: isSmallMobile ? '70px' : (isMobile ? '80px' : '96px'), fontSize: isSmallMobile ? '0.8rem' : (isMobile ? '0.9rem' : '1rem') }} className="add-btn"><MdAdd size={isSmallMobile ? 18 : (isMobile ? 20 : 24)} /><span>{isSmallMobile ? 'Ajouter' : (isMobile ? 'Ajouter produit' : 'Nouveau produit')}</span></button>
+            <button onClick={() => { setEditingProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '' }); setImages([]); setShowModal(true); }} disabled={!peutPublier} style={{ ...styles.addBtnLarge, opacity: peutPublier ? 1 : 0.6, cursor: peutPublier ? 'pointer' : 'not-allowed', padding: isMobile ? '18px 14px' : '24px 20px', minHeight: isMobile ? '80px' : '96px', fontSize: isMobile ? '0.9rem' : '1rem' }} className="add-btn"><MdAdd size={isMobile ? 20 : 24} /><span>{isMobile ? 'Ajouter produit' : 'Nouveau produit'}</span></button>
           </div>
 
           <div style={{ ...styles.chartsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? '20px' : '24px' }}>
@@ -597,9 +595,16 @@ export default function DashboardVendeur() {
             </div>
           </div>
 
+          {/* Barre de navigation en bas - texte toujours visible sur mobile */}
           <div style={styles.bottomNav}>
-            <button onClick={() => setCurrentView('produits')} style={styles.bottomNavBtn} className="bottom-nav-btn"><MdInventory size={22} /><span>Mes produits</span></button>
-            <button onClick={() => setCurrentView('commandes')} style={styles.bottomNavBtn} className="bottom-nav-btn"><MdShoppingCart size={22} /><span>Commandes</span></button>
+            <button onClick={() => setCurrentView('produits')} style={styles.bottomNavBtn} className="bottom-nav-btn">
+              <MdInventory size={22} />
+              <span style={styles.bottomNavText}>Mes produits</span>
+            </button>
+            <button onClick={() => setCurrentView('commandes')} style={styles.bottomNavBtn} className="bottom-nav-btn">
+              <MdShoppingCart size={22} />
+              <span style={styles.bottomNavText}>Commandes</span>
+            </button>
           </div>
         </div>
       )}
@@ -649,8 +654,14 @@ export default function DashboardVendeur() {
           )}
 
           <div style={styles.bottomNav}>
-            <button onClick={() => setCurrentView('produits')} style={{...styles.bottomNavBtn, color: '#C8410A'}} className="bottom-nav-btn"><MdInventory size={22} /><span>Mes produits</span></button>
-            <button onClick={() => setCurrentView('commandes')} style={styles.bottomNavBtn} className="bottom-nav-btn"><MdShoppingCart size={22} /><span>Commandes</span></button>
+            <button onClick={() => setCurrentView('produits')} style={{...styles.bottomNavBtn, color: '#C8410A'}} className="bottom-nav-btn">
+              <MdInventory size={22} />
+              <span style={styles.bottomNavText}>Mes produits</span>
+            </button>
+            <button onClick={() => setCurrentView('commandes')} style={styles.bottomNavBtn} className="bottom-nav-btn">
+              <MdShoppingCart size={22} />
+              <span style={styles.bottomNavText}>Commandes</span>
+            </button>
           </div>
         </div>
       )}
@@ -702,8 +713,14 @@ export default function DashboardVendeur() {
           )}
 
           <div style={styles.bottomNav}>
-            <button onClick={() => setCurrentView('produits')} style={styles.bottomNavBtn} className="bottom-nav-btn"><MdInventory size={22} /><span>Mes produits</span></button>
-            <button onClick={() => setCurrentView('commandes')} style={{...styles.bottomNavBtn, color: '#C8410A'}} className="bottom-nav-btn"><MdShoppingCart size={22} /><span>Commandes</span></button>
+            <button onClick={() => setCurrentView('produits')} style={styles.bottomNavBtn} className="bottom-nav-btn">
+              <MdInventory size={22} />
+              <span style={styles.bottomNavText}>Mes produits</span>
+            </button>
+            <button onClick={() => setCurrentView('commandes')} style={{...styles.bottomNavBtn, color: '#C8410A'}} className="bottom-nav-btn">
+              <MdShoppingCart size={22} />
+              <span style={styles.bottomNavText}>Commandes</span>
+            </button>
           </div>
         </div>
       )}
@@ -722,7 +739,7 @@ export default function DashboardVendeur() {
                 <p><strong>Catégorie:</strong> {selectedProduit.categorie}</p>
                 <p><strong>Prix:</strong> <span style={styles.detailPrice}>{Number(selectedProduit.prix).toLocaleString('fr-FR')} FCFA</span></p>
                 <p><strong>Stock:</strong> {selectedProduit.stock} unités</p>
-                {!isSmallMobile && <p><strong>Description:</strong> {selectedProduit.description}</p>}
+                <p><strong>Description:</strong> {selectedProduit.description}</p>
                 <p><strong>Statut:</strong> <span style={{ ...styles.productDetailStatus, background: selectedProduit.actif ? '#10B981' : '#EF4444' }}>{selectedProduit.actif ? 'En ligne' : 'Hors ligne'}</span></p>
                 <div style={styles.detailActions}>
                   <button disabled={produitEstCommande(selectedProduit._id)} onClick={() => ouvrirEdition(selectedProduit)} style={{ ...styles.editBtn, opacity: produitEstCommande(selectedProduit._id) ? 0.5 : 1, cursor: produitEstCommande(selectedProduit._id) ? 'not-allowed' : 'pointer', padding: isMobile ? '8px 16px' : '10px 20px', fontSize: isMobile ? '0.75rem' : '0.85rem' }}><MdEdit size={16} /> Modifier</button>
@@ -951,8 +968,39 @@ const styles = {
   emptyStateSubtext: { fontSize: '0.75rem', marginTop: '6px', color: '#CBD5E1' },
   emptyStateBtn: { marginTop: '20px', padding: '10px 24px', background: 'linear-gradient(135deg, #C8410A, #E8622A)', color: '#fff', border: 'none', borderRadius: '50px', cursor: 'pointer', fontWeight: '600' },
   
-  bottomNav: { position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '12px 20px', boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', borderTop: '1px solid #E2E8F0', zIndex: 100 },
-  bottomNavBtn: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: '#64748B', fontSize: '0.7rem', fontWeight: '500', cursor: 'pointer', padding: '8px 16px', borderRadius: '40px', transition: 'all 0.2s ease' },
+  bottomNav: { 
+    position: 'fixed', 
+    bottom: 0, 
+    left: 0, 
+    right: 0, 
+    background: '#fff', 
+    display: 'flex', 
+    justifyContent: 'space-around', 
+    alignItems: 'center', 
+    padding: '12px 20px', 
+    boxShadow: '0 -2px 10px rgba(0,0,0,0.05)', 
+    borderTop: '1px solid #E2E8F0', 
+    zIndex: 100 
+  },
+  bottomNavBtn: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    gap: '6px', 
+    background: 'none', 
+    border: 'none', 
+    color: '#64748B', 
+    fontSize: '0.75rem', 
+    fontWeight: '500', 
+    cursor: 'pointer', 
+    padding: '8px 20px', 
+    borderRadius: '40px', 
+    transition: 'all 0.2s ease' 
+  },
+  bottomNavText: {
+    fontSize: '0.7rem',
+    fontWeight: '500'
+  },
   
   notificationWrapper: { position: 'relative' },
   bellButton: { borderRadius: '50%', border: '1px solid #E2E8F0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', transition: 'all 0.2s ease', width: '42px', height: '42px' },
@@ -1024,6 +1072,7 @@ styleSheet.textContent = `
   ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
   ::-webkit-scrollbar-thumb:hover { background: #C8410A; }
   
+  /* Responsive - TOUS LES TEXTES RESTENT VISIBLES SUR MOBILE */
   @media (max-width: 768px) { 
     .stats-grid { gap: 16px !important; padding: 20px 20px 0 20px !important; } 
     .charts-grid { padding: 20px 20px 0 20px !important; gap: 20px !important; }
@@ -1034,22 +1083,32 @@ styleSheet.textContent = `
     .pie-legend-label { font-size: 0.8rem !important; }
     .pie-legend-percent { font-size: 0.75rem !important; }
     .pie-legend-value { font-size: 0.65rem !important; }
-    .bottom-nav-btn { padding: 6px 12px !important; } 
-    .bottom-nav-btn span { font-size: 0.6rem !important; } 
-    .bottom-nav { padding: 8px 16px !important; } 
     .page-container { padding: 16px !important; padding-bottom: 70px !important; } 
     .filters-row { gap: 12px !important; }
     .filter-group { width: 100% !important; justify-content: space-between !important; }
     .filter-select { flex: 1 !important; }
     .reset-filter-btn { width: 100% !important; margin-top: 8px !important; }
+    
+    /* Le texte des boutons de navigation reste visible */
+    .bottom-nav-btn span { display: inline !important; font-size: 0.7rem !important; margin-left: 8px !important; }
+    .bottom-nav-btn { padding: 8px 16px !important; flex-direction: row !important; gap: 8px !important; }
+    
+    /* La photo de profil reste visible */
+    .user-info { display: flex !important; }
+    .avatar { width: 32px !important; height: 32px !important; }
+    .user-name { font-size: 0.7rem !important; }
   }
+  
+  /* Pour les très petits mobiles (largeur < 400px) */
+  @media (max-width: 400px) {
+    .bottom-nav-btn span { font-size: 0.65rem !important; }
+    .bottom-nav-btn { padding: 6px 12px !important; }
+    .user-name { font-size: 0.65rem !important; }
+    .user-status { font-size: 0.55rem !important; }
+    .avatar { width: 28px !important; height: 28px !important; }
+  }
+  
   @media (max-width: 480px) { 
-    .user-info { display: none !important; } 
-    .logout-btn span { display: none !important; } 
-    .logout-btn { padding: 6px 10px !important; } 
-    .bottom-nav-btn span { display: none !important; } 
-    .bottom-nav-btn { padding: 8px 12px !important; } 
-    .bottom-nav { justify-content: center !important; gap: 20px !important; } 
     .page-title { font-size: 1.1rem !important; }
     .pie-svg-wrapper { width: 160px !important; height: 160px !important; }
   }
