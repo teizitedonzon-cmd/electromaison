@@ -21,6 +21,9 @@ const paths = {
   lock: <path d="M6 10h12v10H6V10Zm3 0V7a3 3 0 0 1 6 0v3" />,
   'eye-off': <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 4.2A10.7 10.7 0 0 1 12 4c6 0 10 8 10 8a18.5 18.5 0 0 1-3.2 4.4M6.6 6.6C3.8 8.2 2 12 2 12s4 8 10 8c1.4 0 2.7-.4 3.8-1" />,
   camera: <path d="M4 7h3l2-3h6l2 3h3v13H4V7Zm8 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />,
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  x: <path d="M6 6l12 12M18 6 6 18" />,
+  'line-chart': <path d="M4 16l4-4 4 6 8-12" />,
 };
 
 export default function Icon({ name, size = 18, color = 'currentColor', style }) {
