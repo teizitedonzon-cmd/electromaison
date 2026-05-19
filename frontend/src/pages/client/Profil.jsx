@@ -13,6 +13,14 @@ export default function Profil() {
   });
   const [chargement, setChargement] = useState(false);
 
+  React.useEffect(() => {
+    setForm({
+      nom: user?.nom || '',
+      prenom: user?.prenom || '',
+      telephone: user?.telephone || ''
+    });
+  }, [user]);
+
   const sauvegarder = async (e) => {
     e.preventDefault();
     setChargement(true);
@@ -20,11 +28,12 @@ export default function Profil() {
       // Envoi au backend (nécessite une route PUT /users/profil)
       const { data } = await api.put('/users/profil', form);
       
-      // Mise à jour locale immédiate[cite: 25]
+      // Mise à jour locale immédiate
       updateUser(data.user || form);
       toast.success('Profil mis à jour !');
-    } catch (err) { 
-      toast.error('Erreur lors de la mise à jour.'); 
+    } catch (err) {
+      const message = err.response?.data?.message || 'Erreur lors de la mise à jour.';
+      toast.error(message);
     } finally { setChargement(false); }
   };
 
@@ -62,7 +71,13 @@ export default function Profil() {
             </div>
             <div style={{marginBottom:'16px'}}>
               <label style={styles.label}>Téléphone</label>
-              <input type="tel" value={form.telephone} onChange={e => setForm({...form, telephone: e.target.value})} style={styles.input} />
+              <input
+                type="tel"
+                value={form.telephone}
+                onChange={e => setForm({...form, telephone: e.target.value})}
+                placeholder="+237699123456"
+                style={styles.input}
+              />
             </div>
             <button type="submit" disabled={chargement} style={styles.btnAction}>
               {chargement ? 'Sauvegarde...' : 'Enregistrer'}
