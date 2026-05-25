@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { proteger, admin } = require('../middleware/authMiddleware');
 const User = require('../models/User');
+const upload = require('../middleware/uploadMiddleware');
 
 router.get('/', proteger, admin, async (req, res) => {
   try {
@@ -22,7 +23,7 @@ router.get('/profil', proteger, async (req, res) => {
   }
 });
 
-router.put('/profil', proteger, async (req, res) => {
+router.put('/profil', proteger, upload.single('photoProfil'), async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
@@ -45,6 +46,7 @@ router.put('/profil', proteger, async (req, res) => {
     user.nom = String(req.body.nom || user.nom).trim();
     user.prenom = String(req.body.prenom || user.prenom).trim();
     user.telephone = telephone;
+    if (req.file) user.photoProfil = req.file.path;
     if (req.body.motDePasse) user.motDePasse = req.body.motDePasse;
 
     const misAJour = await user.save();
