@@ -49,7 +49,7 @@ export default function DetailProduit() {
             <h1 style={styles.title}>{produit.nom}</h1>
             <p style={styles.meta}>{produit.marque} · {produit.categorie}</p>
             <p style={styles.description}>{produit.description}</p>
-            {produit.nombreAvis > 0 && <div style={styles.rating}>Note {produit.noteMoyenne}/5 ({produit.nombreAvis} avis)</div>}
+            {produit.nombreAvis > 0 && <div style={styles.rating}> {produit.noteMoyenne}/5 ({produit.nombreAvis} avis)</div>}
             {venteFlashActive(produit) && <div style={styles.flash}>Vente flash - fin dans {tempsRestant(produit.venteFlash.dateFin)}</div>}
             <div style={styles.price}>{Number(venteFlashActive(produit) ? produit.venteFlash.prixFlash : produit.prix).toLocaleString('fr-FR')} FCFA</div>
             {venteFlashActive(produit) && <div style={styles.oldPrice}>{produit.prix.toLocaleString('fr-FR')} FCFA</div>}
