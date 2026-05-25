@@ -42,7 +42,14 @@ export const CartProvider = ({ children }) => {
 
   // Calculs
   const nombreArticles = panier.reduce((s, i) => s + i.quantite, 0);
-  const total = panier.reduce((s, i) => s + i.prix * i.quantite, 0);
+  const getPrixEffectif = (item) => {
+    const vf = item.venteFlash;
+    if (vf?.actif && vf?.prixFlash && vf?.dateFin && new Date(vf.dateFin) > new Date()) {
+      return vf.prixFlash;
+    }
+    return item.prix;
+  };
+  const total = panier.reduce((s, i) => s + getPrixEffectif(i) * i.quantite, 0);
 
   return (
     <CartContext.Provider value={{
