@@ -32,6 +32,19 @@ const categorieCanonique = (categorie) => {
   return match ? match.value : String(categorie || '').trim();
 };
 
+const construireVenteFlash = (body, produitActuel = null) => {
+  if (body.venteFlashActif === undefined && body.prixFlash === undefined && body.venteFlashDateFin === undefined) {
+    return produitActuel?.venteFlash;
+  }
+
+  const actif = body.venteFlashActif === true || body.venteFlashActif === 'true';
+  return {
+    actif,
+    prixFlash: body.prixFlash ? Number(body.prixFlash) : null,
+    dateFin: body.venteFlashDateFin ? new Date(body.venteFlashDateFin) : null,
+  };
+};
+
 const regexCategorie = (categorie) => {
   const normalized = normaliserTexte(categorie);
   const match = categoriesCanon.find((cat) =>
@@ -122,9 +135,12 @@ exports.creerProduit = async (req, res) => {
     // Avant : req.files.map(f => `/uploads/${f.filename}`)
     const images = req.files ? req.files.map((f) => f.path) : [];
 
+    const venteFlash = construireVenteFlash(req.body);
     const nouveauProduit = await Produit.create({
       ...req.body,
       categorie: categorieCanonique(req.body.categorie),
+      venteFlash,
+      badge: venteFlash?.actif ? 'Vente flash' : req.body.badge,
       images,
       vendeur: req.user._id,
     });
@@ -151,6 +167,11 @@ exports.modifierProduit = async (req, res) => {
     const updates = { ...req.body };
     if (updates.categorie !== undefined) {
       updates.categorie = categorieCanonique(updates.categorie);
+    }
+    const venteFlash = construireVenteFlash(req.body, produit);
+    if (venteFlash !== undefined) {
+      updates.venteFlash = venteFlash;
+      if (venteFlash?.actif) updates.badge = 'Vente flash';
     }
 
     if (
