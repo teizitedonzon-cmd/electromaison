@@ -51,7 +51,7 @@ export default function Profil() {
   };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'DM Sans',sans-serif" }}>
+    <div style={{ minHeight:'100vh', background:'var(--em-page)', fontFamily:"'DM Sans',sans-serif" }}>
       <ClientNav />
 
       <div style={styles.content}>
@@ -108,11 +108,11 @@ const styles = {
   decoBtn: { background:'transparent', border:'1px solid rgba(255,255,255,0.3)', color:'#fff', padding:'8px 16px', borderRadius:'50px', cursor:'pointer' },
   content: { maxWidth:'500px', margin:'0 auto', padding:'clamp(24px, 6vw, 40px) 20px' },
   title: { fontSize:'clamp(1.35rem, 5vw, 1.8rem)', fontWeight:'700', marginBottom:'10px' },
-  card: { background:'#fff', borderRadius:'20px', padding:'clamp(22px, 6vw, 32px)', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' },
+  card: { background:'var(--em-surface)', borderRadius:'8px', padding:'clamp(22px, 6vw, 32px)', boxShadow:'var(--em-shadow-sm)', border:'1px solid var(--em-border)' },
   avatarLabel: { width:'86px', height:'86px', borderRadius:'50%', background:'#1A3A2A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2rem', margin:'0 auto 8px', overflow:'hidden', cursor:'pointer', border:'3px solid #C8410A' },
   avatarImg: { width:'100%', height:'100%', objectFit:'cover' },
   photoHint: { color:'#888', fontSize:'0.78rem', margin:'0 0 8px' },
   label: { display:'block', marginBottom:'6px', fontSize:'0.88rem', fontWeight:'600' },
-  input: { width:'100%', padding:'11px', borderRadius:'10px', border:'1.5px solid #E2DAD0', boxSizing:'border-box' },
-  btnAction: { width:'100%', padding:'14px', background:'#C8410A', color:'#fff', border:'none', borderRadius:'50px', fontWeight:'700', cursor:'pointer' }
+  input: { width:'100%', padding:'11px', borderRadius:'8px', border:'1.5px solid #E2DAD0', boxSizing:'border-box' },
+  btnAction: { width:'100%', padding:'14px', background:'linear-gradient(135deg, #C8410A, #E8622A)', color:'#fff', border:'none', borderRadius:'8px', fontWeight:'700', cursor:'pointer', boxShadow:'0 12px 28px rgba(200,65,10,0.2)' }
 };
