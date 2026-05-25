@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import Icon from '../../components/Icon';
+import ClientNav from '../../components/ClientNav';
 
 // Importation des images locales
 import font from '../../assets/images/font.jpg';
@@ -170,135 +171,7 @@ export default function Accueil() {
 
   return (
     <div style={styles.container}>
-      {/* Navigation avec menu burger - Version améliorée */}
-      <nav style={styles.nav}>
-        <div style={styles.logoContainer}>
-          <Link to="/" style={styles.logoLink}>
-            <img src={logot} alt="TeyShop" style={styles.logoImage} />
-          </Link>
-          <Link to="/" style={styles.logoText}>
-            TEY<span style={{ color: '#F4A76A' }}>SHOP</span>
-          </Link>
-        </div>
-        
-        {/* Menu Desktop */}
-        <div className="desktop-menu" style={styles.desktopMenu}>
-          <Link to="/catalogue" style={getNavLinkStyle('cat')} onMouseEnter={() => setHoveredLink('cat')} onMouseLeave={() => setHoveredLink(null)}>Catalogue</Link>
-          
-          {user ? (
-            <>
-              <Link to="/mes-commandes" style={getNavLinkStyle('cmd')} onMouseEnter={() => setHoveredLink('cmd')} onMouseLeave={() => setHoveredLink(null)}>Mes commandes</Link>
-              <Link to="/profil" style={getNavLinkStyle('prof')} onMouseEnter={() => setHoveredLink('prof')} onMouseLeave={() => setHoveredLink(null)}>Mon profil</Link>
-              <Link to="/panier" style={styles.cartBtn}>
-                <Icon name="cart" size={17} />
-                <span>Panier</span>
-                {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
-              </Link>
-              <button onClick={deconnexion} style={styles.decoBtn}>Déconnexion</button>
-            </>
-          ) : (
-            <>
-              <Link to="/panier" style={styles.cartBtn}>
-                <Icon name="cart" size={17} />
-                <span>Panier</span>
-                {nombreArticles > 0 && <span style={styles.cartBadge}>{nombreArticles}</span>}
-              </Link>
-              <Link to="/connexion" style={styles.navLink}>Connexion</Link>
-              <Link to="/inscription" style={styles.navLink}>Inscription</Link>
-            </>
-          )}
-        </div>
-
-        {/* Bouton Menu Mobile Professionnel - Amélioré et plus visible */}
-        <button 
-          className="mobile-menu-btn" 
-          onClick={() => setMenuOpen(!menuOpen)} 
-          style={{
-            ...styles.mobileMenuBtn,
-            display: isMobile ? 'flex' : 'none',
-            transform: menuOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-          }}
-          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-        >
-          {menuOpen ? (
-            <svg 
-              viewBox="0 0 24 24" 
-              width="22" 
-              height="22" 
-              fill="none" 
-              stroke="white" 
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          ) : (
-            <svg 
-              viewBox="0 0 24 24" 
-              width="22" 
-              height="22" 
-              fill="none" 
-              stroke="white" 
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          )}
-        </button>
-      </nav>
-
-      {/* Menu Mobile Déroulant - Design amélioré */}
-      {menuOpen && (
-        <div style={styles.mobileMenu}>
-          <Link to="/catalogue" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-            <span style={styles.mobileMenuIcon}>📦</span>
-            Catalogue
-          </Link>
-          {user ? (
-            <>
-              <Link to="/mes-commandes" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>📋</span>
-                Mes commandes
-              </Link>
-              <Link to="/profil" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>👤</span>
-                Mon profil
-              </Link>
-              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>🛒</span>
-                Panier 
-                {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
-              </Link>
-              <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn}>
-                <span style={styles.mobileMenuIcon}>🚪</span>
-                Déconnexion
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>🛒</span>
-                Panier 
-                {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
-              </Link>
-              <Link to="/connexion" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>🔑</span>
-                Connexion
-              </Link>
-              <Link to="/inscription" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>✨</span>
-                Inscription
-              </Link>
-            </>
-          )}
-        </div>
-      )}
+      <ClientNav />
 
       {/* Hero Section */}
       <div 
