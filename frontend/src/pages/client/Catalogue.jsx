@@ -34,6 +34,27 @@ const tempsRestant = (dateFin) => {
   return `${heures}h ${minutes}min`;
 };
 
+// Composant d'affichage des étoiles (sans texte X/5)
+const StarRating = ({ rating }) => {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <div style={styles.starRating}>
+      {[...Array(fullStars)].map((_, i) => (
+        <span key={`full-${i}`} style={styles.starFull}>★</span>
+      ))}
+      {hasHalfStar && (
+        <span style={styles.starHalf}>½</span>
+      )}
+      {[...Array(emptyStars)].map((_, i) => (
+        <span key={`empty-${i}`} style={styles.starEmpty}>★</span>
+      ))}
+    </div>
+  );
+};
+
 export default function Catalogue() {
   const { ajouterAuPanier } = useCart();
   const location = useLocation();
@@ -280,9 +301,11 @@ export default function Catalogue() {
                           <span style={styles.oldPrice}>{Number(p.prix).toLocaleString('fr-FR')} FCFA</span>
                         )}
                       </div>
-                      {p.nombreAvis > 0 && (
-                        <div style={styles.rating}>★ {p.noteMoyenne}/5 ({p.nombreAvis})</div>
-                      )}
+                      {p.nombreAvis > 0 && p.noteMoyenne > 0 ? (
+                        <StarRating rating={p.noteMoyenne} />
+                      ) : p.nombreAvis === 0 ? (
+                        <div style={styles.noRating}>⭐ Aucun avis</div>
+                      ) : null}
                       {!isSmallMobile && (
                         <p style={styles.cardDesc}>{p.description?.substring(0, 60)}...</p>
                       )}
@@ -457,17 +480,20 @@ const styles = {
   cardLink: { textDecoration: 'none', flex: 1 },
   cardImageWrapper: {
     position: 'relative',
-    height: '240px',
+    height: '260px',
     overflow: 'hidden',
-    background: '#f0f0f0',
+    background: '#f5f5f5',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   productImg: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
-    objectPosition: 'center top',
+    objectFit: 'contain',
     transition: 'transform 0.4s ease',
     display: 'block',
+    padding: '12px',
   },
   noImage: {
     width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
@@ -476,11 +502,11 @@ const styles = {
   },
   badge: {
     position: 'absolute', top: '12px', left: '12px', background: '#C8410A',
-    color: '#fff', fontSize: '0.65rem', fontWeight: '700', padding: '4px 10px', borderRadius: '6px',
+    color: '#fff', fontSize: '0.65rem', fontWeight: '700', padding: '4px 10px', borderRadius: '6px', zIndex: 2,
   },
   flashBadge: {
     position: 'absolute', top: '12px', right: '12px', background: '#112219',
-    color: '#F4A76A', fontSize: '0.65rem', fontWeight: '800', padding: '4px 10px', borderRadius: '6px',
+    color: '#F4A76A', fontSize: '0.65rem', fontWeight: '800', padding: '4px 10px', borderRadius: '6px', zIndex: 2,
   },
   cardContent: { padding: '14px 16px' },
   cardTitle: {
@@ -493,6 +519,11 @@ const styles = {
   priceCurrency: { fontSize: '0.65rem', fontWeight: '500', color: '#C8410A' },
   oldPrice: { color: '#999', textDecoration: 'line-through', fontSize: '0.68rem' },
   rating: { color: '#B45309', fontSize: '0.72rem', fontWeight: '700', marginBottom: '6px' },
+  starRating: { display: 'flex', alignItems: 'center', gap: '3px', marginBottom: '6px' },
+  starFull: { color: '#FFC107', fontSize: '0.7rem' },
+  starHalf: { color: '#FFC107', fontSize: '0.65rem' },
+  starEmpty: { color: '#E0E0E0', fontSize: '0.7rem' },
+  noRating: { color: '#999', fontSize: '0.65rem', marginBottom: '6px' },
   cardDesc: {
     fontSize: '0.7rem', color: '#888', marginBottom: '6px', lineHeight: 1.3,
     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -501,7 +532,7 @@ const styles = {
   inStock: { color: '#2ECC71', fontWeight: '600' },
   outStock: { color: '#E74C3C', fontWeight: '600' },
   addBtn: {
-    margin: '0 12px 12px 12px', padding: '10px', background: '#112219',
+    margin: '0 12px 12px 12px', padding: '10px', background: '#E74C3C',
     border: 'none', borderRadius: '40px', fontSize: '0.8rem', fontWeight: '600',
     cursor: 'pointer', transition: 'all 0.3s ease', color: '#fff',
   },
