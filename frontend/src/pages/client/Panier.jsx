@@ -17,6 +17,8 @@ export default function Panier() {
   const [modePaiement, setModePaiement] = useState('cash');
   const [chargement, setChargement] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [codePromo, setCodePromo] = useState('');
+  const [promo, setPromo] = useState(null);
 
   const passerCommande = async () => {
     if (!user) {
@@ -35,7 +37,8 @@ export default function Panier() {
       const payload = { 
         lignes, 
         adresseLivraison: adresse, 
-        modePaiement 
+        modePaiement,
+        codePromo: promo?.code || codePromo || undefined,
       };
 
       await api.post('/commandes', payload);
@@ -50,6 +53,20 @@ export default function Panier() {
       setChargement(false); 
     }
   };
+
+  const appliquerCodePromo = async () => {
+    if (!codePromo.trim()) return toast.error('Entrez un code promo.');
+    try {
+      const { data } = await api.post('/codes-promo/verifier', { code: codePromo, total });
+      setPromo(data);
+      toast.success(`Code ${data.code} applique !`);
+    } catch (err) {
+      setPromo(null);
+      toast.error(err.response?.data?.message || 'Code promo invalide.');
+    }
+  };
+
+  const totalApresReduction = Math.max(total - (promo?.reduction || 0), 0);
 
   const TrashIcon = () => (
     <svg 
@@ -192,10 +209,25 @@ export default function Panier() {
                 <span>Sous-total ({panier.reduce((s,i)=> s + i.quantite,0)} articles)</span>
                 <span>{total.toLocaleString('fr-FR')} FCFA</span>
               </div>
+              <div style={styles.promoBox}>
+                <input
+                  value={codePromo}
+                  onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setPromo(null); }}
+                  placeholder="Code promo"
+                  style={styles.promoInput}
+                />
+                <button type="button" onClick={appliquerCodePromo} style={styles.promoBtn}>Appliquer</button>
+              </div>
+              {promo && (
+                <div style={styles.summaryRow}>
+                  <span>Reduction ({promo.code})</span>
+                  <span>-{Number(promo.reduction).toLocaleString('fr-FR')} FCFA</span>
+                </div>
+              )}
               <div style={styles.divider}></div>
               <div style={{...styles.summaryRow, ...styles.summaryTotal}}>
                 <span>Total</span>
-                <span>{total.toLocaleString('fr-FR')} FCFA</span>
+                <span>{totalApresReduction.toLocaleString('fr-FR')} FCFA</span>
               </div>
               <button onClick={() => setEtape(2)} style={styles.checkoutBtn}>
                 Passer à la livraison →
@@ -547,6 +579,28 @@ const styles = {
     height: '1px',
     background: '#E8E8E8',
     margin: '16px 0',
+  },
+  promoBox: {
+    display: 'flex',
+    gap: '8px',
+    margin: '16px 0',
+  },
+  promoInput: {
+    flex: 1,
+    border: '1.5px solid #E2E8F0',
+    borderRadius: '12px',
+    padding: '10px 12px',
+    fontSize: '0.85rem',
+    outline: 'none',
+  },
+  promoBtn: {
+    background: '#112219',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '10px 14px',
+    fontWeight: '700',
+    cursor: 'pointer',
   },
   checkoutBtn: {
     width: '100%',
