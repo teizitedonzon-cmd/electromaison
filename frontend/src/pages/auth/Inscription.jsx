@@ -8,13 +8,21 @@ import logot from '../../assets/images/logot.jpg';
 export default function Inscription() {
   const { inscription } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ nom: '', prenom: '', email: '', motDePasse: '', telephone: '', role: 'client' });
+  const [form, setForm] = useState({ nom: '', prenom: '', email: '', motDePasse: '', telephone: '+237', role: 'client' });
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'telephone') {
+      const chiffres = value.replace(/\D/g, '').replace(/^237/, '').slice(0, 9);
+      setForm({ ...form, telephone: `+237${chiffres}` });
+      return;
+    }
+    setForm({ ...form, [name]: value });
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -116,8 +124,9 @@ export default function Inscription() {
             <label style={styles.label}>Téléphone</label>
             <div style={styles.inputWrapper}>
               <Icon name="phone" size={16} style={styles.inputIcon} className="inputIcon" />
-              <input name="telephone" placeholder="+225 XX XX XX XX" onChange={handleChange} style={styles.input} className="input" />
+              <input name="telephone" value={form.telephone} onChange={handleChange} style={styles.input} className="input" />
             </div>
+            <p style={styles.contactHint}>Entrez 9 chiffres après le +237.</p>
           </div>
 
           <div style={styles.champ}>
@@ -304,6 +313,12 @@ const styles = {
     outline: 'none',
     transition: 'all 0.3s ease',
     boxSizing: 'border-box',
+  },
+  contactHint: {
+    margin: '6px 0 0',
+    color: '#C8410A',
+    fontSize: '0.75rem',
+    fontWeight: '600',
   },
   eyeBtn: {
     position: 'absolute',
