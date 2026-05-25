@@ -58,13 +58,13 @@ export default function ClientNav({ searchSlot = null }) {
 
   return (
     <>
-      <nav style={styles.nav}>
+      <nav style={{ ...styles.nav, ...(isMobile && searchSlot ? styles.navWithMobileSearch : {}) }}>
         <Link to="/" style={styles.logoLink}>
           <img src={logot} alt="TeyShop" style={styles.logoImage} />
           <span style={styles.logoText}>TEY<span style={styles.logoAccent}>SHOP</span></span>
         </Link>
 
-        {searchSlot && <div style={styles.searchSlot}>{searchSlot}</div>}
+        {searchSlot && <div style={{ ...styles.searchSlot, ...(isMobile ? styles.mobileSearchSlot : {}) }}>{searchSlot}</div>}
 
         <div style={{ ...styles.desktopMenu, display: isMobile ? 'none' : 'flex' }}>
           {items.map((item) => renderItem(item))}
@@ -117,6 +117,15 @@ const styles = {
     boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
     gap: '16px',
   },
+  navWithMobileSearch: {
+    height: 'auto',
+    minHeight: '76px',
+    flexWrap: 'wrap',
+    paddingTop: '10px',
+    paddingBottom: '10px',
+    rowGap: '10px',
+    columnGap: '8px',
+  },
   logoLink: {
     color: '#fff',
     textDecoration: 'none',
@@ -142,6 +151,12 @@ const styles = {
     flex: 1,
     maxWidth: '520px',
     minWidth: 0,
+  },
+  mobileSearchSlot: {
+    order: 3,
+    flex: '0 0 100%',
+    maxWidth: '100%',
+    minWidth: '100%',
   },
   desktopMenu: {
     display: 'flex',
