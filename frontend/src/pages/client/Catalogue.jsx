@@ -20,6 +20,17 @@ const CATEGORIES = [
   { id: 'Autre',         label: 'Autre' },
 ];
 
+const venteFlashActive = (produit) =>
+  produit?.venteFlash?.actif && produit.venteFlash?.prixFlash && produit.venteFlash?.dateFin && new Date(produit.venteFlash.dateFin) > new Date();
+
+const tempsRestant = (dateFin) => {
+  const diff = new Date(dateFin) - new Date();
+  if (diff <= 0) return 'Terminee';
+  const heures = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  return `${heures}h ${minutes}min`;
+};
+
 export default function Catalogue() {
   const { user, deconnexion } = useAuth();
   const { ajouterAuPanier, nombreArticles } = useCart();
@@ -303,6 +314,7 @@ export default function Catalogue() {
                   <Link to={`/produit/${p._id}`} style={styles.cardLink}>
                     <div className="card-image-wrapper" style={styles.cardImageWrapper}>
                       {p.badge && <span style={styles.badge}>{p.badge}</span>}
+                      {venteFlashActive(p) && <span style={styles.flashBadge}>Flash: {tempsRestant(p.venteFlash.dateFin)}</span>}
                       {p.images && p.images.length > 0 ? (
                         <img 
                           src={mediaUrl(p.images?.[0])} 
@@ -320,9 +332,13 @@ export default function Catalogue() {
                     <div style={styles.cardContent}>
                       <h3 className="card-title" style={styles.cardTitle}>{p.nom}</h3>
                       <div style={styles.cardPrice}>
-                        <span className="price-amount" style={styles.priceAmount}>{Number(p.prix).toLocaleString('fr-FR')}</span>
+                        <span className="price-amount" style={styles.priceAmount}>
+                          {Number(venteFlashActive(p) ? p.venteFlash.prixFlash : p.prix).toLocaleString('fr-FR')}
+                        </span>
                         <span className="price-currency" style={styles.priceCurrency}>FCFA</span>
+                        {venteFlashActive(p) && <span style={styles.oldPrice}>{Number(p.prix).toLocaleString('fr-FR')} FCFA</span>}
                       </div>
+                      {p.nombreAvis > 0 && <div style={styles.rating}>★ {p.noteMoyenne}/5 ({p.nombreAvis})</div>}
                       {!isSmallMobile && (
                         <p className="card-desc" style={styles.cardDesc}>{p.description?.substring(0, 60)}...</p>
                       )}
@@ -1281,6 +1297,17 @@ const styles = {
     padding: '4px 10px',
     borderRadius: '6px',
   },
+  flashBadge: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    background: '#112219',
+    color: '#F4A76A',
+    fontSize: '0.65rem',
+    fontWeight: '800',
+    padding: '4px 10px',
+    borderRadius: '6px',
+  },
   cardContent: {
     padding: '16px',
   },
@@ -1297,6 +1324,10 @@ const styles = {
   },
   cardPrice: {
     marginBottom: '8px',
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '5px',
+    flexWrap: 'wrap',
   },
   priceAmount: {
     fontSize: '1.1rem',
@@ -1308,6 +1339,17 @@ const styles = {
     fontWeight: '500',
     color: '#C8410A',
     marginLeft: '2px',
+  },
+  oldPrice: {
+    color: '#999',
+    textDecoration: 'line-through',
+    fontSize: '0.68rem',
+  },
+  rating: {
+    color: '#B45309',
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    marginBottom: '6px',
   },
   cardDesc: {
     fontSize: '0.7rem',
