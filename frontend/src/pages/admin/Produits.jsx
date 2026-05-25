@@ -69,7 +69,10 @@ export default function AdminProduits() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
-    Object.keys(formData).forEach(key => data.append(key, formData[key]));
+    Object.keys(formData).forEach(key => {
+      if (!formData.venteFlashActif && ['prixFlash', 'venteFlashDateFin'].includes(key)) return;
+      data.append(key, formData[key]);
+    });
     Array.from(images).forEach(img => data.append('images', img));
 
     try {
