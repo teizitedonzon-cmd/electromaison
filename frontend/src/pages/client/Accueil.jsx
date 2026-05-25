@@ -434,7 +434,7 @@ const styles = {
   container: {
     fontFamily: "'Inter', -apple-system, sans-serif",
     minHeight: '100vh',
-    background: '#F8F9FA',
+    background: 'var(--em-page)',
   },
   
   // Navigation
@@ -706,7 +706,7 @@ const styles = {
     padding: '80px 8%',
     position: 'relative',
     zIndex: 5,
-    background: '#F8F9FA',
+    background: 'var(--em-page)',
   },
   sectionHeader: {
     textAlign: 'center',
@@ -738,7 +738,7 @@ const styles = {
   },
   catCard: {
     background: '#fff',
-    borderRadius: '24px',
+    borderRadius: '8px',
     overflow: 'hidden',
     textDecoration: 'none',
     color: '#1A1A1A',
@@ -749,7 +749,7 @@ const styles = {
     height: '200px',
     width: '100%',
     overflow: 'hidden',
-    background: '#f5f5f5',
+    background: 'linear-gradient(135deg, #fff7ef, #edf7f2)',
     position: 'relative',
   },
   cardImage: {
@@ -765,7 +765,7 @@ const styles = {
     width: '38px',
     height: '38px',
     background: '#112219',
-    borderRadius: '12px',
+    borderRadius: '8px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
