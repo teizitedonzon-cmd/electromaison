@@ -23,6 +23,9 @@ export default function AdminProduits() {
     stock: '',
     categorie: '',
     marque: '',
+    venteFlashActif: false,
+    prixFlash: '',
+    venteFlashDateFin: '',
     actif: true
   });
   const [images, setImages] = useState([]);
@@ -79,7 +82,7 @@ export default function AdminProduits() {
       }
       setShowModal(false);
       setSelectedProduit(null);
-      setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', actif: true });
+      setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', venteFlashActif: false, prixFlash: '', venteFlashDateFin: '', actif: true });
       setImages([]);
       chargerProduits();
     } catch (err) {
@@ -108,6 +111,9 @@ export default function AdminProduits() {
       stock: produit.stock,
       categorie: produit.categorie,
       marque: produit.marque || '',
+      venteFlashActif: produit.venteFlash?.actif || false,
+      prixFlash: produit.venteFlash?.prixFlash || '',
+      venteFlashDateFin: produit.venteFlash?.dateFin ? new Date(produit.venteFlash.dateFin).toISOString().slice(0, 16) : '',
       actif: produit.actif !== false
     });
     setImages([]);
@@ -228,7 +234,7 @@ export default function AdminProduits() {
             <h1 style={styles.titre}>Gestion des produits</h1>
             <p style={styles.sousTitre}>Gérez votre catalogue par catégorie</p>
           </div>
-          <button onClick={() => { setSelectedProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', actif: true }); setImages([]); setShowModal(true); }} style={styles.addBtn} className="responsive-full-button">
+          <button onClick={() => { setSelectedProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '', venteFlashActif: false, prixFlash: '', venteFlashDateFin: '', actif: true }); setImages([]); setShowModal(true); }} style={styles.addBtn} className="responsive-full-button">
             <Icon name="plus" size={18} /> Nouveau produit
           </button>
         </div>
@@ -434,6 +440,24 @@ export default function AdminProduits() {
                 <label style={styles.formLabel}>Description</label>
                 <textarea name="description" placeholder="Description détaillée..." value={formData.description} onChange={handleChange} required style={{ ...styles.input, height: '80px', resize: 'vertical' }} />
               </div>
+              <div style={styles.formGroup}>
+                <label className="radio-label">
+                  <input type="checkbox" checked={formData.venteFlashActif} onChange={e => setFormData({ ...formData, venteFlashActif: e.target.checked })} />
+                  <span>Activer une vente flash</span>
+                </label>
+              </div>
+              {formData.venteFlashActif && (
+                <div style={styles.formRow} className="form-row responsive-two-grid">
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Prix flash (FCFA)</label>
+                    <input name="prixFlash" type="number" min="0" value={formData.prixFlash} onChange={handleChange} required style={styles.input} />
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Fin de la vente flash</label>
+                    <input name="venteFlashDateFin" type="datetime-local" value={formData.venteFlashDateFin} onChange={handleChange} required style={styles.input} />
+                  </div>
+                </div>
+              )}
               <div style={styles.formGroup}>
                 <label style={styles.formLabel}>Statut</label>
                 <div style={styles.radioGroup}>
