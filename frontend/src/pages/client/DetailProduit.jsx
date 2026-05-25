@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
+import { mediaUrl } from '../../utils/media';
 import { useCart } from '../../context/CartContext';
 import Icon from '../../components/Icon';
+import ClientNav from '../../components/ClientNav';
 
 export default function DetailProduit() {
   const { id } = useParams();
@@ -18,11 +20,16 @@ export default function DetailProduit() {
 
   return (
     <div style={styles.page}>
+      <ClientNav />
       <Link to="/catalogue" style={styles.backLink}>← Retour au catalogue</Link>
       <div style={styles.card}>
         <div style={styles.productLayout} className="responsive-two-grid">
           <div style={styles.imageBox}>
-            <Icon name="package" size={88} color="#C8410A" />
+            {produit.images?.[0] ? (
+              <img src={mediaUrl(produit.images[0])} alt={produit.nom} style={styles.productImage} />
+            ) : (
+              <Icon name="package" size={88} color="#C8410A" />
+            )}
           </div>
           <div style={styles.productInfo}>
             {produit.badge && <span style={styles.badge}>{produit.badge}</span>}
@@ -51,11 +58,12 @@ export default function DetailProduit() {
 
 const styles = {
   loading: { padding: '40px', fontFamily: "'DM Sans',sans-serif" },
-  page: { fontFamily: "'DM Sans',sans-serif", minHeight: '100vh', background: '#F5F0E8', padding: 'clamp(20px, 5vw, 40px)' },
-  backLink: { color: '#C8410A', textDecoration: 'none', fontWeight: '600', display: 'inline-block', marginBottom: '24px' },
+  page: { fontFamily: "'DM Sans',sans-serif", minHeight: '100vh', background: '#F5F0E8' },
+  backLink: { color: '#C8410A', textDecoration: 'none', fontWeight: '600', display: 'inline-block', margin: 'clamp(20px, 5vw, 40px) clamp(20px, 5vw, 40px) 24px' },
   card: { background: '#fff', borderRadius: '20px', padding: 'clamp(20px, 5vw, 40px)', maxWidth: '800px', margin: '0 auto', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' },
   productLayout: { display: 'grid', gridTemplateColumns: 'minmax(220px, 280px) minmax(0, 1fr)', gap: 'clamp(24px, 5vw, 40px)', alignItems: 'start' },
   imageBox: { background: '#F5F0E8', borderRadius: '16px', width: '100%', aspectRatio: '1 / 1', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  productImage: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '16px' },
   productInfo: { minWidth: 0 },
   badge: { background: '#C8410A', color: '#fff', padding: '4px 12px', borderRadius: '50px', fontSize: '0.75rem', fontWeight: '700' },
   title: { fontFamily: 'Georgia,serif', fontSize: 'clamp(1.35rem, 5vw, 1.8rem)', margin: '12px 0 8px', overflowWrap: 'anywhere' },
