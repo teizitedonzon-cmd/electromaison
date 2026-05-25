@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
     ville: { type: String },
     pays: { type: String, default: 'Cameroun' },
   },
-  photoProfil: { type: String, default: '/uploads/default-avatar.png' },
+  photoProfil: { type: String, default: '' },
   actif: { type: Boolean, default: true }
 }, { timestamps: true });
 
