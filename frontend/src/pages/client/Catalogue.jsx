@@ -6,6 +6,7 @@ import { mediaUrl } from '../../utils/media';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../../components/Icon';
+import ClientNav from '../../components/ClientNav';
 
 const CATEGORIES = [
   { id: '', label: 'Tous les produits' },
@@ -110,128 +111,30 @@ export default function Catalogue() {
   return (
     <div style={styles.container}>
       
-      {/* Navigation avec menu burger amélioré */}
-      <nav className="nav" style={styles.nav}>
-        <div style={styles.logoContainer}>
-          <Link to="/" style={styles.logoLink}>
-            <span className="logo" style={styles.logo}>TEY<span style={{ color: '#F4A76A' }}>SHOP</span></span>
-          </Link>
-        </div>
-        
-        <div className="search-container" style={styles.searchContainer}>
-          <div style={styles.searchWrapper}>
-            <input 
-              className="search-input"
-              type="text" 
-              placeholder={isSmallMobile ? "Rechercher..." : (isMobile ? "Rechercher..." : "Rechercher un produit...")} 
-              value={recherche}
-              onChange={e => setRecherche(e.target.value)}
-              style={styles.searchInput} 
-            />
-            <button className="search-btn" style={styles.searchBtn}>
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Menu Desktop */}
-        <div className="desktop-menu" style={styles.desktopMenu}>
-          <Link to="/" style={getNavLinkStyle('home')} onMouseEnter={() => setHoveredLink('home')} onMouseLeave={() => setHoveredLink(null)}>Accueil</Link>
-          
-          {user ? (
-            <>
-              <Link to="/mes-commandes" style={getNavLinkStyle('cmd')} onMouseEnter={() => setHoveredLink('cmd')} onMouseLeave={() => setHoveredLink(null)}>Commandes</Link>
-              <Link to="/panier" style={styles.cartBtn}>
-                <Icon name="cart" size={17} />
-                <span>Panier</span>
-                {nombreArticles > 0 && <span className="cart-badge" style={styles.cartBadge}>{nombreArticles}</span>}
-              </Link>
-              <button onClick={deconnexion} style={styles.decoBtn}>Déconnexion</button>
-            </>
-          ) : (
-            <>
-              <Link to="/panier" style={styles.cartBtn}>
-                <Icon name="cart" size={17} />
-                <span>Panier</span>
-                {nombreArticles > 0 && <span className="cart-badge" style={styles.cartBadge}>{nombreArticles}</span>}
-              </Link>
-              <Link to="/connexion" style={styles.navLink}>Connexion</Link>
-              <Link to="/inscription" style={styles.navLink}>Inscription</Link>
-            </>
-          )}
-        </div>
-
-        {/* Bouton Menu Mobile Professionnel */}
-        <button 
-          className="mobile-menu-btn" 
-          onClick={() => setMenuOpen(!menuOpen)} 
-          style={{
-            ...styles.mobileMenuBtn,
-            display: isMobile ? 'flex' : 'none',
-            transform: menuOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-          }}
-          aria-label={menuOpen ? "Fermer le menu" : "Ouvrir le menu"}
-        >
-          {menuOpen ? (
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          )}
-        </button>
-      </nav>
-
-      {/* Menu Mobile Déroulant */}
-      {menuOpen && (
-        <div className="mobile-menu" style={styles.mobileMenu}>
-          <Link to="/" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-            <span style={styles.mobileMenuIcon}>🏠</span>
-            Accueil
-          </Link>
-          {user ? (
-            <>
-              <Link to="/mes-commandes" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>📋</span>
-                Commandes
-              </Link>
-              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>🛒</span>
-                Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
-              </Link>
-              <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn}>
-                <span style={styles.mobileMenuIcon}>🚪</span>
-                Déconnexion
+      <ClientNav
+        searchSlot={(
+          <div className="search-container" style={styles.searchContainer}>
+            <div style={styles.searchWrapper}>
+              <input
+                className="search-input"
+                type="text"
+                placeholder={isSmallMobile ? "Rechercher..." : (isMobile ? "Rechercher..." : "Rechercher un produit...")}
+                value={recherche}
+                onChange={e => setRecherche(e.target.value)}
+                style={styles.searchInput}
+              />
+              <button className="search-btn" style={styles.searchBtn}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
               </button>
-            </>
-          ) : (
-            <>
-              <Link to="/panier" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>🛒</span>
-                Panier {nombreArticles > 0 && <span style={styles.mobileBadge}>{nombreArticles}</span>}
-              </Link>
-              <Link to="/connexion" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>🔑</span>
-                Connexion
-              </Link>
-              <Link to="/inscription" onClick={() => setMenuOpen(false)} style={styles.mobileMenuItem}>
-                <span style={styles.mobileMenuIcon}>✨</span>
-                Inscription
-              </Link>
-            </>
-          )}
-        </div>
-      )}
+            </div>
+          </div>
+        )}
+      />
 
-      {/* Bouton Filtres Mobile - Amélioré et plus attrayant */}
+      {/* Bouton Filtres Mobile - Ameliore et plus attrayant */}
       {isMobile && (
         <div className="mobile-filter-bar" style={styles.mobileFilterBar}>
           <button 
