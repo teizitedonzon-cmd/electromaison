@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
 import Icon from '../../components/Icon';
+import ClientNav from '../../components/ClientNav';
 
 const COULEURS = {
   en_attente: { bg: '#FEF9C3', color: '#B45309' },
@@ -22,14 +23,7 @@ export default function MesCommandes() {
 
   return (
     <div style={styles.page}>
-      <nav style={styles.nav} className="responsive-nav">
-        <Link to="/" style={styles.logo}>Tey<span style={{ color: '#F4A76A' }}>Shop</span></Link>
-        <div style={{ display: 'flex', gap: '20px' }} className="responsive-nav-links">
-          <Link to="/catalogue" style={styles.navLink}>Catalogue</Link>
-          <Link to="/mes-commandes" style={styles.navLink}>Mes commandes</Link>
-          <Link to="/profil" style={styles.navLink}>Profil</Link>
-        </div>
-      </nav>
+      <ClientNav />
 
       <div style={styles.container}>
         <h1 style={styles.titre}>Mes commandes</h1>
