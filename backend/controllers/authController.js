@@ -30,7 +30,7 @@ exports.inscription = async (req, res) => {
     const nom = String(req.body.nom || '').trim();
     const prenom = String(req.body.prenom || '').trim();
     const telephone = String(req.body.telephone || '').trim();
-    const photoProfil = req.file ? `/uploads/${req.file.filename}` : '/uploads/default-avatar.png';
+    const photoProfil = req.file ? req.file.path : '';
 
     if (nom.length < 3 || prenom.length < 3) {
       return res.status(400).json({ message: 'Le nom et le prenom doivent contenir au moins 3 caracteres.' });
