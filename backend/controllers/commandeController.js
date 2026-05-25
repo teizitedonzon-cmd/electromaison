@@ -2,18 +2,21 @@ const mongoose = require('mongoose');
 const Commande = require('../models/Commande');
 const Produit = require('../models/Produit');
 const Notification = require('../models/Notification');
+const { trouverPromoValide } = require('./codePromoController');
 
 exports.passerCommande = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
-    const { lignes, adresseLivraison, modePaiement, notes } = req.body;
+    const { lignes, adresseLivraison, modePaiement, notes, codePromo } = req.body;
 
     if (!Array.isArray(lignes) || lignes.length === 0) {
       return res.status(400).json({ message: 'Le panier est vide.' });
     }
 
     let montantTotal = 0;
+    let reduction = 0;
+    let codePromoApplique = '';
     const lignesVerifiees = [];
     let commande;
 
@@ -34,17 +37,28 @@ exports.passerCommande = async (req, res) => {
           throw new Error(`Produit "${ligne.nomProduit || 'selectionne'}" indisponible ou stock insuffisant.`);
         }
 
-        const sousTotal = produit.prix * quantite;
+        const venteFlashActive = produit.venteFlash?.actif && produit.venteFlash?.prixFlash && produit.venteFlash?.dateFin && new Date(produit.venteFlash.dateFin) > new Date();
+        const prixUnitaire = venteFlashActive ? produit.venteFlash.prixFlash : produit.prix;
+        const sousTotal = prixUnitaire * quantite;
         montantTotal += sousTotal;
         lignesVerifiees.push({
           produit: produit._id,
           vendeur: produit.vendeur,
           nomProduit: produit.nom,
           categorie: produit.categorie,
-          prixUnitaire: produit.prix,
+          prixUnitaire,
           quantite,
           sousTotal,
         });
+      }
+
+      if (codePromo) {
+        const resultatPromo = await trouverPromoValide(codePromo, montantTotal);
+        if (!resultatPromo.promo) throw new Error(resultatPromo.message);
+        reduction = resultatPromo.reduction;
+        codePromoApplique = resultatPromo.promo.code;
+        montantTotal = Math.max(montantTotal - reduction, 0);
+        await resultatPromo.promo.updateOne({ $inc: { utilisations: 1 } }, { session });
       }
 
       const commandes = await Commande.create([{
@@ -52,6 +66,8 @@ exports.passerCommande = async (req, res) => {
         lignes: lignesVerifiees,
         adresseLivraison,
         montantTotal,
+        reduction,
+        codePromo: codePromoApplique,
         modePaiement: modePaiement || 'cash',
         notes,
       }], { session });
