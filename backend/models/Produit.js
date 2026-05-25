@@ -48,8 +48,24 @@ const produitSchema = new mongoose.Schema(
     },
     badge: {
       type: String,
-      enum: ['Promo', 'Nouveau', 'Best-seller', null],
+      enum: ['Promo', 'Nouveau', 'Best-seller', 'Vente flash', null],
       default: null,
+    },
+    noteMoyenne: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    nombreAvis: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    venteFlash: {
+      actif: { type: Boolean, default: false },
+      prixFlash: { type: Number, default: null, min: 0 },
+      dateFin: { type: Date, default: null },
     },
     actif: {
       type: Boolean,
