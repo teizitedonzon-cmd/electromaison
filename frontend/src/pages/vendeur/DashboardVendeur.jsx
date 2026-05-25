@@ -1072,10 +1072,11 @@ styleSheet.textContent = `
   ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
   ::-webkit-scrollbar-thumb:hover { background: #C8410A; }
   
-  /* Responsive - TOUS LES TEXTES RESTENT VISIBLES SUR MOBILE */
-  @media (max-width: 768px) { 
-    .stats-grid { gap: 16px !important; padding: 20px 20px 0 20px !important; } 
+  /* ===== RESPONSIVE TABLETTE (max-width: 992px) ===== */
+  @media (max-width: 992px) {
+    .stats-grid { gap: 16px !important; padding: 20px 20px 0 20px !important; }
     .charts-grid { padding: 20px 20px 0 20px !important; gap: 20px !important; }
+    .charts-grid { grid-template-columns: 1fr !important; }
     .pie-chart-layout { flex-direction: column !important; gap: 20px !important; }
     .pie-svg-wrapper { width: 180px !important; height: 180px !important; }
     .pie-legend-list { max-height: 200px !important; }
@@ -1083,34 +1084,92 @@ styleSheet.textContent = `
     .pie-legend-label { font-size: 0.8rem !important; }
     .pie-legend-percent { font-size: 0.75rem !important; }
     .pie-legend-value { font-size: 0.65rem !important; }
-    .page-container { padding: 16px !important; padding-bottom: 70px !important; } 
-    .filters-row { gap: 12px !important; }
+    .page-container { padding: 16px !important; padding-bottom: 70px !important; }
+    .filters-row { gap: 12px !important; flex-direction: column !important; }
     .filter-group { width: 100% !important; justify-content: space-between !important; }
     .filter-select { flex: 1 !important; }
     .reset-filter-btn { width: 100% !important; margin-top: 8px !important; }
-    
-    /* Le texte des boutons de navigation reste visible */
-    .bottom-nav-btn span { display: inline !important; font-size: 0.7rem !important; margin-left: 8px !important; }
-    .bottom-nav-btn { padding: 8px 16px !important; flex-direction: row !important; gap: 8px !important; }
-    
-    /* La photo de profil reste visible */
-    .user-info { display: flex !important; }
-    .avatar { width: 32px !important; height: 32px !important; }
-    .user-name { font-size: 0.7rem !important; }
+    .products-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
   }
   
-  /* Pour les très petits mobiles (largeur < 400px) */
-  @media (max-width: 400px) {
-    .bottom-nav-btn span { font-size: 0.65rem !important; }
-    .bottom-nav-btn { padding: 6px 12px !important; }
-    .user-name { font-size: 0.65rem !important; }
+  /* ===== RESPONSIVE MOBILE (max-width: 768px) ===== */
+  @media (max-width: 768px) {
+    .header { padding: 12px 16px !important; }
+    .header-left { flex-wrap: wrap !important; }
+    .header-title { font-size: 1.2rem !important; }
+    .header-subtitle { display: none !important; }
+    
+    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; padding: 16px !important; }
+    .stat-card { padding: 12px !important; }
+    .stat-icon { width: 40px !important; height: 40px !important; }
+    .stat-number { font-size: 1.2rem !important; }
+    .stat-label { font-size: 0.65rem !important; }
+    
+    .charts-grid { padding: 0 16px !important; }
+    .bar-chart-container { padding: 12px !important; }
+    .pie-chart-container { padding: 12px !important; }
+    
+    .add-btn { padding: 12px !important; min-height: auto !important; font-size: 0.8rem !important; }
+    .add-btn span { font-size: 0.75rem !important; }
+    
+    .bottom-nav { padding: 8px 12px !important; }
+    .bottom-nav-btn { padding: 6px 12px !important; flex-direction: row !important; gap: 6px !important; }
+    .bottom-nav-btn span { display: inline !important; font-size: 0.7rem !important; margin-left: 4px !important; }
+    
+    .notification-dropdown { width: 300px !important; right: -15px !important; }
+    .bell-button { width: 36px !important; height: 36px !important; }
+    
+    .user-info { padding: 4px 10px !important; }
+    .user-name { font-size: 0.7rem !important; }
     .user-status { font-size: 0.55rem !important; }
     .avatar { width: 28px !important; height: 28px !important; }
+    
+    .logout-btn { padding: 6px 10px !important; }
+    .logout-btn span { font-size: 0.7rem !important; }
   }
   
-  @media (max-width: 480px) { 
-    .page-title { font-size: 1.1rem !important; }
-    .pie-svg-wrapper { width: 160px !important; height: 160px !important; }
+  /* ===== TRÈS PETIT MOBILE (max-width: 480px) ===== */
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr !important; }
+    .products-grid { grid-template-columns: 1fr !important; }
+    .pie-svg-wrapper { width: 140px !important; height: 140px !important; }
+    .pie-legend-label { font-size: 0.7rem !important; }
+    .pie-legend-percent { font-size: 0.7rem !important; }
+    .page-title { font-size: 1rem !important; }
+    .bottom-nav-btn { padding: 6px 10px !important; }
+    .bottom-nav-btn span { font-size: 0.6rem !important; }
+    .logout-btn span { display: none !important; }
+    .logout-btn { padding: 6px 8px !important; }
+    .filter-group label { font-size: 0.7rem !important; }
+    .filter-select { font-size: 0.7rem !important; padding: 6px 8px !important; }
+    .reset-filter-btn { font-size: 0.65rem !important; }
+    .order-card { padding: 12px !important; }
+    .order-ref { font-size: 0.7rem !important; }
+    .order-date { font-size: 0.6rem !important; }
+    .order-product-name { font-size: 0.7rem !important; }
+    .order-product-price { font-size: 0.7rem !important; }
+    .order-total { font-size: 0.9rem !important; }
+  }
+  
+  /* ===== EXTRA PETIT MOBILE (max-width: 360px) ===== */
+  @media (max-width: 360px) {
+    .bottom-nav-btn span { display: none !important; }
+    .bottom-nav-btn { padding: 8px 12px !important; }
+    .bottom-nav { gap: 12px !important; justify-content: center !important; }
+    .stat-number { font-size: 1rem !important; }
+    .stat-label { font-size: 0.6rem !important; }
+    .card-title { font-size: 0.8rem !important; }
+    .product-price { font-size: 0.85rem !important; }
+  }
+  
+  /* Tableau des commandes responsive */
+  @media (max-width: 768px) {
+    .orders-table {
+      overflow-x: auto;
+    }
+    .orders-table table {
+      min-width: 600px;
+    }
   }
 `;
 document.head.appendChild(styleSheet);
