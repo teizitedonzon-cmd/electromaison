@@ -2,21 +2,17 @@ const mongoose = require('mongoose');
 const Commande = require('../models/Commande');
 const Produit = require('../models/Produit');
 const Notification = require('../models/Notification');
-const { trouverPromoValide } = require('./codePromoController');
 
 exports.passerCommande = async (req, res) => {
   const session = await mongoose.startSession();
-
   try {
-    const { lignes, adresseLivraison, modePaiement, notes, codePromo } = req.body;
+    const { lignes, adresseLivraison, modePaiement, notes } = req.body;
 
     if (!Array.isArray(lignes) || lignes.length === 0) {
       return res.status(400).json({ message: 'Le panier est vide.' });
     }
 
     let montantTotal = 0;
-    let reduction = 0;
-    let codePromoApplique = '';
     const lignesVerifiees = [];
     let commande;
 
@@ -52,22 +48,11 @@ exports.passerCommande = async (req, res) => {
         });
       }
 
-      if (codePromo) {
-        const resultatPromo = await trouverPromoValide(codePromo, montantTotal);
-        if (!resultatPromo.promo) throw new Error(resultatPromo.message);
-        reduction = resultatPromo.reduction;
-        codePromoApplique = resultatPromo.promo.code;
-        montantTotal = Math.max(montantTotal - reduction, 0);
-        await resultatPromo.promo.updateOne({ $inc: { utilisations: 1 } }, { session });
-      }
-
       const commandes = await Commande.create([{
         client: req.user._id,
         lignes: lignesVerifiees,
         adresseLivraison,
         montantTotal,
-        reduction,
-        codePromo: codePromoApplique,
         modePaiement: modePaiement || 'cash',
         notes,
       }], { session });
@@ -209,26 +194,9 @@ exports.statistiques = async (req, res) => {
 
     const parMois = await Commande.aggregate([
       { $match: { statut: { $ne: 'annulee' } } },
-      {
-        $group: {
-          _id: { annee: { $year: '$createdAt' }, mois: { $month: '$createdAt' } },
-          total: { $sum: '$montantTotal' },
-        },
-      },
+      { $group: { _id: { annee: { $year: '$createdAt' }, mois: { $month: '$createdAt' } }, total: { $sum: '$montantTotal' } } },
       { $sort: { '_id.annee': 1, '_id.mois': 1 } },
-      {
-        $project: {
-          _id: 0,
-          label: {
-            $concat: [
-              { $toString: '$_id.mois' },
-              '/',
-              { $toString: '$_id.annee' },
-            ],
-          },
-          total: 1,
-        },
-      },
+      { $project: { _id: 0, label: { $concat: [{ $toString: '$_id.mois' }, '/', { $toString: '$_id.annee' }] }, total: 1 } },
     ]);
 
     res.json({ totalCommandes, enAttente, livrees, revenus, parCategorie, parVendeur, parMois });
