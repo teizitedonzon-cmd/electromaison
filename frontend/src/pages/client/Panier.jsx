@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import { mediaUrl } from '../../utils/media';
 import Icon from '../../components/Icon';
-import ClientNav from '../../components/ClientNav';
+
 
 export default function Panier() {
   const { panier, changerQuantite, retirerDuPanier, viderPanier, total } = useCart();
@@ -17,8 +17,6 @@ export default function Panier() {
   const [modePaiement, setModePaiement] = useState('cash');
   const [chargement, setChargement] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
-  const [codePromo, setCodePromo] = useState('');
-  const [promo, setPromo] = useState(null);
 
   const passerCommande = async () => {
     if (!user) {
@@ -38,7 +36,6 @@ export default function Panier() {
         lignes, 
         adresseLivraison: adresse, 
         modePaiement,
-        codePromo: promo?.code || codePromo || undefined,
       };
 
       await api.post('/commandes', payload);
@@ -53,20 +50,6 @@ export default function Panier() {
       setChargement(false); 
     }
   };
-
-  const appliquerCodePromo = async () => {
-    if (!codePromo.trim()) return toast.error('Entrez un code promo.');
-    try {
-      const { data } = await api.post('/codes-promo/verifier', { code: codePromo, total });
-      setPromo(data);
-      toast.success(`Code ${data.code} applique !`);
-    } catch (err) {
-      setPromo(null);
-      toast.error(err.response?.data?.message || 'Code promo invalide.');
-    }
-  };
-
-  const totalApresReduction = Math.max(total - (promo?.reduction || 0), 0);
 
   const TrashIcon = () => (
     <svg 
@@ -89,7 +72,6 @@ export default function Panier() {
 
   if (panier.length === 0 && etape === 1) return (
     <div style={styles.emptyPage}>
-      <ClientNav />
       <div style={styles.emptyContainer}>
       <div style={styles.emptyIcon}>🛒</div>
       <h2 style={styles.emptyTitle}>Votre panier est vide</h2>
@@ -101,7 +83,6 @@ export default function Panier() {
 
   return (
     <div style={styles.container} className="container">
-      <ClientNav />
       <div style={styles.wrapper}>
         
         {/* Header avec progression */}
@@ -129,7 +110,7 @@ export default function Panier() {
           </div>
         </div>
 
-        {/* Étape 1 : Panier - Version responsive */}
+        {/* Étape 1 : Panier */}
         {etape === 1 && (
           <>
             <div style={styles.cartItems}>
@@ -145,7 +126,6 @@ export default function Panier() {
                   onMouseLeave={() => setHoveredItem(null)}
                   className="cart-item"
                 >
-                  {/* Image produit */}
                   <div style={styles.itemImage} className="item-image">
                     {item.images?.[0] ? (
                       <img src={mediaUrl(item.images[0])} alt={item.nom} style={styles.itemImg} />
@@ -156,7 +136,6 @@ export default function Panier() {
                     )}
                   </div>
                   
-                  {/* Détails produit */}
                   <div style={styles.itemDetails}>
                     <h3 style={styles.itemName} className="item-name">{item.nom}</h3>
                     <p style={styles.itemPrice}>{item.prix.toLocaleString('fr-FR')} FCFA / unité</p>
@@ -183,14 +162,12 @@ export default function Panier() {
                         <TrashIcon />
                       </button>
                     </div>
-                    {/* Total mobile (visible uniquement sur petits écrans) */}
                     <div style={styles.itemTotalMobile} className="item-total-mobile">
                       <span style={styles.totalLabelMobile}>Total : </span>
                       <span style={styles.totalValueMobile}>{(item.prix * item.quantite).toLocaleString('fr-FR')} FCFA</span>
                     </div>
                   </div>
                   
-                  {/* Total desktop */}
                   <div style={styles.itemTotalDesktop} className="item-total-desktop">
                     <span style={styles.totalLabel}>Total</span>
                     <span style={styles.totalValue}>{(item.prix * item.quantite).toLocaleString('fr-FR')} FCFA</span>
@@ -209,25 +186,10 @@ export default function Panier() {
                 <span>Sous-total ({panier.reduce((s,i)=> s + i.quantite,0)} articles)</span>
                 <span>{total.toLocaleString('fr-FR')} FCFA</span>
               </div>
-              <div style={styles.promoBox}>
-                <input
-                  value={codePromo}
-                  onChange={(e) => { setCodePromo(e.target.value.toUpperCase()); setPromo(null); }}
-                  placeholder="Code promo"
-                  style={styles.promoInput}
-                />
-                <button type="button" onClick={appliquerCodePromo} style={styles.promoBtn}>Appliquer</button>
-              </div>
-              {promo && (
-                <div style={styles.summaryRow}>
-                  <span>Reduction ({promo.code})</span>
-                  <span>-{Number(promo.reduction).toLocaleString('fr-FR')} FCFA</span>
-                </div>
-              )}
               <div style={styles.divider}></div>
               <div style={{...styles.summaryRow, ...styles.summaryTotal}}>
                 <span>Total</span>
-                <span>{totalApresReduction.toLocaleString('fr-FR')} FCFA</span>
+                <span>{total.toLocaleString('fr-FR')} FCFA</span>
               </div>
               <button onClick={() => setEtape(2)} style={styles.checkoutBtn}>
                 Passer à la livraison →
@@ -236,7 +198,7 @@ export default function Panier() {
           </>
         )}
 
-        {/* Étape 2 : Livraison - Version responsive */}
+        {/* Étape 2 : Livraison */}
         {etape === 2 && (
           <div style={styles.shippingForm}>
             <div style={styles.formHeader}>
@@ -282,9 +244,9 @@ export default function Panier() {
               </div>
               <div style={styles.paymentOptions}>
                 {[
-                  { value: 'cash', label: '💵 Cash à la livraison', icon: 'cash' },
-                  { value: 'mobile_money', label: '📱 Mobile Money', icon: 'phone' },
-                  { value: 'virement', label: '🏦 Virement bancaire', icon: 'building' }
+                  { value: 'cash', label: '💵 Cash à la livraison' },
+                  { value: 'mobile_money', label: '📱 Mobile Money' },
+                  { value: 'virement', label: '🏦 Virement bancaire' }
                 ].map(m => (
                   <label key={m.value} style={{...styles.paymentOption, ...(modePaiement === m.value ? styles.paymentOptionActive : {})}}>
                     <input 
@@ -317,7 +279,6 @@ export default function Panier() {
         )}
       </div>
       
-      {/* Injection des styles responsives */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 768px) {
           .cart-item {
@@ -347,11 +308,7 @@ const styles = {
     margin: '0 auto',
     padding: '40px 20px 0',
   },
-  
-  // Header
-  header: {
-    marginBottom: '32px',
-  },
+  header: { marginBottom: '32px' },
   titleSection: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -366,551 +323,146 @@ const styles = {
     color: '#112219',
     margin: 0,
   },
-  steps: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    flexWrap: 'wrap',
-  },
-  step: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  stepActive: {
-    color: '#C8410A',
-  },
+  steps: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' },
+  step: { display: 'flex', alignItems: 'center', gap: '6px' },
+  stepActive: { color: '#C8410A' },
   stepNum: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    background: '#E8ECEF',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: '#666',
+    width: '28px', height: '28px', borderRadius: '50%', background: '#E8ECEF',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: '0.75rem', fontWeight: '700', color: '#666',
   },
-  stepLabel: {
-    fontSize: '0.75rem',
-    fontWeight: '500',
-    color: '#666',
-  },
-  stepLine: {
-    width: '20px',
-    height: '1px',
-    background: '#E0E0E0',
-  },
-  
-  // Cart Items - RESPONSIVE
-  cartItems: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    marginBottom: '32px',
-  },
+  stepLabel: { fontSize: '0.75rem', fontWeight: '500', color: '#666' },
+  stepLine: { width: '20px', height: '1px', background: '#E0E0E0' },
+  cartItems: { display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' },
   cartItem: {
-    background: 'var(--em-surface)',
-    borderRadius: '8px',
-    padding: '20px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px',
-    transition: 'all 0.3s ease',
-    border: '1px solid #E8E8E8',
+    background: 'var(--em-surface)', borderRadius: '8px', padding: '20px',
+    display: 'flex', alignItems: 'center', gap: '20px',
+    transition: 'all 0.3s ease', border: '1px solid #E8E8E8',
   },
   itemImage: {
-    width: '70px',
-    height: '70px',
-    borderRadius: '12px',
-    background: '#F8F9FA',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    flexShrink: 0,
+    width: '70px', height: '70px', borderRadius: '12px', background: '#F8F9FA',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden', flexShrink: 0,
   },
-  itemImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  itemImagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemDetails: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: '0.95rem',
-    fontWeight: '600',
-    color: '#112219',
-    marginBottom: '6px',
-    wordBreak: 'break-word',
-  },
-  itemPrice: {
-    fontSize: '0.75rem',
-    color: '#888',
-    marginBottom: '12px',
-  },
-  itemActions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    flexWrap: 'wrap',
-  },
+  itemImg: { width: '100%', height: '100%', objectFit: 'cover' },
+  itemImagePlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  itemDetails: { flex: 1 },
+  itemName: { fontSize: '0.95rem', fontWeight: '600', color: '#112219', marginBottom: '6px', wordBreak: 'break-word' },
+  itemPrice: { fontSize: '0.75rem', color: '#888', marginBottom: '12px' },
+  itemActions: { display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' },
   quantityControl: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    background: '#F5F5F5',
-    borderRadius: '30px',
-    padding: '4px',
+    display: 'flex', alignItems: 'center', gap: '8px',
+    background: '#F5F5F5', borderRadius: '30px', padding: '4px',
   },
   qtyBtn: {
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    border: 'none',
-    background: '#fff',
-    cursor: 'pointer',
-    fontSize: '1rem',
-    fontWeight: '600',
-    color: '#C8410A',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '28px', height: '28px', borderRadius: '50%', border: 'none',
+    background: '#fff', cursor: 'pointer', fontSize: '1rem', fontWeight: '600',
+    color: '#C8410A', display: 'flex', alignItems: 'center', justifyContent: 'center',
     transition: 'all 0.2s ease',
   },
-  qtyValue: {
-    minWidth: '28px',
-    textAlign: 'center',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    color: '#333',
-  },
+  qtyValue: { minWidth: '28px', textAlign: 'center', fontSize: '0.9rem', fontWeight: '600', color: '#333' },
   removeBtn: {
-    width: '34px',
-    height: '34px',
-    background: '#FEF0EE',
-    border: 'none',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    color: '#E74C3C',
+    width: '34px', height: '34px', background: '#FEF0EE', border: 'none',
+    borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', transition: 'all 0.2s ease', color: '#E74C3C',
   },
-  
-  // Total Desktop (caché sur mobile)
-  itemTotalDesktop: {
-    textAlign: 'right',
-    minWidth: '130px',
-  },
-  totalLabel: {
-    display: 'block',
-    fontSize: '0.7rem',
-    color: '#999',
-    marginBottom: '4px',
-  },
-  totalValue: {
-    fontSize: '1rem',
-    fontWeight: '700',
-    color: '#C8410A',
-  },
-  
-  // Total Mobile (visible uniquement sur mobile)
-  itemTotalMobile: {
-    display: 'none',
-    marginTop: '12px',
-    paddingTop: '12px',
-    borderTop: '1px solid #E8E8E8',
-  },
-  totalLabelMobile: {
-    fontSize: '0.75rem',
-    color: '#999',
-  },
-  totalValueMobile: {
-    fontSize: '1rem',
-    fontWeight: '700',
-    color: '#C8410A',
-    marginLeft: '8px',
-  },
-  
-  // Summary - RESPONSIVE
+  itemTotalDesktop: { textAlign: 'right', minWidth: '130px' },
+  totalLabel: { display: 'block', fontSize: '0.7rem', color: '#999', marginBottom: '4px' },
+  totalValue: { fontSize: '1rem', fontWeight: '700', color: '#C8410A' },
+  itemTotalMobile: { display: 'none', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #E8E8E8' },
+  totalLabelMobile: { fontSize: '0.75rem', color: '#999' },
+  totalValueMobile: { fontSize: '1rem', fontWeight: '700', color: '#C8410A', marginLeft: '8px' },
   summary: {
-    background: 'var(--em-surface)',
-    borderRadius: '8px',
-    padding: 'clamp(16px, 4vw, 24px)',
-    border: '1px solid #E8E8E8',
+    background: 'var(--em-surface)', borderRadius: '8px',
+    padding: 'clamp(16px, 4vw, 24px)', border: '1px solid #E8E8E8',
   },
   summaryHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '20px',
-    paddingBottom: '12px',
-    borderBottom: '1px solid #E8E8E8',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#112219',
+    display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px',
+    paddingBottom: '12px', borderBottom: '1px solid #E8E8E8',
+    fontSize: '0.85rem', fontWeight: '600', color: '#112219',
   },
   summaryRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '12px',
-    fontSize: '0.85rem',
-    color: '#666',
-    flexWrap: 'wrap',
-    gap: '8px',
+    display: 'flex', justifyContent: 'space-between', marginBottom: '12px',
+    fontSize: '0.85rem', color: '#666', flexWrap: 'wrap', gap: '8px',
   },
-  summaryTotal: {
-    fontSize: '1rem',
-    fontWeight: '700',
-    color: '#112219',
-  },
-  divider: {
-    height: '1px',
-    background: '#E8E8E8',
-    margin: '16px 0',
-  },
-  promoBox: {
-    display: 'flex',
-    gap: '8px',
-    margin: '16px 0',
-  },
-  promoInput: {
-    flex: 1,
-    border: '1.5px solid #E2E8F0',
-    borderRadius: '8px',
-    padding: '10px 12px',
-    fontSize: '0.85rem',
-    outline: 'none',
-  },
-  promoBtn: {
-    background: '#112219',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    fontWeight: '700',
-    cursor: 'pointer',
-  },
+  summaryTotal: { fontSize: '1rem', fontWeight: '700', color: '#112219' },
+  divider: { height: '1px', background: '#E8E8E8', margin: '16px 0' },
   checkoutBtn: {
-    width: '100%',
-    padding: '14px',
-    background: '#C8410A',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '40px',
-    fontSize: 'clamp(0.85rem, 4vw, 0.9rem)',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    marginTop: '16px',
+    width: '100%', padding: '14px', background: '#C8410A', color: '#fff',
+    border: 'none', borderRadius: '40px', fontSize: 'clamp(0.85rem, 4vw, 0.9rem)',
+    fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease', marginTop: '16px',
   },
-  
-  // Shipping Form - RESPONSIVE
   shippingForm: {
-    background: 'var(--em-surface)',
-    borderRadius: '8px',
-    padding: 'clamp(20px, 5vw, 32px)',
-    border: '1px solid #E8E8E8',
+    background: 'var(--em-surface)', borderRadius: '8px',
+    padding: 'clamp(20px, 5vw, 32px)', border: '1px solid #E8E8E8',
   },
-  formHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '8px',
-    flexWrap: 'wrap',
-  },
-  formSubtitle: {
-    fontSize: '0.8rem',
-    color: '#888',
-    marginBottom: '24px',
-  },
-  formGroup: {
-    marginBottom: '20px',
-  },
-  formLabel: {
-    display: 'block',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    color: '#444',
-    marginBottom: '8px',
-  },
+  formHeader: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' },
+  formSubtitle: { fontSize: '0.8rem', color: '#888', marginBottom: '24px' },
+  formGroup: { marginBottom: '20px' },
+  formLabel: { display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#444', marginBottom: '8px' },
   formInput: {
-    width: '100%',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    border: '1.5px solid #E2E8F0',
-    fontSize: '0.85rem',
-    fontFamily: 'inherit',
-    outline: 'none',
-    transition: 'all 0.2s ease',
-    boxSizing: 'border-box',
+    width: '100%', padding: '12px 16px', borderRadius: '8px',
+    border: '1.5px solid #E2E8F0', fontSize: '0.85rem', fontFamily: 'inherit',
+    outline: 'none', transition: 'all 0.2s ease', boxSizing: 'border-box',
   },
-  paymentSection: {
-    marginTop: '24px',
-    paddingTop: '20px',
-    borderTop: '1px solid #E8E8E8',
-  },
+  paymentSection: { marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #E8E8E8' },
   paymentHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    marginBottom: '16px',
-    fontSize: '0.85rem',
-    fontWeight: '600',
-    color: '#112219',
+    display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px',
+    fontSize: '0.85rem', fontWeight: '600', color: '#112219',
   },
-  paymentOptions: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
+  paymentOptions: { display: 'flex', flexDirection: 'column', gap: '12px' },
   paymentOption: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    border: '1px solid #E2E8F0',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+    borderRadius: '8px', border: '1px solid #E2E8F0', cursor: 'pointer', transition: 'all 0.2s ease',
   },
-  paymentOptionActive: {
-    borderColor: '#C8410A',
-    background: '#FFF5F0',
-  },
-  formActions: {
-    display: 'flex',
-    gap: '16px',
-    marginTop: '32px',
-    flexDirection: 'row',
-  },
+  paymentOptionActive: { borderColor: '#C8410A', background: '#FFF5F0' },
+  formActions: { display: 'flex', gap: '16px', marginTop: '32px', flexDirection: 'row' },
   backBtn: {
-    flex: 1,
-    padding: '12px',
-    background: '#F0F0F0',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: 'clamp(0.75rem, 4vw, 0.85rem)',
-    fontWeight: '600',
-    color: '#444',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    flex: 1, padding: '12px', background: '#F0F0F0', border: 'none',
+    borderRadius: '8px', fontSize: 'clamp(0.75rem, 4vw, 0.85rem)',
+    fontWeight: '600', color: '#444', cursor: 'pointer', transition: 'all 0.2s ease',
   },
   confirmBtn: {
-    flex: 2,
-    padding: '12px',
-    background: '#C8410A',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: 'clamp(0.75rem, 4vw, 0.85rem)',
-    fontWeight: '600',
-    color: '#fff',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    flex: 2, padding: '12px', background: '#C8410A', border: 'none',
+    borderRadius: '8px', fontSize: 'clamp(0.75rem, 4vw, 0.85rem)',
+    fontWeight: '600', color: '#fff', cursor: 'pointer', transition: 'all 0.2s ease',
   },
-  
-  // Empty state - RESPONSIVE
   emptyContainer: {
-    minHeight: '100vh',
-    background: 'var(--em-page)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '20px',
-    padding: '40px 20px',
-    textAlign: 'center',
+    minHeight: '100vh', background: 'var(--em-page)', display: 'flex',
+    flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+    gap: '20px', padding: '40px 20px', textAlign: 'center',
   },
-  emptyIcon: {
-    fontSize: '4rem',
-  },
-  emptyTitle: {
-    fontSize: 'clamp(1.2rem, 6vw, 1.5rem)',
-    fontWeight: '700',
-    color: '#112219',
-    marginBottom: '8px',
-  },
-  emptyText: {
-    color: '#999',
-    marginBottom: '16px',
-    fontSize: 'clamp(0.85rem, 4vw, 1rem)',
-    maxWidth: '300px',
-  },
+  emptyIcon: { fontSize: '4rem' },
+  emptyTitle: { fontSize: 'clamp(1.2rem, 6vw, 1.5rem)', fontWeight: '700', color: '#112219', marginBottom: '8px' },
+  emptyText: { color: '#999', marginBottom: '16px', fontSize: 'clamp(0.85rem, 4vw, 1rem)', maxWidth: '300px' },
   emptyBtn: {
-    display: 'inline-block',
-    padding: '12px 28px',
-    background: '#C8410A',
-    color: '#fff',
-    textDecoration: 'none',
-    borderRadius: '40px',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-    transition: 'all 0.2s ease',
+    display: 'inline-block', padding: '12px 28px', background: '#C8410A',
+    color: '#fff', textDecoration: 'none', borderRadius: '40px',
+    fontSize: '0.9rem', fontWeight: '600', transition: 'all 0.2s ease',
   },
 };
 
-// Animations globales
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
-  .qty-btn:hover {
-    background: #C8410A;
-    color: #fff;
-    transform: scale(1.05);
-  }
-  
-  .remove-btn:hover {
-    background: #E74C3C;
-    color: #fff;
-    transform: scale(1.1);
-  }
-  
-  .checkout-btn:hover, .confirm-btn:hover, .empty-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(200, 65, 10, 0.25);
-  }
-  
-  .back-btn:hover {
-    background: #E0E0E0;
-    transform: translateY(-2px);
-  }
-  
-  .payment-option:hover {
-    border-color: #C8410A;
-    background: #FFF5F0;
-  }
-  
-  input:focus {
-    border-color: #C8410A;
-    box-shadow: 0 0 0 3px rgba(200, 65, 10, 0.1);
-  }
-  
+  .qty-btn:hover { background: #C8410A; color: #fff; transform: scale(1.05); }
+  .remove-btn:hover { background: #E74C3C; color: #fff; transform: scale(1.1); }
+  input:focus { border-color: #C8410A; box-shadow: 0 0 0 3px rgba(200, 65, 10, 0.1); }
   @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  
-  .cart-item {
-    animation: fadeInUp 0.3s ease-out backwards;
-  }
-  
-  /* ===== RESPONSIVE MEDIA QUERIES ===== */
-  
-  /* Tablette */
+  .cart-item { animation: fadeInUp 0.3s ease-out backwards; }
   @media (max-width: 768px) {
-    .cart-item {
-      flex-direction: column !important;
-      align-items: flex-start !important;
-    }
-    
-    .item-total-desktop {
-      display: none !important;
-    }
-    
-    .item-total-mobile {
-      display: block !important;
-    }
-    
-    .cart-item {
-      flex-direction: column;
-    }
+    .cart-item { flex-direction: column !important; align-items: flex-start !important; }
+    .item-total-desktop { display: none !important; }
+    .item-total-mobile { display: block !important; }
   }
-  
-  /* Mobile */
   @media (max-width: 640px) {
-    .container {
-      padding: 20px 12px !important;
-    }
-    
-    .steps {
-      justify-content: center;
-      width: 100%;
-    }
-    
-    .step-label {
-      display: none;
-    }
-    
-    .step-line {
-      width: 15px;
-    }
-    
-    .form-actions {
-      flex-direction: column;
-    }
-    
-    .back-btn, .confirm-btn {
-      width: 100%;
-    }
-    
-    .payment-option {
-      padding: 10px 12px;
-      font-size: 0.8rem;
-    }
-  }
-  
-  /* Très petit mobile */
-  @media (max-width: 480px) {
-    .title-section {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .item-image {
-      width: 60px;
-      height: 60px;
-    }
-    
-    .item-name {
-      font-size: 0.85rem;
-    }
-    
-    .quantity-control {
-      gap: 5px;
-    }
-    
-    .qty-btn {
-      width: 24px;
-      height: 24px;
-      font-size: 0.9rem;
-    }
-    
-    .remove-btn {
-      width: 30px;
-      height: 30px;
-    }
-  }
-  
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #F1F1F1;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #C8410A;
-    border-radius: 4px;
-  }
-  
-  ::selection {
-    background: #C8410A;
-    color: #fff;
+    .steps { justify-content: center; width: 100%; }
+    .step-label { display: none; }
+    .step-line { width: 15px; }
+    .form-actions { flex-direction: column; }
+    .back-btn, .confirm-btn { width: 100%; }
   }
 `;
 document.head.appendChild(styleSheet);
