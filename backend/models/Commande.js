@@ -12,6 +12,8 @@ const commandeSchema = new mongoose.Schema({
     sousTotal: Number
   }],
   montantTotal: { type: Number, required: true },
+  reduction: { type: Number, default: 0 },
+  codePromo: { type: String, uppercase: true, trim: true },
   adresseLivraison: {
     rue: String,
     ville: String,
