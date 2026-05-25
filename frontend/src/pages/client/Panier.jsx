@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import { mediaUrl } from '../../utils/media';
 import Icon from '../../components/Icon';
+import ClientNav from '../../components/ClientNav';
 
 export default function Panier() {
   const { panier, changerQuantite, retirerDuPanier, viderPanier, total } = useCart();
@@ -70,16 +71,20 @@ export default function Panier() {
   );
 
   if (panier.length === 0 && etape === 1) return (
-    <div style={styles.emptyContainer}>
+    <div style={styles.emptyPage}>
+      <ClientNav />
+      <div style={styles.emptyContainer}>
       <div style={styles.emptyIcon}>🛒</div>
       <h2 style={styles.emptyTitle}>Votre panier est vide</h2>
       <p style={styles.emptyText}>Ajoutez des produits à votre panier pour commencer vos achats</p>
       <Link to="/catalogue" style={styles.emptyBtn}>Découvrir le catalogue →</Link>
+      </div>
     </div>
   );
 
   return (
     <div style={styles.container} className="container">
+      <ClientNav />
       <div style={styles.wrapper}>
         
         {/* Header avec progression */}
@@ -294,15 +299,21 @@ export default function Panier() {
 }
 
 const styles = {
+  emptyPage: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #F5F7FA 0%, #E9ECEF 100%)',
+    fontFamily: "'Inter', 'DM Sans', sans-serif",
+  },
   container: {
     minHeight: '100vh',
     background: 'linear-gradient(135deg, #F5F7FA 0%, #E9ECEF 100%)',
-    padding: '40px 20px',
+    padding: '0 0 40px',
     fontFamily: "'Inter', 'DM Sans', sans-serif",
   },
   wrapper: {
     maxWidth: '1000px',
     margin: '0 auto',
+    padding: '40px 20px 0',
   },
   
   // Header
