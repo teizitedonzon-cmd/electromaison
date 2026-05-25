@@ -753,7 +753,7 @@ const styles = {
   container: {
     fontFamily: "'Inter', -apple-system, sans-serif",
     minHeight: '100vh',
-    background: '#F5F7FA',
+    background: 'var(--em-page)',
   },
   
   // Navigation
@@ -991,13 +991,13 @@ const styles = {
   // Sidebar
   sidebar: {
     width: '280px',
-    background: '#fff',
-    borderRadius: '16px',
+    background: 'var(--em-surface)',
+    borderRadius: '8px',
     padding: '20px 0',
     height: 'fit-content',
     top: '100px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-    border: '1px solid #E8E8E8',
+    boxShadow: 'var(--em-shadow-sm)',
+    border: '1px solid var(--em-border)',
     transition: 'all 0.3s ease',
     zIndex: 1000,
     overflowY: 'auto',
@@ -1253,11 +1253,11 @@ const styles = {
     gap: '24px',
   },
   card: {
-    background: '#fff',
-    borderRadius: '16px',
+    background: 'var(--em-surface)',
+    borderRadius: '8px',
     overflow: 'hidden',
     transition: 'all 0.3s ease',
-    border: '1px solid #E8E8E8',
+    border: '1px solid var(--em-border)',
     display: 'flex',
     flexDirection: 'column',
   },
@@ -1271,7 +1271,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#FAFAFA',
+    background: 'linear-gradient(135deg, #fff7ef, #edf7f2)',
     overflow: 'hidden',
   },
   productImg: {
