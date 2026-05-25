@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { mediaUrl } from '../../utils/media';
+import ClientNav from '../../components/ClientNav';
 
 export default function Profil() {
-  const { user, deconnexion, updateUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const [form, setForm] = useState({ 
     nom: user?.nom || '', 
     prenom: user?.prenom || '', 
     telephone: user?.telephone || '' 
   });
+  const [photo, setPhoto] = useState(null);
+  const [preview, setPreview] = useState(user?.photoProfil ? mediaUrl(user.photoProfil) : '');
   const [chargement, setChargement] = useState(false);
 
   React.useEffect(() => {
@@ -19,14 +22,24 @@ export default function Profil() {
       prenom: user?.prenom || '',
       telephone: user?.telephone || ''
     });
+    setPreview(user?.photoProfil ? mediaUrl(user.photoProfil) : '');
   }, [user]);
+
+  const changerPhoto = (e) => {
+    const fichier = e.target.files?.[0];
+    if (!fichier) return;
+    setPhoto(fichier);
+    setPreview(URL.createObjectURL(fichier));
+  };
 
   const sauvegarder = async (e) => {
     e.preventDefault();
     setChargement(true);
     try {
-      // Envoi au backend (nécessite une route PUT /users/profil)
-      const { data } = await api.put('/users/profil', form);
+      const payload = new FormData();
+      Object.entries(form).forEach(([key, value]) => payload.append(key, value));
+      if (photo) payload.append('photoProfil', photo);
+      const { data } = await api.put('/users/profil', payload);
       
       // Mise à jour locale immédiate
       updateUser(data.user || form);
@@ -39,14 +52,7 @@ export default function Profil() {
 
   return (
     <div style={{ minHeight:'100vh', background:'#F5F0E8', fontFamily:"'DM Sans',sans-serif" }}>
-      <nav style={styles.nav} className="responsive-nav">
-        <Link to="/" style={styles.logo}>Tey<span style={{color:'#F4A76A'}}>Shop</span></Link>
-        <div style={{display:'flex', gap:'20px'}} className="responsive-nav-links">
-          <Link to="/" style={styles.navLink}>Accueil</Link>
-          <Link to="/mes-commandes" style={styles.navLink}>Commandes</Link>
-          <button onClick={deconnexion} style={styles.decoBtn}>Déconnexion</button>
-        </div>
-      </nav>
+      <ClientNav />
 
       <div style={styles.content}>
         <h1 style={styles.title}>Mon Profil</h1>
@@ -54,9 +60,15 @@ export default function Profil() {
 
         <div style={styles.card}>
           <div style={{textAlign:'center', marginBottom:'28px'}}>
-            <div style={{width:'80px', height:'80px', borderRadius:'50%', background:'#1A3A2A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2rem', margin:'0 auto 12px'}}>
-              {user?.prenom?.[0]?.toUpperCase()}{user?.nom?.[0]?.toUpperCase()}
-            </div>
+            <label style={styles.avatarLabel}>
+              {preview ? (
+                <img src={preview} alt="Profil" style={styles.avatarImg} />
+              ) : (
+                <span>{user?.prenom?.[0]?.toUpperCase()}{user?.nom?.[0]?.toUpperCase()}</span>
+              )}
+              <input type="file" accept="image/*" onChange={changerPhoto} style={{ display: 'none' }} />
+            </label>
+            <p style={styles.photoHint}>Cliquez sur la photo pour la modifier</p>
             <p style={{color:'#888', fontSize:'0.85rem'}}>{user?.email}</p>
           </div>
 
@@ -97,6 +109,9 @@ const styles = {
   content: { maxWidth:'500px', margin:'0 auto', padding:'clamp(24px, 6vw, 40px) 20px' },
   title: { fontSize:'clamp(1.35rem, 5vw, 1.8rem)', fontWeight:'700', marginBottom:'10px' },
   card: { background:'#fff', borderRadius:'20px', padding:'clamp(22px, 6vw, 32px)', boxShadow:'0 2px 12px rgba(0,0,0,0.06)' },
+  avatarLabel: { width:'86px', height:'86px', borderRadius:'50%', background:'#1A3A2A', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2rem', margin:'0 auto 8px', overflow:'hidden', cursor:'pointer', border:'3px solid #C8410A' },
+  avatarImg: { width:'100%', height:'100%', objectFit:'cover' },
+  photoHint: { color:'#888', fontSize:'0.78rem', margin:'0 0 8px' },
   label: { display:'block', marginBottom:'6px', fontSize:'0.88rem', fontWeight:'600' },
   input: { width:'100%', padding:'11px', borderRadius:'10px', border:'1.5px solid #E2DAD0', boxSizing:'border-box' },
   btnAction: { width:'100%', padding:'14px', background:'#C8410A', color:'#fff', border:'none', borderRadius:'50px', fontWeight:'700', cursor:'pointer' }
