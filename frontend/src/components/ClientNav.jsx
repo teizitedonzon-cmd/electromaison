@@ -48,7 +48,7 @@ export default function ClientNav({ searchSlot = null }) {
     const style = mobile ? styles.mobileItem : (isCart ? styles.cartBtn : styles.navLink);
 
     return (
-      <Link key={item.to} to={item.to} onClick={() => setMenuOpen(false)} style={style}>
+      <Link key={item.to} to={item.to} onClick={() => setMenuOpen(false)} style={style} className={mobile ? 'em-mobile-nav-item' : 'em-nav-item'}>
         <Icon name={item.icon} size={mobile ? 18 : 16} />
         <span>{item.label}</span>
         {isCart && nombreArticles > 0 && <span style={mobile ? styles.mobileBadge : styles.cartBadge}>{nombreArticles}</span>}
@@ -58,7 +58,7 @@ export default function ClientNav({ searchSlot = null }) {
 
   return (
     <>
-      <nav style={{ ...styles.nav, ...(isMobile && searchSlot ? styles.navWithMobileSearch : {}) }}>
+      <nav style={{ ...styles.nav, ...(isMobile && searchSlot ? styles.navWithMobileSearch : {}) }} className="em-client-nav">
         <Link to="/" style={styles.logoLink}>
           <img src={logot} alt="TeyShop" style={styles.logoImage} />
           <span style={styles.logoText}>TEY<span style={styles.logoAccent}>SHOP</span></span>
@@ -69,7 +69,7 @@ export default function ClientNav({ searchSlot = null }) {
         <div style={{ ...styles.desktopMenu, display: isMobile ? 'none' : 'flex' }}>
           {items.map((item) => renderItem(item))}
           {user && (
-            <button onClick={deconnexion} style={styles.decoBtn}>
+            <button onClick={deconnexion} style={styles.decoBtn} className="em-nav-item">
               <Icon name="logout" size={16} />
               <span>Deconnexion</span>
             </button>
@@ -80,6 +80,7 @@ export default function ClientNav({ searchSlot = null }) {
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
           style={{ ...styles.mobileMenuBtn, display: isMobile ? 'flex' : 'none' }}
+          className="em-menu-button"
           aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
         >
           <Icon name={menuOpen ? 'x' : 'menu'} size={22} color="#fff" />
@@ -87,10 +88,10 @@ export default function ClientNav({ searchSlot = null }) {
       </nav>
 
       {menuOpen && isMobile && (
-        <div style={styles.mobileMenu}>
+        <div style={styles.mobileMenu} className="em-mobile-menu">
           {items.map((item) => renderItem(item, true))}
           {user && (
-            <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn}>
+            <button onClick={() => { deconnexion(); setMenuOpen(false); }} style={styles.mobileDecoBtn} className="em-mobile-nav-item">
               <Icon name="logout" size={18} />
               <span>Deconnexion</span>
             </button>
@@ -105,16 +106,16 @@ const styles = {
   nav: {
     width: '100%',
     boxSizing: 'border-box',
-    background: '#112219',
+    background: 'linear-gradient(135deg, rgba(13, 34, 24, 0.98), rgba(18, 50, 36, 0.98) 55%, rgba(31, 90, 67, 0.98))',
     padding: '0 clamp(14px, 5vw, 8%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: '76px',
+    height: '78px',
     position: 'sticky',
     top: 0,
     zIndex: 1000,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+    boxShadow: '0 16px 42px rgba(11, 24, 17, 0.22)',
     gap: '16px',
   },
   navWithMobileSearch: {
@@ -135,14 +136,17 @@ const styles = {
     flexShrink: 0,
   },
   logoImage: {
-    width: '36px',
-    height: '36px',
+    width: '40px',
+    height: '40px',
     objectFit: 'contain',
+    borderRadius: '8px',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
   },
   logoText: {
-    fontSize: '1.35rem',
-    fontWeight: 800,
+    fontSize: '1.28rem',
+    fontWeight: 900,
     color: '#fff',
+    letterSpacing: '0',
   },
   logoAccent: {
     color: '#F4A76A',
@@ -165,22 +169,23 @@ const styles = {
     flexShrink: 0,
   },
   navLink: {
-    color: 'rgba(255,255,255,0.86)',
+    color: 'rgba(255,255,255,0.9)',
     textDecoration: 'none',
     fontSize: '0.88rem',
     fontWeight: 600,
     padding: '10px 14px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '7px',
-    background: 'transparent',
+    background: 'rgba(255,255,255,0.045)',
+    border: '1px solid rgba(255,255,255,0.07)',
   },
   cartBtn: {
-    background: '#C8410A',
+    background: 'linear-gradient(135deg, #C8410A, #E8622A)',
     color: '#fff',
     padding: '10px 16px',
-    borderRadius: '40px',
+    borderRadius: '8px',
     textDecoration: 'none',
     fontSize: '0.88rem',
     fontWeight: 700,
@@ -191,7 +196,7 @@ const styles = {
   cartBadge: {
     background: '#fff',
     color: '#C8410A',
-    borderRadius: '50%',
+    borderRadius: '8px',
     width: '21px',
     height: '21px',
     display: 'inline-flex',
@@ -205,7 +210,7 @@ const styles = {
     border: '1px solid rgba(255,255,255,0.2)',
     color: '#fff',
     padding: '10px 14px',
-    borderRadius: '40px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '0.88rem',
     fontWeight: 700,
@@ -215,37 +220,37 @@ const styles = {
   },
   mobileMenuBtn: {
     display: 'none',
-    background: 'rgba(244, 167, 106, 0.25)',
+    background: 'linear-gradient(135deg, rgba(200,65,10,0.95), rgba(244,167,106,0.92))',
     border: '1px solid rgba(244, 167, 106, 0.45)',
     cursor: 'pointer',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '12px',
+    borderRadius: '8px',
     padding: '10px 12px',
     flexShrink: 0,
   },
   mobileMenu: {
     position: 'fixed',
-    top: '76px',
+    top: '78px',
     left: 0,
     right: 0,
-    background: 'linear-gradient(135deg, #112219 0%, #1a3324 100%)',
+    background: 'linear-gradient(135deg, rgba(13,34,24,0.98), rgba(31,90,67,0.98))',
     padding: '14px',
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
     zIndex: 999,
     borderBottom: '2px solid rgba(244, 167, 106, 0.3)',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+    boxShadow: '0 26px 60px rgba(0,0,0,0.32)',
   },
   mobileItem: {
     color: '#fff',
     textDecoration: 'none',
     padding: '13px 16px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     fontSize: '0.95rem',
     fontWeight: 600,
-    background: 'rgba(255,255,255,0.08)',
+    background: 'rgba(255,255,255,0.09)',
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
@@ -256,7 +261,7 @@ const styles = {
     background: 'linear-gradient(135deg, #C8410A, #F4A76A)',
     color: '#fff',
     padding: '2px 8px',
-    borderRadius: '20px',
+    borderRadius: '8px',
     fontSize: '0.7rem',
     fontWeight: 800,
   },
@@ -267,7 +272,7 @@ const styles = {
     border: '1px solid rgba(231, 76, 60, 0.3)',
     color: '#ffb5ae',
     padding: '13px 16px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     fontSize: '0.95rem',
     fontWeight: 700,
     cursor: 'pointer',
