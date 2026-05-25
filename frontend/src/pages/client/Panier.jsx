@@ -333,12 +333,12 @@ export default function Panier() {
 const styles = {
   emptyPage: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #F5F7FA 0%, #E9ECEF 100%)',
+    background: 'var(--em-page)',
     fontFamily: "'Inter', 'DM Sans', sans-serif",
   },
   container: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #F5F7FA 0%, #E9ECEF 100%)',
+    background: 'var(--em-page)',
     padding: '0 0 40px',
     fontFamily: "'Inter', 'DM Sans', sans-serif",
   },
@@ -411,8 +411,8 @@ const styles = {
     marginBottom: '32px',
   },
   cartItem: {
-    background: '#fff',
-    borderRadius: '16px',
+    background: 'var(--em-surface)',
+    borderRadius: '8px',
     padding: '20px',
     display: 'flex',
     alignItems: 'center',
@@ -545,8 +545,8 @@ const styles = {
   
   // Summary - RESPONSIVE
   summary: {
-    background: '#fff',
-    borderRadius: '20px',
+    background: 'var(--em-surface)',
+    borderRadius: '8px',
     padding: 'clamp(16px, 4vw, 24px)',
     border: '1px solid #E8E8E8',
   },
@@ -588,7 +588,7 @@ const styles = {
   promoInput: {
     flex: 1,
     border: '1.5px solid #E2E8F0',
-    borderRadius: '12px',
+    borderRadius: '8px',
     padding: '10px 12px',
     fontSize: '0.85rem',
     outline: 'none',
@@ -597,7 +597,7 @@ const styles = {
     background: '#112219',
     color: '#fff',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: '8px',
     padding: '10px 14px',
     fontWeight: '700',
     cursor: 'pointer',
@@ -618,8 +618,8 @@ const styles = {
   
   // Shipping Form - RESPONSIVE
   shippingForm: {
-    background: '#fff',
-    borderRadius: '20px',
+    background: 'var(--em-surface)',
+    borderRadius: '8px',
     padding: 'clamp(20px, 5vw, 32px)',
     border: '1px solid #E8E8E8',
   },
@@ -648,7 +648,7 @@ const styles = {
   formInput: {
     width: '100%',
     padding: '12px 16px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     border: '1.5px solid #E2E8F0',
     fontSize: '0.85rem',
     fontFamily: 'inherit',
@@ -680,7 +680,7 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '12px 16px',
-    borderRadius: '12px',
+    borderRadius: '8px',
     border: '1px solid #E2E8F0',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
@@ -700,7 +700,7 @@ const styles = {
     padding: '12px',
     background: '#F0F0F0',
     border: 'none',
-    borderRadius: '40px',
+    borderRadius: '8px',
     fontSize: 'clamp(0.75rem, 4vw, 0.85rem)',
     fontWeight: '600',
     color: '#444',
@@ -712,7 +712,7 @@ const styles = {
     padding: '12px',
     background: '#C8410A',
     border: 'none',
-    borderRadius: '40px',
+    borderRadius: '8px',
     fontSize: 'clamp(0.75rem, 4vw, 0.85rem)',
     fontWeight: '600',
     color: '#fff',
@@ -723,7 +723,7 @@ const styles = {
   // Empty state - RESPONSIVE
   emptyContainer: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #F5F7FA 0%, #E9ECEF 100%)',
+    background: 'var(--em-page)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
