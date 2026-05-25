@@ -16,10 +16,27 @@ const ICONES_STATUT = { en_attente: 'clock', confirmee: 'check', en_livraison: '
 export default function MesCommandes() {
   const [commandes, setCommandes] = useState([]);
   const [detail, setDetail] = useState(null);
+  const [avisForm, setAvisForm] = useState({});
 
   useEffect(() => {
     api.get('/commandes/mes-commandes').then(({ data }) => setCommandes(data)).catch(console.error);
   }, []);
+
+  const envoyerAvis = async (commandeId, produitId) => {
+    const form = avisForm[`${commandeId}-${produitId}`] || {};
+    try {
+      await api.post('/avis', {
+        commandeId,
+        produitId,
+        note: Number(form.note || 5),
+        commentaire: form.commentaire || '',
+      });
+      setAvisForm({ ...avisForm, [`${commandeId}-${produitId}`]: { note: 5, commentaire: '' } });
+      alert('Avis enregistre.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Impossible d enregistrer l avis.');
+    }
+  };
 
   return (
     <div style={styles.page}>
@@ -62,9 +79,29 @@ export default function MesCommandes() {
             <p><strong>Paiement :</strong> {detail.modePaiement}</p>
             <p style={{ marginTop: '16px', fontWeight: '700' }}>Articles :</p>
             {detail.lignes?.map((l, i) => (
-              <div key={i} style={styles.ligne} className="responsive-card-row">
-                <span>{l.nomProduit} x {l.quantite}</span>
-                <span>{Number(l.sousTotal).toLocaleString('fr-FR')} FCFA</span>
+              <div key={i} style={styles.ligneBloc}>
+                <div style={styles.ligne} className="responsive-card-row">
+                  <span>{l.nomProduit} x {l.quantite}</span>
+                  <span>{Number(l.sousTotal).toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                {detail.statut === 'livree' && l.produit?._id && (
+                  <div style={styles.avisBox}>
+                    <select
+                      value={avisForm[`${detail._id}-${l.produit._id}`]?.note || 5}
+                      onChange={(e) => setAvisForm({ ...avisForm, [`${detail._id}-${l.produit._id}`]: { ...(avisForm[`${detail._id}-${l.produit._id}`] || {}), note: e.target.value } })}
+                      style={styles.avisSelect}
+                    >
+                      {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}/5</option>)}
+                    </select>
+                    <input
+                      placeholder="Votre avis"
+                      value={avisForm[`${detail._id}-${l.produit._id}`]?.commentaire || ''}
+                      onChange={(e) => setAvisForm({ ...avisForm, [`${detail._id}-${l.produit._id}`]: { ...(avisForm[`${detail._id}-${l.produit._id}`] || {}), commentaire: e.target.value } })}
+                      style={styles.avisInput}
+                    />
+                    <button onClick={() => envoyerAvis(detail._id, l.produit._id)} style={styles.avisBtn}>Noter</button>
+                  </div>
+                )}
               </div>
             ))}
             <div style={styles.total}>Total : {Number(detail.montantTotal).toLocaleString('fr-FR')} FCFA</div>
@@ -96,5 +133,10 @@ const styles = {
   overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' },
   modal: { background: '#fff', borderRadius: '20px', padding: '36px', width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto' },
   ligne: { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee', fontSize: '0.9rem', gap: '12px' },
+  ligneBloc: { borderBottom: '1px solid #eee', padding: '8px 0' },
+  avisBox: { display: 'grid', gridTemplateColumns: '80px 1fr auto', gap: '8px', marginTop: '8px' },
+  avisSelect: { border: '1px solid #ddd', borderRadius: '8px', padding: '8px' },
+  avisInput: { border: '1px solid #ddd', borderRadius: '8px', padding: '8px', minWidth: 0 },
+  avisBtn: { background: '#C8410A', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', fontWeight: '700' },
   total: { fontWeight: '800', textAlign: 'right', marginTop: '12px', color: '#C8410A', fontSize: '1.1rem' },
 };
