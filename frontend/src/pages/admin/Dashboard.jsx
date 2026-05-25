@@ -66,11 +66,11 @@ function LineChart({ title, data = [] }) {
         </div>
         <div style={styles.chartBadgeCompact}>
           <span style={styles.badgeDot}></span>
-          +23%
+          {data.length} mois
         </div>
       </div>
       <div style={styles.lineContainerCompact}>
-        <svg viewBox="0 0 500 180" style={styles.lineSvgCompact}>
+        <svg viewBox="0 0 500 200" style={styles.lineSvgCompact}>
           <defs>
             <linearGradient id="areaGradientCompact" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#C8410A" stopOpacity="0.25"/>
@@ -295,19 +295,8 @@ export default function AdminDashboard() {
     { path: '/admin/clients', label: 'Utilisateurs', icon: 'users' },
   ];
 
-  const evolutionData = stats?.parMois || [
-    { label: 'Jan', total: 120000 }, { label: 'Fév', total: 98000 }, { label: 'Mar', total: 145000 },
-    { label: 'Avr', total: 132000 }, { label: 'Mai', total: 189000 }, { label: 'Juin', total: 210000 },
-    { label: 'Juil', total: 198000 }, { label: 'Aoû', total: 225000 }, { label: 'Sep', total: 245000 },
-    { label: 'Oct', total: 267000 }, { label: 'Nov', total: 289000 }, { label: 'Déc', total: 310000 }
-  ];
-
-  const repartitionData = stats?.parCategorie || [
-    { label: 'Électronique', total: 450000 }, { label: 'Vêtements', total: 320000 },
-    { label: 'Maison', total: 280000 }, { label: 'Beauté', total: 195000 },
-    { label: 'Sports', total: 170000 }, 
-    { label: 'Livres', total: 89000 }, { label: 'Autres', total: 67000 }
-  ];
+  const evolutionData = stats?.parMois || [];
+  const repartitionData = stats?.parCategorie || [];
 
   return (
     <div style={styles.layout}>
