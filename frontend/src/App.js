@@ -25,6 +25,7 @@ import Profil from './pages/client/Profil';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProduits from './pages/admin/Produits';
 import AdminCommandes from './pages/admin/Commandes';
+import AdminCategories from './pages/admin/Categories';
 import AdminClients from './pages/admin/Clients';
 
 // Pages Vendeur
@@ -116,6 +117,7 @@ function App() {
             <Route path="/admin/dashboard" element={<RouteAdmin><AdminDashboard /></RouteAdmin>} />
             <Route path="/admin/produits" element={<RouteAdmin><AdminProduits /></RouteAdmin>} />
             <Route path="/admin/commandes" element={<RouteAdmin><AdminCommandes /></RouteAdmin>} />
+            <Route path="/admin/categories" element={<RouteAdmin><AdminCategories /></RouteAdmin>} />
             <Route path="/admin/clients" element={<RouteAdmin><AdminClients /></RouteAdmin>} />
 
             {/* Fallback */}
