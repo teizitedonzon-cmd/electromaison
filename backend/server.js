@@ -174,6 +174,7 @@ app.use('/api/commandes',     require('./routes/commandeRoutes'));
 app.use('/api/users',         require('./routes/userRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/avis',          require('./routes/avisRoutes'));
+app.use('/api/categories',    require('./routes/categorieRoutes'));
 
 // ✅ MODIFIÉ : ajout du statut Cloudinary dans le health check
 app.get('/api/health', (req, res) => {
