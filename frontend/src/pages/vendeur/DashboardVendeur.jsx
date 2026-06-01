@@ -12,6 +12,7 @@ import {
   MdArrowBack, MdSearch, MdAccessTime, MdRefresh
 } from 'react-icons/md';
 import logot from '../../assets/images/logot.jpg';
+import { useCategories } from '../../hooks/useCategories';
 
 // Composant BarChart
 function BarChart({ title, data = [], icon }) {
@@ -163,8 +164,8 @@ function PieChart({ title, data = [], total, icon, onRefresh }) {
         </div>
       </div>
       
-      <div style={styles.pieChartLayout}>
-        <div style={styles.pieLegendList}>
+      <div style={{ ...styles.pieChartLayout }} className="pie-chart-layout">
+        <div style={styles.pieLegendList} className="pie-legend-list">
           {slices.map((slice, i) => (
             <div 
               key={i} 
@@ -188,8 +189,8 @@ function PieChart({ title, data = [], total, icon, onRefresh }) {
           ))}
         </div>
         
-        <div style={styles.pieChartRight}>
-          <div style={styles.pieSvgWrapper}>
+        <div style={styles.pieChartRight} className="pie-chart-right">
+          <div style={styles.pieSvgWrapper} className="pie-svg-wrapper">
             <svg viewBox="0 0 200 200" style={styles.pieSvg}>
               <defs>
                 <filter id="pieShadow">
@@ -224,6 +225,7 @@ function PieChart({ title, data = [], total, icon, onRefresh }) {
 export default function DashboardVendeur() {
   const navigate = useNavigate();
   const { user, deconnexion } = useAuth();
+  const { categories: categoriesDispo } = useCategories();
   const [produits, setProduits] = useState([]);
   const [ventes, setVentes] = useState([]);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -542,7 +544,7 @@ export default function DashboardVendeur() {
                     {nonLues > 0 && (<span style={{ ...styles.bellBadge, minWidth: '20px', height: '20px', fontSize: '0.65rem', top: '-5px', right: '-5px' }}>{nonLues > 9 ? '9+' : nonLues}</span>)}
                   </button>
                   {showNotifications && (
-                    <div style={{ ...styles.notificationDropdown, width: isMobile ? '300px' : '360px', right: isMobile ? '-15px' : '0' }}>
+                    <div style={{ ...styles.notificationDropdown, right: isMobile ? '8px' : '0', left: isMobile ? '8px' : 'auto', position: isMobile ? 'fixed' : 'absolute', top: isMobile ? 'auto' : '52px', bottom: isMobile ? '80px' : 'auto', width: isMobile ? 'auto' : '360px' }}>
                       <div style={styles.notificationDropdownHeader}>
                         <div><div style={styles.notificationDropdownTitle}>Notifications</div><div style={styles.notificationDropdownSub}>{nonLues} non lue(s)</div></div>
                         {nonLues > 0 && (<button onClick={marquerToutLu} style={styles.markReadBtn}>Tout lire</button>)}
@@ -764,7 +766,7 @@ export default function DashboardVendeur() {
               <div style={styles.formGroup}><label style={styles.formLabel}>Nom du produit</label><input name="nom" placeholder="Ex: iPhone 13 Pro" value={formData.nom} onChange={handleChange} required style={styles.input} /></div>
               <div style={{ ...styles.formRow, flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '16px' }}>
                 <div style={styles.formGroup}><label>Marque</label><input name="marque" placeholder="Apple, Samsung..." value={formData.marque} onChange={handleChange} required style={styles.input} /></div>
-                <div style={styles.formGroup}><label>Catégorie</label><select name="categorie" value={formData.categorie} onChange={handleChange} required style={styles.input}><option value="">Sélectionner</option>{['Electronique','Vetements','Alimentation','Electromenager','Beaute','Immobilier','Sport','Autre'].map(c => <option key={c}>{c}</option>)}</select></div>
+                <div style={styles.formGroup}><label>Catégorie</label><select name="categorie" value={formData.categorie} onChange={handleChange} required style={styles.input}><option value="">Sélectionner</option>{categoriesDispo.map(c => <option key={c._id} value={c.nom}>{c.nom}</option>)}</select></div>
               </div>
               <div style={{ ...styles.formRow, flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? '12px' : '16px' }}>
                 <div style={styles.formGroup}><label>Prix (FCFA)</label><input name="prix" type="number" min="0" placeholder="0" value={formData.prix} onChange={handleChange} required style={styles.input} /></div>
@@ -794,22 +796,22 @@ export default function DashboardVendeur() {
 
 const styles = {
   container: { background: '#F8FAFC', minHeight: '100vh', fontFamily: "'Inter', 'Poppins', -apple-system, sans-serif" },
-  header: { background: '#fff', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', gap: '16px' },
-  headerLeft: { display: 'flex', alignItems: 'center', gap: '16px' },
-  headerRight: { display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-end' },
+  header: { background: '#fff', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100, flexWrap: 'wrap', gap: '10px' },
+  headerLeft: { display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 },
+  headerRight: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end', minWidth: 0 },
   logoWrapper: { width: '44px', height: '44px', background: '#fff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #E2E8F0' },
   logoImageHeader: { width: '100%', height: '100%', objectFit: 'cover' },
   headerTitle: { fontSize: '1.6rem', fontWeight: '700', color: '#0F172A', margin: 0 },
   headerSubtitle: { fontSize: '0.75rem', color: '#64748B', margin: '4px 0 0' },
-  userSection: { display: 'flex', alignItems: 'center', gap: '16px' },
-  userInfo: { display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 16px', background: '#F8FAFC', borderRadius: '50px' },
-  avatar: { width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #C8410A' },
-  userName: { margin: 0, fontWeight: '600', fontSize: '0.8rem', color: '#1E293B' },
-  userStatus: { fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '6px' },
+  userSection: { display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' },
+  userInfo: { display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: '#F8FAFC', borderRadius: '50px', minWidth: 0 },
+  avatar: { width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #C8410A', flexShrink: 0 },
+  userName: { margin: 0, fontWeight: '600', fontSize: '0.78rem', color: '#1E293B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' },
+  userStatus: { fontSize: '0.62rem', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' },
   statusDot: { width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' },
   logoutBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', border: '1px solid #FEE2E2', color: '#EF4444', background: '#FEF2F2', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s ease', fontSize: '0.8rem', fontWeight: '500' },
   spinner: { width: '14px', height: '14px', border: '2px solid #EF4444', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite' },
-  statsGrid: { display: 'grid', gap: '20px', padding: '28px 32px 0 32px', marginBottom: '8px' },
+  statsGrid: { display: 'grid', gap: '16px', padding: '20px 20px 0 20px', marginBottom: '8px' },
   statCard: { background: '#fff', padding: '20px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', borderTop: '1px solid #F1F5F9', borderRight: '1px solid #F1F5F9', borderBottom: '1px solid #F1F5F9', borderLeft: '4px solid' },
   statIcon: { width: '56px', height: '56px', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   statInfo: { flex: 1 },
@@ -817,7 +819,7 @@ const styles = {
   statLabel: { fontSize: '0.8rem', color: '#64748B', marginTop: '6px', fontWeight: '500' },
   statSuffix: { fontSize: '0.65rem', color: '#94A3B8', marginTop: '2px' },
   addBtnLarge: { background: 'linear-gradient(135deg, #C8410A 0%, #E8622A 100%)', color: '#fff', border: 'none', borderRadius: '20px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.3s ease', boxShadow: '0 4px 14px rgba(200, 65, 10, 0.25)', width: '100%', minHeight: '96px' },
-  chartsGrid: { display: 'grid', gap: '24px', padding: '28px 32px 0 32px' },
+  chartsGrid: { display: 'grid', gap: '20px', padding: '20px 20px 0 20px' },
   chartWrapper: { position: 'relative' },
   chartHint: { marginTop: '12px', padding: '10px', background: '#FEF3F2', borderRadius: '12px', fontSize: '0.7rem', color: '#C8410A', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '500' },
   barChartContainer: { background: '#fff', borderRadius: '20px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', transition: 'all 0.3s ease', height: '100%', border: '1px solid #F1F5F9' },
@@ -836,17 +838,20 @@ const styles = {
   
   pieChartLayout: {
     display: 'flex',
-    gap: '24px',
+    flexWrap: 'wrap',
+    gap: '16px',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginTop: '8px',
   },
   pieChartRight: {
     flexShrink: 0,
+    display: 'flex',
+    justifyContent: 'center',
   },
   pieSvgWrapper: { 
-    width: '200px', 
-    height: '200px', 
+    width: '160px', 
+    height: '160px', 
     flexShrink: 0 
   },
   pieSvg: { 
@@ -855,13 +860,14 @@ const styles = {
     transform: 'rotate(-90deg)' 
   },
   pieLegendList: { 
-    flex: 1,
+    flex: '1 1 200px',
     display: 'flex', 
     flexDirection: 'column', 
-    gap: '12px',
-    maxHeight: '220px',
+    gap: '8px',
+    maxHeight: '200px',
     overflowY: 'auto',
-    paddingRight: '8px',
+    paddingRight: '4px',
+    minWidth: '160px',
   },
   pieLegendItem: { 
     display: 'flex', 
@@ -890,7 +896,11 @@ const styles = {
   pieLegendLabel: { 
     color: '#475569', 
     fontWeight: '600', 
-    fontSize: '0.85rem' 
+    fontSize: '0.78rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: '100px',
   },
   pieLegendStats: {
     display: 'flex',
@@ -920,15 +930,15 @@ const styles = {
   
   filtersSection: { background: '#fff', borderRadius: '16px', padding: '16px 20px', marginBottom: '20px', border: '1px solid #F1F5F9' },
   filterTitle: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: '600', color: '#1E293B', marginBottom: '12px' },
-  filtersRow: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' },
-  filterGroup: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#475569' },
-  filterSelect: { padding: '8px 12px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#fff', fontSize: '0.8rem', outline: 'none', cursor: 'pointer' },
-  resetFilterBtn: { padding: '8px 16px', borderRadius: '8px', border: '1px solid #C8410A', background: '#fff', color: '#C8410A', fontSize: '0.75rem', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s ease' },
+  filtersRow: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' },
+  filterGroup: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#475569', flex: '1 1 140px', minWidth: '140px' },
+  filterSelect: { flex: 1, padding: '8px 10px', borderRadius: '8px', border: '1px solid #E2E8F0', background: '#fff', fontSize: '0.8rem', outline: 'none', cursor: 'pointer', minWidth: 0 },
+  resetFilterBtn: { padding: '8px 16px', borderRadius: '8px', border: '1px solid #C8410A', background: '#fff', color: '#C8410A', fontSize: '0.75rem', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s ease', flex: '1 1 120px' },
   monthHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '8px', borderBottom: '2px solid #E2E8F0' },
   monthCount: { fontSize: '0.75rem', color: '#64748B', background: '#F1F5F9', padding: '4px 10px', borderRadius: '20px' },
   
   searchBarWrapper: { marginBottom: '24px' },
-  searchInputWrapper: { position: 'relative', maxWidth: '400px' },
+  searchInputWrapper: { position: 'relative', width: '100%', maxWidth: '400px' },
   searchIcon: { position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' },
   searchInput: { width: '100%', padding: '12px 40px 12px 44px', borderRadius: '50px', border: '1px solid #E2E8F0', fontSize: '0.9rem', outline: 'none', background: '#fff' },
   clearSearchBtn: { position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8' },
@@ -1005,7 +1015,7 @@ const styles = {
   notificationWrapper: { position: 'relative' },
   bellButton: { borderRadius: '50%', border: '1px solid #E2E8F0', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', transition: 'all 0.2s ease', width: '42px', height: '42px' },
   bellBadge: { position: 'absolute', background: '#EF4444', color: '#fff', borderRadius: '999px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #fff', fontWeight: '800', minWidth: '20px', height: '20px', padding: '0 6px', fontSize: '0.65rem', top: '-5px', right: '-5px' },
-  notificationDropdown: { position: 'absolute', top: '52px', right: 0, width: '360px', maxWidth: 'calc(100vw - 20px)', background: '#fff', borderRadius: '16px', boxShadow: '0 20px 40px -12px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', overflow: 'hidden', zIndex: 200, animation: 'slideDown 0.2s ease-out' },
+  notificationDropdown: { position: 'fixed', top: 'auto', right: '12px', left: '12px', width: 'auto', maxWidth: '400px', background: '#fff', borderRadius: '16px', boxShadow: '0 20px 40px -12px rgba(0,0,0,0.25)', border: '1px solid #E2E8F0', overflow: 'hidden', zIndex: 200, animation: 'slideDown 0.2s ease-out' },
   notificationDropdownHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '1px solid #E2E8F0' },
   notificationDropdownTitle: { fontWeight: '700', color: '#0F172A', fontSize: '0.85rem' },
   notificationDropdownSub: { color: '#64748B', fontSize: '0.65rem', marginTop: '2px' },
@@ -1074,102 +1084,72 @@ styleSheet.textContent = `
   
   /* ===== RESPONSIVE TABLETTE (max-width: 992px) ===== */
   @media (max-width: 992px) {
-    .stats-grid { gap: 16px !important; padding: 20px 20px 0 20px !important; }
-    .charts-grid { padding: 20px 20px 0 20px !important; gap: 20px !important; }
-    .charts-grid { grid-template-columns: 1fr !important; }
-    .pie-chart-layout { flex-direction: column !important; gap: 20px !important; }
-    .pie-svg-wrapper { width: 180px !important; height: 180px !important; }
-    .pie-legend-list { max-height: 200px !important; }
-    .pie-legend-item { padding: 8px 10px !important; }
-    .pie-legend-label { font-size: 0.8rem !important; }
-    .pie-legend-percent { font-size: 0.75rem !important; }
-    .pie-legend-value { font-size: 0.65rem !important; }
-    .page-container { padding: 16px !important; padding-bottom: 70px !important; }
-    .filters-row { gap: 12px !important; flex-direction: column !important; }
-    .filter-group { width: 100% !important; justify-content: space-between !important; }
-    .filter-select { flex: 1 !important; }
-    .reset-filter-btn { width: 100% !important; margin-top: 8px !important; }
+    .pie-chart-layout { flex-direction: column !important; align-items: center !important; }
+    .pie-svg-wrapper { width: 160px !important; height: 160px !important; }
+    .pie-legend-list { max-height: 180px !important; min-width: 100% !important; }
+    .pie-chart-right { width: 100% !important; justify-content: center !important; }
     .products-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
   }
   
   /* ===== RESPONSIVE MOBILE (max-width: 768px) ===== */
   @media (max-width: 768px) {
-    .header { padding: 12px 16px !important; }
-    .header-left { flex-wrap: wrap !important; }
-    .header-title { font-size: 1.2rem !important; }
+    .header { padding: 10px 14px !important; }
     .header-subtitle { display: none !important; }
-    
-    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; padding: 16px !important; }
-    .stat-card { padding: 12px !important; }
-    .stat-icon { width: 40px !important; height: 40px !important; }
+    .user-info { padding: 4px 10px !important; }
+    .user-name { font-size: 0.7rem !important; max-width: 80px !important; }
+    .user-status { display: none !important; }
+    .avatar { width: 26px !important; height: 26px !important; }
+    .logout-btn { padding: 6px 8px !important; }
+    .logout-btn span { display: none !important; }
+    .bell-button { width: 34px !important; height: 34px !important; }
+    .stats-grid { gap: 10px !important; padding: 14px !important; }
+    .stat-card { padding: 10px !important; gap: 10px !important; }
+    .stat-icon { width: 38px !important; height: 38px !important; border-radius: 12px !important; }
     .stat-number { font-size: 1.2rem !important; }
-    .stat-label { font-size: 0.65rem !important; }
-    
-    .charts-grid { padding: 0 16px !important; }
+    .stat-label { font-size: 0.62rem !important; margin-top: 3px !important; }
+    .charts-grid { padding: 14px !important; gap: 14px !important; }
     .bar-chart-container { padding: 12px !important; }
     .pie-chart-container { padding: 12px !important; }
-    
-    .add-btn { padding: 12px !important; min-height: auto !important; font-size: 0.8rem !important; }
-    .add-btn span { font-size: 0.75rem !important; }
-    
-    .bottom-nav { padding: 8px 12px !important; }
-    .bottom-nav-btn { padding: 6px 12px !important; flex-direction: row !important; gap: 6px !important; }
-    .bottom-nav-btn span { display: inline !important; font-size: 0.7rem !important; margin-left: 4px !important; }
-    
-    .notification-dropdown { width: 300px !important; right: -15px !important; }
-    .bell-button { width: 36px !important; height: 36px !important; }
-    
-    .user-info { padding: 4px 10px !important; }
-    .user-name { font-size: 0.7rem !important; }
-    .user-status { font-size: 0.55rem !important; }
-    .avatar { width: 28px !important; height: 28px !important; }
-    
-    .logout-btn { padding: 6px 10px !important; }
-    .logout-btn span { font-size: 0.7rem !important; }
+    .pie-chart-layout { gap: 12px !important; }
+    .pie-svg-wrapper { width: 130px !important; height: 130px !important; }
+    .pie-legend-label { font-size: 0.72rem !important; max-width: 80px !important; }
+    .pie-legend-percent { font-size: 0.7rem !important; }
+    .pie-legend-value { display: none !important; }
+    .add-btn { padding: 12px !important; min-height: 70px !important; font-size: 0.8rem !important; }
+    .bottom-nav { padding: 8px 16px !important; }
+    .bottom-nav-btn { padding: 6px 16px !important; flex-direction: row !important; gap: 6px !important; }
+    .page-container { padding: 14px !important; padding-bottom: 80px !important; }
+    .search-input-wrapper { max-width: 100% !important; }
+    .filters-row { flex-direction: column !important; gap: 10px !important; }
+    .filter-group { width: 100% !important; }
+    .reset-filter-btn { width: 100% !important; text-align: center !important; }
+    .products-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+    .order-card { padding: 14px !important; }
   }
   
   /* ===== TRÈS PETIT MOBILE (max-width: 480px) ===== */
   @media (max-width: 480px) {
-    .stats-grid { grid-template-columns: 1fr !important; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
     .products-grid { grid-template-columns: 1fr !important; }
-    .pie-svg-wrapper { width: 140px !important; height: 140px !important; }
-    .pie-legend-label { font-size: 0.7rem !important; }
-    .pie-legend-percent { font-size: 0.7rem !important; }
+    .pie-svg-wrapper { width: 110px !important; height: 110px !important; }
+    .pie-legend-label { font-size: 0.68rem !important; max-width: 70px !important; }
     .page-title { font-size: 1rem !important; }
-    .bottom-nav-btn { padding: 6px 10px !important; }
-    .bottom-nav-btn span { font-size: 0.6rem !important; }
-    .logout-btn span { display: none !important; }
-    .logout-btn { padding: 6px 8px !important; }
-    .filter-group label { font-size: 0.7rem !important; }
-    .filter-select { font-size: 0.7rem !important; padding: 6px 8px !important; }
-    .reset-filter-btn { font-size: 0.65rem !important; }
-    .order-card { padding: 12px !important; }
-    .order-ref { font-size: 0.7rem !important; }
+    .order-ref { font-size: 0.72rem !important; }
     .order-date { font-size: 0.6rem !important; }
-    .order-product-name { font-size: 0.7rem !important; }
-    .order-product-price { font-size: 0.7rem !important; }
-    .order-total { font-size: 0.9rem !important; }
+    .order-product-name { font-size: 0.72rem !important; }
+    .order-total { font-size: 0.95rem !important; }
+    .filter-group label { font-size: 0.72rem !important; }
+    .filter-select { font-size: 0.72rem !important; padding: 6px 8px !important; }
   }
   
   /* ===== EXTRA PETIT MOBILE (max-width: 360px) ===== */
   @media (max-width: 360px) {
+    .stats-grid { grid-template-columns: 1fr !important; }
     .bottom-nav-btn span { display: none !important; }
-    .bottom-nav-btn { padding: 8px 12px !important; }
-    .bottom-nav { gap: 12px !important; justify-content: center !important; }
+    .bottom-nav-btn { padding: 8px 16px !important; }
     .stat-number { font-size: 1rem !important; }
-    .stat-label { font-size: 0.6rem !important; }
-    .card-title { font-size: 0.8rem !important; }
-    .product-price { font-size: 0.85rem !important; }
-  }
-  
-  /* Tableau des commandes responsive */
-  @media (max-width: 768px) {
-    .orders-table {
-      overflow-x: auto;
-    }
-    .orders-table table {
-      min-width: 600px;
-    }
+    .stat-label { font-size: 0.58rem !important; }
+    .pie-svg-wrapper { width: 100px !important; height: 100px !important; }
   }
 `;
 document.head.appendChild(styleSheet);
