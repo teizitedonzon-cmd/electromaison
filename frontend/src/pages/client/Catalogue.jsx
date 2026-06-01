@@ -7,18 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../../components/Icon';
 import ClientNav from '../../components/ClientNav';
-
-const CATEGORIES = [
-  { id: '', label: 'Tous les produits' },
-  { id: 'Électronique', label: 'Électronique' },
-  { id: 'Vêtements', label: 'Vêtements' },
-  { id: 'Alimentation', label: 'Alimentation' },
-  { id: 'electromenager', label: 'Électroménager' },
-  { id: 'Beauté', label: 'Beauté' },
-  { id: 'immobilier', label: 'Immobilier' },
-  { id: 'Sport', label: 'Sport' },
-  { id: 'Autre', label: 'Autre' },
-];
+import { useCategories } from '../../hooks/useCategories';
 
 const venteFlashActive = (produit) =>
   produit?.venteFlash?.actif &&
@@ -58,6 +47,12 @@ const StarRating = ({ rating }) => {
 export default function Catalogue() {
   const { ajouterAuPanier } = useCart();
   const location = useLocation();
+  const { categories: categoriesDispo } = useCategories();
+
+  const CATEGORIES = [
+    { id: '', label: 'Tous les produits' },
+    ...categoriesDispo.map(c => ({ id: c.nom, label: c.nom }))
+  ];
 
   const [produits, setProduits] = useState([]);
   const [categorie, setCategorie] = useState('');
@@ -95,6 +90,7 @@ export default function Catalogue() {
       if (recherche) params.append('recherche', recherche);
       if (minPrix) params.append('minPrix', minPrix);
       if (maxPrix) params.append('maxPrix', maxPrix);
+      params.append('limite', '100');
       const { data } = await api.get(`/produits?${params}`);
       let produitsData = data.produits;
       if (sortBy === 'price_asc') produitsData = [...produitsData].sort((a, b) => a.prix - b.prix);
@@ -264,7 +260,7 @@ export default function Catalogue() {
                 >
                   <Link to={`/produit/${p._id}`} style={styles.cardLink}>
                     <div style={styles.cardImageWrapper}>
-                      {p.badge && <span style={styles.badge}>{p.badge}</span>}
+                      {p.badge && (p.badge !== 'Vente flash' || venteFlashActive(p)) && <span style={styles.badge}>{p.badge}</span>}
                       {venteFlashActive(p) && (
                         <span style={styles.flashBadge}>⚡ {tempsRestant(p.venteFlash.dateFin)}</span>
                       )}
