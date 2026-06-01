@@ -6,9 +6,11 @@ import api from '../../utils/api';
 import { mediaUrl } from '../../utils/media';
 import Icon from '../../components/Icon';
 import logot from '../../assets/images/logot.jpg';
+import { useCategories } from '../../hooks/useCategories';
 
 export default function AdminProduits() {
   const { user, deconnexion } = useAuth();
+  const { categories: categoriesDispo } = useCategories();
   const [produits, setProduits] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export default function AdminProduits() {
   const [hoveredCategory, setHoveredCategory] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const categoriesList = ['Électronique', 'Vêtements', 'Alimentation', 'electromenager', 'Beauté', 'immobilier', 'Sport', 'Autre'];
+  const categoriesList = categoriesDispo.map(c => c.nom);
 
   useEffect(() => {
     chargerProduits();
@@ -207,6 +209,9 @@ export default function AdminProduits() {
           </Link>
           <Link to="/admin/commandes" style={getNavLinkStyle('commandes')} onMouseEnter={() => setHoveredLink('commandes')} onMouseLeave={() => setHoveredLink(null)}>
             <Icon name="shopping-cart" size={18} color="#fff" /> Commandes
+          </Link>
+          <Link to="/admin/categories" style={getNavLinkStyle('categories')} onMouseEnter={() => setHoveredLink('categories')} onMouseLeave={() => setHoveredLink(null)}>
+            <Icon name="tag" size={18} color="#fff" /> Catégories
           </Link>
           <Link to="/admin/clients" style={getNavLinkStyle('clients')} onMouseEnter={() => setHoveredLink('clients')} onMouseLeave={() => setHoveredLink(null)}>
             <Icon name="users" size={18} color="#fff" /> utilisateurs
