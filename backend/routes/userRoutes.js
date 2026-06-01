@@ -47,7 +47,23 @@ router.put('/profil', proteger, upload.single('photoProfil'), async (req, res) =
     user.prenom = String(req.body.prenom || user.prenom).trim();
     user.telephone = telephone;
     if (req.file) user.photoProfil = req.file.path;
-    if (req.body.motDePasse) user.motDePasse = req.body.motDePasse;
+
+    // Modification du mot de passe : exiger l'ancien mot de passe
+    if (req.body.motDePasse) {
+      const nouveau = String(req.body.motDePasse || '').trim();
+      const ancien = String(req.body.currentMotDePasse || '').trim();
+      if (nouveau.length < 6) {
+        return res.status(400).json({ message: 'Le nouveau mot de passe doit contenir au moins 6 caracteres.' });
+      }
+      if (!ancien) {
+        return res.status(400).json({ message: "L'ancien mot de passe est requis pour le changement." });
+      }
+      const valide = await user.verifierMotDePasse(ancien);
+      if (!valide) {
+        return res.status(401).json({ message: 'Ancien mot de passe incorrect.' });
+      }
+      user.motDePasse = nouveau;
+    }
 
     const misAJour = await user.save();
     res.json({
