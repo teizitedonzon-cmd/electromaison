@@ -291,6 +291,7 @@ export default function AdminDashboard() {
   const menuItems = [
     { path: '/admin/dashboard', label: 'Tableau de bord', icon: 'dashboard' },
     { path: '/admin/produits', label: 'Produits', icon: 'package' },
+    { path: '/admin/categories', label: 'Catégories', icon: 'tag' },
     { path: '/admin/commandes', label: 'Commandes', icon: 'shopping-cart' },
     { path: '/admin/clients', label: 'Utilisateurs', icon: 'users' },
   ];
