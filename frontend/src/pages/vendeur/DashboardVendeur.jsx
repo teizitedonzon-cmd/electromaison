@@ -390,27 +390,38 @@ export default function DashboardVendeur() {
     setShowNotifications(!showNotifications);
   };
 
-  const revenu = ventes.reduce((s, v) => s + (v.montantVendeur || 0), 0);
   const peutPublier = user?.role === 'admin' || user?.statutVendeur === 'approuve';
-  const totalCommandes = ventes.length;
 
-  const ventesParMois = () => {
+  const getVentesByMonth = (month, year) => {
+    return ventes.filter(v => {
+      if (!v.createdAt) return false;
+      const date = new Date(v.createdAt);
+      return date.getMonth() === month && date.getFullYear() === year;
+    });
+  };
+
+  const ventesDuMois = getVentesByMonth(selectedMonth, selectedYear);
+  const revenu = ventesDuMois.reduce((s, v) => s + (v.montantVendeur || 0), 0);
+  const totalCommandes = ventesDuMois.length;
+
+  const ventesParMois = (year = selectedYear) => {
     const mois = {};
     ventes.forEach(v => {
       if (v.createdAt) {
         const date = new Date(v.createdAt);
+        if (date.getFullYear() !== year) return;
         const moisKey = date.toLocaleString('fr-FR', { month: 'short' });
         mois[moisKey] = (mois[moisKey] || 0) + 1;
       }
     });
     const ordered = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
-    const currentMonthIndex = new Date().getMonth();
+    const currentMonthIndex = year === new Date().getFullYear() ? new Date().getMonth() : 11;
     return ordered.slice(0, currentMonthIndex + 1).map(m => ({ label: m, value: mois[m] || 0 }));
   };
   
-  const ventesParCategorie = () => {
+  const ventesParCategorie = (month = selectedMonth, year = selectedYear) => {
     const cats = {};
-    
+
     const categoryMapping = {
       'Électronique': ['Électronique', 'Electronique', 'electronique', 'électronique', 'Smartphone', 'Ordinateur', 'Tablette', 'iPhone', 'Samsung', 'Xiaomi', 'Huawei', 'Téléphone', 'Laptop', 'PC'],
       'Vêtements': ['Vêtements', 'Vetements', 'vêtements', 'vetements', 'Mode', 'Habillement', 'T-shirt', 'Chemise', 'Pantalon', 'Robe', 'Jupe', 'Veste', 'Manteau', 'Chaussure', 'Basket'],
@@ -421,7 +432,7 @@ export default function DashboardVendeur() {
       'Sport': ['Sport', 'sport', 'Sports', 'Fitness', 'Vélo', 'Ballon', 'Tapis', 'Haltère', 'Gant', 'Maillot'],
       'Autre': ['Autre', 'autre', 'Other', 'other', 'Divers', 'undefined', 'null', '']
     };
-    
+
     const normalizeCategory = (cat) => {
       if (!cat || cat === 'undefined' || cat === 'null') return 'Autre';
       for (const [standard, variantes] of Object.entries(categoryMapping)) {
@@ -431,13 +442,14 @@ export default function DashboardVendeur() {
       }
       return cat;
     };
-    
-    ventes.forEach(vente => {
+
+    const ventesFiltrees = getVentesByMonth(month, year);
+    ventesFiltrees.forEach(vente => {
       if (!vente.lignes || vente.lignes.length === 0) return;
-      
+
       vente.lignes.forEach(ligne => {
         let categorie = 'Autre';
-        
+
         if (ligne.categorie && typeof ligne.categorie === 'string' && ligne.categorie.trim() !== '' && ligne.categorie !== 'undefined') {
           categorie = ligne.categorie;
         }
@@ -470,13 +482,13 @@ export default function DashboardVendeur() {
             categorie = 'Sport';
           }
         }
-        
+
         categorie = normalizeCategory(categorie);
-        
+
         const quantite = ligne.quantite || 1;
         const prixUnitaire = ligne.prixUnitaire || ligne.prix || 0;
         const montant = prixUnitaire * quantite;
-        
+
         if (cats[categorie]) {
           cats[categorie] += montant;
         } else {
@@ -484,18 +496,18 @@ export default function DashboardVendeur() {
         }
       });
     });
-    
+
     let result = Object.entries(cats)
       .map(([label, value]) => ({ label, value }))
       .filter(item => item.value > 0);
-    
+
     result.sort((a, b) => b.value - a.value);
-    
+
     return result;
   };
-  
-  const monthlyData = ventesParMois();
-  const categoryData = ventesParCategorie();
+
+  const monthlyData = ventesParMois(selectedYear);
+  const categoryData = ventesParCategorie(selectedMonth, selectedYear);
   const totalCategorie = categoryData.reduce((s, i) => s + i.value, 0);
   const produitsFiltres = produits.filter(p => p.nom?.toLowerCase().includes(searchProduit.toLowerCase()));
 
@@ -512,14 +524,6 @@ export default function DashboardVendeur() {
     });
     if (years.size === 0) years.add(new Date().getFullYear());
     return Array.from(years).sort((a, b) => b - a);
-  };
-
-  const getVentesByMonth = (month, year) => {
-    return ventes.filter(v => {
-      if (!v.createdAt) return false;
-      const date = new Date(v.createdAt);
-      return date.getMonth() === month && date.getFullYear() === year;
-    });
   };
 
   const ventesFiltrees = getVentesByMonth(selectedMonth, selectedYear);
