@@ -35,7 +35,7 @@ function BarChart({ title, data = [], icon }) {
   const bestIndex = values.indexOf(Math.max(...values));
 
   return (
-    <div style={styles.barChartContainer}>
+    <div style={styles.barChartContainer} className="bar-chart-container">
       <div style={styles.chartCardHeader}>
         <div>
           <div style={styles.chartTitle}>
@@ -150,7 +150,7 @@ function PieChart({ title, data = [], total, icon, onRefresh }) {
   });
 
   return (
-    <div style={styles.pieChartContainer}>
+    <div style={styles.pieChartContainer} className="pie-chart-container">
       <div style={styles.chartCardHeader}>
         <div style={styles.chartTitle}>
           <div style={styles.chartIconBg}>{icon ? React.createElement(icon, { size: 18, color: '#C8410A' }) : null}</div>
@@ -234,6 +234,7 @@ export default function DashboardVendeur() {
   const [nonLues, setNonLues] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isVerySmallMobile, setIsVerySmallMobile] = useState(window.innerWidth <= 480);
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedProduit, setSelectedProduit] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -258,6 +259,7 @@ export default function DashboardVendeur() {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
+      setIsVerySmallMobile(window.innerWidth <= 480);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -527,19 +529,19 @@ export default function DashboardVendeur() {
   return (
     <>
       {currentView === 'dashboard' && (
-        <div style={{ ...styles.container, paddingBottom: '80px' }}>
-          <header style={styles.header}>
+        <div style={{ ...styles.container, paddingBottom: '80px' }} className="page-container">
+          <header style={styles.header} className="header">
             <div style={styles.headerLeft}>
               <div style={styles.logoWrapper}><img src={logot} alt="TeyShop" style={styles.logoImageHeader} /></div>
               <div>
                 <h1 style={{ ...styles.headerTitle, fontSize: isMobile ? '1.3rem' : '1.6rem' }}>Tableau de bord</h1>
-                <p style={styles.headerSubtitle}>Aperçu de votre activité</p>
+                <p style={styles.headerSubtitle} className="header-subtitle">Aperçu de votre activité</p>
               </div>
             </div>
             <div style={styles.headerRight}>
               <div style={styles.userSection}>
                 <div className="notification-wrapper" style={styles.notificationWrapper}>
-                  <button onClick={ouvrirNotifications} style={{ ...styles.bellButton, width: isMobile ? '38px' : '42px', height: isMobile ? '38px' : '42px' }} title="Notifications">
+                  <button onClick={ouvrirNotifications} style={{ ...styles.bellButton, width: isMobile ? '38px' : '42px', height: isMobile ? '38px' : '42px' }} className="bell-button" title="Notifications">
                     <MdNotifications size={isMobile ? 18 : 20} color="#475569" />
                     {nonLues > 0 && (<span style={{ ...styles.bellBadge, minWidth: '20px', height: '20px', fontSize: '0.65rem', top: '-5px', right: '-5px' }}>{nonLues > 9 ? '9+' : nonLues}</span>)}
                   </button>
@@ -557,8 +559,8 @@ export default function DashboardVendeur() {
                     </div>
                   )}
                 </div>
-                <div style={styles.userInfo}>
-                  <img src={user?.photoProfil ? mediaUrl(user.photoProfil) : 'https://via.placeholder.com/40'} style={styles.avatar} alt="profil" />
+                <div style={styles.userInfo} className="user-info">
+                  <img src={user?.photoProfil ? mediaUrl(user.photoProfil) : 'https://via.placeholder.com/40'} style={styles.avatar} className="avatar" alt="profil" />
                   <div>
                     <p style={styles.userName}>{user?.prenom} {user?.nom}</p>
                     <span style={{ ...styles.userStatus, color: peutPublier ? '#10B981' : '#F59E0B' }}>
@@ -572,7 +574,7 @@ export default function DashboardVendeur() {
             </div>
           </header>
 
-          <div style={{ ...styles.statsGrid, gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)' }}>
+          <div style={{ ...styles.statsGrid, gridTemplateColumns: isVerySmallMobile ? '1fr' : isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)' }} className="stats-grid">
             {[
               { label: 'Mes produits', value: produits.length, icon: MdInventory, color: '#6366F1', borderColor: '#6366F1', suffix: '', bg: '#EEF2FF', onClick: () => setCurrentView('produits') },
               { label: isMobile ? 'Commandes' : 'Commandes reçues', value: totalCommandes, icon: MdShoppingCart, color: '#06B6D4', borderColor: '#06B6D4', suffix: '', bg: '#ECFEFF', onClick: () => setCurrentView('commandes') },
@@ -586,7 +588,7 @@ export default function DashboardVendeur() {
             <button onClick={() => { setEditingProduit(null); setFormData({ nom: '', description: '', prix: '', stock: '', categorie: '', marque: '' }); setImages([]); setShowModal(true); }} disabled={!peutPublier} style={{ ...styles.addBtnLarge, opacity: peutPublier ? 1 : 0.6, cursor: peutPublier ? 'pointer' : 'not-allowed', padding: isMobile ? '18px 14px' : '24px 20px', minHeight: isMobile ? '80px' : '96px', fontSize: isMobile ? '0.9rem' : '1rem' }} className="add-btn"><MdAdd size={isMobile ? 20 : 24} /><span>{isMobile ? 'Ajouter produit' : 'Nouveau produit'}</span></button>
           </div>
 
-          <div style={{ ...styles.chartsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? '20px' : '24px' }}>
+          <div style={{ ...styles.chartsGrid, gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: isMobile ? '20px' : '24px' }} className="charts-grid">
             <div style={styles.chartWrapper}>
               <BarChart title="Ventes mensuelles" data={monthlyData} icon={MdCalendarToday} />
               {monthlyData.length === 0 && (<div style={styles.chartHint}><MdInfo size={14} /><span>Les ventes apparaîtront ici</span></div>)}
@@ -598,7 +600,7 @@ export default function DashboardVendeur() {
           </div>
 
           {/* Barre de navigation en bas - texte toujours visible sur mobile */}
-          <div style={styles.bottomNav}>
+          <div style={styles.bottomNav} className="bottom-nav">
             <button onClick={() => setCurrentView('produits')} style={styles.bottomNavBtn} className="bottom-nav-btn">
               <MdInventory size={22} />
               <span style={styles.bottomNavText}>Mes produits</span>
@@ -612,7 +614,7 @@ export default function DashboardVendeur() {
       )}
 
       {currentView === 'produits' && (
-        <div style={{ ...styles.pageContainer, paddingBottom: '80px' }}>
+        <div style={{ ...styles.pageContainer, paddingBottom: '80px' }} className="page-container">
           <div style={styles.pageHeader}>
             <button onClick={() => setCurrentView('dashboard')} style={styles.backBtn}><MdArrowBack size={20} /></button>
             <h2 style={styles.pageTitle}>Mes produits</h2>
@@ -620,7 +622,7 @@ export default function DashboardVendeur() {
           </div>
           
           <div style={styles.searchBarWrapper}>
-            <div style={styles.searchInputWrapper}>
+            <div style={styles.searchInputWrapper} className="search-input-wrapper">
               <MdSearch size={18} color="#94A3B8" style={styles.searchIcon} />
               <input type="text" placeholder="Rechercher un produit..." value={searchProduit} onChange={(e) => setSearchProduit(e.target.value)} style={styles.searchInput} />
               {searchProduit && (<button onClick={() => setSearchProduit('')} style={styles.clearSearchBtn}><MdClose size={16} /></button>)}
@@ -655,7 +657,7 @@ export default function DashboardVendeur() {
             </div>
           )}
 
-          <div style={styles.bottomNav}>
+          <div style={styles.bottomNav} className="bottom-nav">
             <button onClick={() => setCurrentView('produits')} style={{...styles.bottomNavBtn, color: '#C8410A'}} className="bottom-nav-btn">
               <MdInventory size={22} />
               <span style={styles.bottomNavText}>Mes produits</span>
@@ -669,7 +671,7 @@ export default function DashboardVendeur() {
       )}
 
       {currentView === 'commandes' && (
-        <div style={{ ...styles.pageContainer, paddingBottom: '80px' }}>
+        <div style={{ ...styles.pageContainer, paddingBottom: '80px' }} className="page-container">
           <div style={styles.pageHeader}>
             <button onClick={() => setCurrentView('dashboard')} style={styles.backBtn}><MdArrowBack size={20} /></button>
             <h2 style={styles.pageTitle}>Commandes reçues</h2>
@@ -678,10 +680,10 @@ export default function DashboardVendeur() {
 
           <div style={styles.filtersSection}>
             <div style={styles.filterTitle}><MdAccessTime size={16} /><span>Période</span></div>
-            <div style={styles.filtersRow}>
-              <div style={styles.filterGroup}><label>Mois :</label><select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} style={styles.filterSelect}>{months.map((month, idx) => (<option key={idx} value={idx}>{month}</option>))}</select></div>
-              <div style={styles.filterGroup}><label>Année :</label><select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} style={styles.filterSelect}>{availableYears.map(year => (<option key={year} value={year}>{year}</option>))}</select></div>
-              <button onClick={() => { setSelectedMonth(new Date().getMonth()); setSelectedYear(new Date().getFullYear()); }} style={styles.resetFilterBtn}>Mois en cours</button>
+            <div style={styles.filtersRow} className="filters-row">
+              <div style={styles.filterGroup} className="filter-group"><label>Mois :</label><select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} style={styles.filterSelect}>{months.map((month, idx) => (<option key={idx} value={idx}>{month}</option>))}</select></div>
+              <div style={styles.filterGroup} className="filter-group"><label>Année :</label><select value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} style={styles.filterSelect}>{availableYears.map(year => (<option key={year} value={year}>{year}</option>))}</select></div>
+              <button onClick={() => { setSelectedMonth(new Date().getMonth()); setSelectedYear(new Date().getFullYear()); }} style={styles.resetFilterBtn} className="reset-filter-btn">Mois en cours</button>
             </div>
           </div>
 
@@ -695,7 +697,7 @@ export default function DashboardVendeur() {
             <div style={styles.ordersList}>
               <div style={styles.monthHeader}><h3>{months[selectedMonth]} {selectedYear}</h3><span style={styles.monthCount}>{ventesFiltrees.length} commande(s)</span></div>
               {ventesFiltrees.map(v => (
-                <div key={v._id} style={styles.orderCard}>
+                <div key={v._id} style={styles.orderCard} className="order-card">
                   <div style={styles.orderHeader}>
                     <div><span style={styles.orderRef}>#{v._id.slice(-8).toUpperCase()}</span><span style={styles.orderDate}><MdAccessTime size={12} />{new Date(v.createdAt).toLocaleDateString('fr-FR')}</span></div>
                     <span style={{ ...styles.orderStatus, background: v.statut === 'livree' ? '#10B981' : v.statut === 'expediee' ? '#06B6D4' : v.statut === 'annulee' ? '#EF4444' : '#F59E0B' }}>{v.statut?.replace('_', ' ')}</span>
@@ -714,7 +716,7 @@ export default function DashboardVendeur() {
             </div>
           )}
 
-          <div style={styles.bottomNav}>
+          <div style={styles.bottomNav} className="bottom-nav">
             <button onClick={() => setCurrentView('produits')} style={styles.bottomNavBtn} className="bottom-nav-btn">
               <MdInventory size={22} />
               <span style={styles.bottomNavText}>Mes produits</span>
