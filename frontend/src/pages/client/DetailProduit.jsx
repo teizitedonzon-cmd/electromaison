@@ -45,7 +45,7 @@ export default function DetailProduit() {
             )}
           </div>
           <div style={styles.productInfo}>
-            {produit.badge && <span style={styles.badge}>{produit.badge}</span>}
+            {produit.badge && (produit.badge !== 'Vente flash' || venteFlashActive(produit)) && <span style={styles.badge}>{produit.badge}</span>}
             <h1 style={styles.title}>{produit.nom}</h1>
             <p style={styles.meta}>{produit.marque} · {produit.categorie}</p>
             <p style={styles.description}>{produit.description}</p>
