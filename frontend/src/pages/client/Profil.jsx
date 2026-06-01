@@ -10,7 +10,9 @@ export default function Profil() {
   const [form, setForm] = useState({ 
     nom: user?.nom || '', 
     prenom: user?.prenom || '', 
-    telephone: user?.telephone || '' 
+    telephone: user?.telephone || '',
+    currentMotDePasse: '',
+    motDePasse: ''
   });
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(user?.photoProfil ? mediaUrl(user.photoProfil) : '');
@@ -20,7 +22,9 @@ export default function Profil() {
     setForm({
       nom: user?.nom || '',
       prenom: user?.prenom || '',
-      telephone: user?.telephone || ''
+      telephone: user?.telephone || '',
+      currentMotDePasse: '',
+      motDePasse: ''
     });
     setPreview(user?.photoProfil ? mediaUrl(user.photoProfil) : '');
   }, [user]);
@@ -36,11 +40,20 @@ export default function Profil() {
     e.preventDefault();
     setChargement(true);
     try {
+      // Validation cliente : si nouvel mdp renseigné, exiger ancien mdp
+      if (form.motDePasse && !form.currentMotDePasse) {
+        toast.error("L'ancien mot de passe est requis pour le changement.");
+        setChargement(false);
+        return;
+      }
+
       const payload = new FormData();
-      Object.entries(form).forEach(([key, value]) => payload.append(key, value));
+      Object.entries(form).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) payload.append(key, value);
+      });
       if (photo) payload.append('photoProfil', photo);
       const { data } = await api.put('/users/profil', payload);
-      
+
       // Mise à jour locale immédiate
       updateUser(data.user || form);
       toast.success('Profil mis à jour !');
@@ -89,6 +102,27 @@ export default function Profil() {
                 onChange={e => setForm({...form, telephone: e.target.value})}
                 placeholder="+237699123456"
                 style={styles.input}
+              />
+            </div>
+            <div style={{marginBottom:'12px'}}>
+              <p style={{color:'#666', fontSize:'0.9rem', margin:'6px 0'}}>Changer le mot de passe (optionnel) :</p>
+              <label style={styles.label}>Ancien mot de passe</label>
+              <input
+                type="password"
+                value={form.currentMotDePasse}
+                onChange={e => setForm({...form, currentMotDePasse: e.target.value})}
+                style={styles.input}
+                placeholder="Entrez l'ancien mot de passe"
+              />
+            </div>
+            <div style={{marginBottom:'16px'}}>
+              <label style={styles.label}>Nouveau mot de passe</label>
+              <input
+                type="password"
+                value={form.motDePasse}
+                onChange={e => setForm({...form, motDePasse: e.target.value})}
+                style={styles.input}
+                placeholder="Au moins 6 caracteres"
               />
             </div>
             <button type="submit" disabled={chargement} style={styles.btnAction}>
