@@ -14,14 +14,14 @@ const normaliserTexte = (value = '') =>
     .toLowerCase();
 
 const categoriesCanon = [
-  { value: 'Électronique', aliases: ['electronique', 'electronics', 'lectron'] },
-  { value: 'Vêtements', aliases: ['vetements', 'vetement', 'mode', 'tement'] },
-  { value: 'Alimentation', aliases: ['alimentation', 'alimentaire'] },
-  { value: 'Electromenager', aliases: ['electromenager', 'menager'] },
-  { value: 'Beauté', aliases: ['beaute', 'beauty', 'beaut'] },
+  { value: 'Électronique', aliases: ['electronique', 'electonique', 'electronics', 'lectron', 'lectronique'] },
+  { value: 'Vêtements', aliases: ['vetements', 'vetement', 'vêtements', 'vêtement', 'mode', 'habillement'] },
+  { value: 'Alimentation', aliases: ['alimentation', 'alimentaire', 'nourriture'] },
+  { value: 'Electromenager', aliases: ['electromenager', 'électroménager', 'electroménager', 'menager', 'appareil'] },
+  { value: 'Beauté', aliases: ['beaute', 'beauté', 'beauty', 'cosmetique', 'cosmétique'] },
   { value: 'Immobilier', aliases: ['immobilier', 'maison', 'appartement', 'villa', 'terrain', 'bureau', 'local', 'studio'] },
-  { value: 'Sport', aliases: ['sport', 'sports'] },
-  { value: 'Autre', aliases: ['autre', 'divers'] },
+  { value: 'Sport', aliases: ['sport', 'sports', 'fitness'] },
+  { value: 'Autre', aliases: ['autre', 'divers', 'other'] },
 ];
 
 const categorieCanonique = (categorie) => {
@@ -48,9 +48,12 @@ const construireVenteFlash = (body, produitActuel = null) => {
 const regexCategorie = (categorie) => {
   const normalized = normaliserTexte(categorie);
   const match = categoriesCanon.find((cat) =>
-    cat.aliases.some((alias) => normalized.includes(alias))
+    cat.aliases.some((alias) => normalized.includes(normaliserTexte(alias))) ||
+    normaliserTexte(cat.value) === normalized
   );
-  const terms = match ? [match.value, ...match.aliases] : [String(categorie || '').trim()];
+  const terms = match
+    ? [match.value, normaliserTexte(match.value), ...match.aliases]
+    : [String(categorie || '').trim()];
   const escaped = terms
     .filter(Boolean)
     .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
@@ -61,7 +64,7 @@ const regexCategorie = (categorie) => {
 // ✅ Aucun changement
 exports.listerProduits = async (req, res) => {
   try {
-    const { categorie, recherche, page = 1, limite = 12, minPrix, maxPrix } = req.query;
+    const { categorie, recherche, page = 1, limite = 100, minPrix, maxPrix } = req.query;
     const filtre = { actif: true };
     if (categorie) {
       filtre.categorie = regexCategorie(categorie);
