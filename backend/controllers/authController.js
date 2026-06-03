@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const {
   envoyerEmailAdminNouveauVendeur,
   envoyerEmailAdminConnexionVendeur,
+  envoyerEmailNotificationInscription,
 } = require('../utils/emailService');
 
 const construireUserPublic = (user) => ({
@@ -53,10 +54,21 @@ exports.inscription = async (req, res) => {
       telephone, photoProfil
     });
 
+    envoyerEmailNotificationInscription(user).catch((err) => {
+      console.error('Erreur email notification inscription:', err.message);
+    });
+
     if (user.role === 'vendeur') {
-      envoyerEmailAdminNouveauVendeur(user).catch((err) => {
-        console.error('Erreur email nouveau vendeur:', err.message);
-      });
+      // Générer tokens signés pour approbation et rejet (validité 7 jours)
+      try {
+        const tokenApprove = jwt.sign({ purpose: 'vendor_approval', userId: user._id, action: 'approve' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        const tokenReject = jwt.sign({ purpose: 'vendor_approval', userId: user._id, action: 'reject' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        envoyerEmailAdminNouveauVendeur(user, tokenApprove, tokenReject).catch((err) => {
+          console.error('Erreur email nouveau vendeur:', err.message);
+        });
+      } catch (err) {
+        console.error('Erreur generation token approbation:', err.message);
+      }
     }
 
     res.status(201).json({
