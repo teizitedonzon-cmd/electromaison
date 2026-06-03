@@ -175,6 +175,8 @@ app.use('/api/users',         require('./routes/userRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/avis',          require('./routes/avisRoutes'));
 app.use('/api/categories',    require('./routes/categorieRoutes'));
+// Route publique pour gestion approbation via email
+app.use('/api/admin',         require('./routes/adminApproval'));
 
 // ✅ MODIFIÉ : ajout du statut Cloudinary dans le health check
 app.get('/api/health', (req, res) => {
