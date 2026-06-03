@@ -6,7 +6,7 @@ import Icon from '../../components/Icon';
 import logot from '../../assets/images/logot.jpg';
 
 // Composant LineChart avec courbe et animations avancées (version compacte)
-function LineChart({ title, data = [] }) {
+function LineChart({ title, data = [], subtitle = 'Tendance mensuelle' }) {
   const [isVisible, setIsVisible] = useState(false);
   const chartRef = React.useRef(null);
 
@@ -62,7 +62,7 @@ function LineChart({ title, data = [] }) {
       <div style={styles.chartHeaderCompact}>
         <div>
           <h2 style={styles.sectionTitreCompact}>{title}</h2>
-          <p style={styles.chartSubtitleCompact}>Tendance annuelle</p>
+          <p style={styles.chartSubtitleCompact}>{subtitle}</p>
         </div>
         <div style={styles.chartBadgeCompact}>
           <span style={styles.badgeDot}></span>
@@ -296,7 +296,33 @@ export default function AdminDashboard() {
     { path: '/admin/clients', label: 'Utilisateurs', icon: 'users' },
   ];
 
-  const evolutionData = stats?.parMois || [];
+  // Construire la série mensuelle pour les 12 derniers mois
+  const evolutionData = React.useMemo(() => {
+    const raw = stats?.parMois || [];
+    if (!raw || raw.length === 0) return [];
+
+    // créer une map clé 'YYYY-MM' -> total
+    const map = new Map();
+    raw.forEach((item) => {
+      const [moisStr, anneeStr] = (item.label || '').split('/');
+      const mois = Number(moisStr);
+      const annee = Number(anneeStr);
+      if (!Number.isFinite(mois) || !Number.isFinite(annee)) return;
+      const key = `${annee.toString().padStart(4,'0')}-${String(mois).padStart(2,'0')}`;
+      map.set(key, (map.get(key) || 0) + (item.total || 0));
+    });
+
+    // dernier 12 mois
+    const result = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,'0')}`;
+      const label = d.toLocaleString('fr-FR', { month: 'short', year: 'numeric' });
+      result.push({ label, total: map.get(key) || 0 });
+    }
+    return result;
+  }, [stats]);
   const repartitionData = stats?.parCategorie || [];
 
   return (
@@ -430,7 +456,7 @@ export default function AdminDashboard() {
 
         <div style={styles.chartsGridCompact}>
           <PieChart title="Répartition des ventes" data={repartitionData} />
-          <LineChart title="Évolution des ventes" data={evolutionData} />
+          <LineChart title="Évolution des ventes" data={evolutionData} subtitle="12 derniers mois" />
         </div>
 
         <div style={styles.quickActions}>
