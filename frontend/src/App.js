@@ -112,7 +112,7 @@ function App() {
 
             {/* Routes Client Protégées (nécessitent connexion) */}
             <Route path="/mes-commandes" element={<RouteClient><MesCommandes /></RouteClient>} />
-            <Route path="/profil" element={<RouteClient><Profil /></RouteClient>} />
+            <Route path="/profil" element={<RoutePrivee><Profil /></RoutePrivee>} />
 
             {/* Routes Vendeur */}
             <Route path="/vendeur/dashboard" element={<RouteVendeur><DashboardVendeur /></RouteVendeur>} />
