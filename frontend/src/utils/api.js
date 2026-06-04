@@ -8,13 +8,6 @@ const normalizeApiUrl = (url) => {
 
 const getApiBaseUrl = () => {
   const configuredUrl = normalizeApiUrl(process.env.REACT_APP_API_URL);
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-  const isVercelApp = hostname === 'electromaison.vercel.app' || hostname.endsWith('.vercel.app');
-
-  if (isVercelApp && configuredUrl.includes('onrender.com')) {
-    return '/api';
-  }
-
   return configuredUrl;
 };
 
@@ -44,9 +37,15 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/connexion';
+      const reqUrl = error.config?.url || '';
+      const isLoginAttempt = reqUrl.includes('/auth/connexion') || reqUrl.includes('/auth/login');
+      if (!isLoginAttempt) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined' && window.location.pathname !== '/connexion') {
+          window.location.href = '/connexion';
+        }
+      }
     }
     return Promise.reject(error);
   }
