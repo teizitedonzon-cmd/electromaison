@@ -563,7 +563,7 @@ export default function DashboardVendeur() {
                     </div>
                   )}
                 </div>
-                <div style={styles.userInfo} className="user-info">
+                <div style={{ ...styles.userInfo, cursor: 'pointer' }} className="user-info" onClick={() => navigate('/profil')} title="Voir mon profil">
                   <img src={user?.photoProfil ? mediaUrl(user.photoProfil) : 'https://via.placeholder.com/40'} style={styles.avatar} className="avatar" alt="profil" />
                   <div>
                     <p style={styles.userName}>{user?.prenom} {user?.nom}</p>
