@@ -35,7 +35,7 @@ const envoyerEmailAdminNouveauVendeur = async (vendeurInfo, tokenApprove, tokenR
   // Destinataire admin : teyshopmarket@gmail.com (pour approver/rejeter)
   const adminEmail = process.env.ADMIN_EMAIL || 'teyshopmarket@gmail.com';
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+  const backendUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL || 'http://localhost:5000';
 
   // Adresse d'expéditeur : elowenlea@gmail.com (compte SMTP authentifié)
   const smtpUser = process.env.EMAIL_USER || 'elowenlea@gmail.com';
@@ -170,8 +170,38 @@ const envoyerEmailNotificationInscription = async (utilisateur) => {
   });
 };
 
+const envoyerEmailResetPassword = async (utilisateur, token) => {
+  const destinataire = utilisateur.email;
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+  const smtpUser = process.env.EMAIL_USER || 'elowenlea@gmail.com';
+
+  const resetUrl = `${frontendUrl.replace(/\/+$/, '')}/reinitialiser-mot-de-passe?token=${encodeURIComponent(token)}`;
+
+  const html = `
+    <div style="font-family:Inter,Arial,sans-serif;background:#f7f8fa;padding:20px">
+      <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:10px;padding:18px;border:1px solid #eee;color:#333">
+        <h2 style="margin-top:0">Réinitialisation du mot de passe</h2>
+        <p>Bonjour ${utilisateur.prenom || ''},</p>
+        <p>Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe. Ce lien expire dans 1 heure.</p>
+        <p style="margin-top:14px"><a href="${resetUrl}" style="background:#C8410A;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none">Réinitialiser mon mot de passe</a></p>
+        <p style="color:#777;margin-top:18px;font-size:13px">Si vous n'avez pas demandé cette action, ignorez cet e-mail.</p>
+      </div>
+    </div>
+  `;
+
+  await envoyerEmail({
+    from: `"ElectroMaison" <${smtpUser}>`,
+    to: destinataire,
+    replyTo: 'elowenlea@gmail.com',
+    subject: `Réinitialisation du mot de passe - ElectroMaison`,
+    html,
+    envelope: { from: process.env.EMAIL_USER || smtpUser, to: destinataire }
+  });
+};
+
 module.exports = {
   envoyerEmailAdminNouveauVendeur,
   envoyerEmailAdminConnexionVendeur,
   envoyerEmailNotificationInscription,
+  envoyerEmailResetPassword,
 };
