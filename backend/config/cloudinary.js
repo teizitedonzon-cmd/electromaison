@@ -13,13 +13,13 @@ cloudinary.config({
 // req.files[i].path  → URL https://res.cloudinary.com/...
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder:          'electromaison/produits',
+  params: (req, file) => ({
+    folder: file.fieldname === 'photoProfil' ? 'electromaison/profils' : 'electromaison/produits',
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    transformation:  [
-      { width: 900, height: 900, crop: 'limit', quality: 'auto', fetch_format: 'auto' },
+    transformation: [
+      { width: 900, height: 900, crop: 'limit', quality: 'auto:good', fetch_format: 'auto' },
     ],
-  },
+  }),
 });
 
 const upload = multer({
