@@ -45,6 +45,21 @@ router.put('/profil', proteger, upload.single('photoProfil'), async (req, res) =
 
     user.nom = String(req.body.nom || user.nom).trim();
     user.prenom = String(req.body.prenom || user.prenom).trim();
+    const emailBrute = String(req.body.email || user.email).trim().toLowerCase();
+    if (!emailBrute) {
+      return res.status(400).json({ message: 'L email est requis.' });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailBrute)) {
+      return res.status(400).json({ message: 'Adresse email invalide.' });
+    }
+    if (emailBrute !== user.email) {
+      const emailExistant = await User.findOne({ email: emailBrute });
+      if (emailExistant && emailExistant._id.toString() !== user._id.toString()) {
+        return res.status(400).json({ message: 'Cet email est déjà utilisé.' });
+      }
+      user.email = emailBrute;
+    }
     user.telephone = telephone;
     if (req.file) user.photoProfil = req.file.path;
 
