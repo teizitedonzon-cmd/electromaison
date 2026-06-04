@@ -60,7 +60,7 @@ router.put('/profil', proteger, upload.single('photoProfil'), async (req, res) =
       }
       const valide = await user.verifierMotDePasse(ancien);
       if (!valide) {
-        return res.status(401).json({ message: 'Ancien mot de passe incorrect.' });
+        return res.status(400).json({ message: 'Ancien mot de passe incorrect.' });
       }
       user.motDePasse = nouveau;
     }
