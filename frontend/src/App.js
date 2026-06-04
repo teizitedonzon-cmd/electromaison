@@ -10,6 +10,8 @@ import { CartProvider } from './context/CartContext';
 // Pages Auth
 import Connexion from './pages/auth/Connexion';
 import Inscription from './pages/auth/Inscription';
+import MotDePasseOublie from './pages/auth/MotDePasseOublie';
+import ReinitialiserMotDePasse from './pages/auth/ReinitialiserMotDePasse';
 
 // Pages Client (accessibles même sans connexion)
 import Accueil from './pages/client/Accueil';
@@ -102,6 +104,8 @@ function App() {
             {/* Routes Auth */}
             <Route path="/connexion" element={<RouteAuth><Connexion /></RouteAuth>} />
             <Route path="/inscription" element={<RouteAuth><Inscription /></RouteAuth>} />
+            <Route path="/mot-de-passe-oublie" element={<RouteAuth><MotDePasseOublie /></RouteAuth>} />
+            <Route path="/reinitialiser-mot-de-passe" element={<RouteAuth><ReinitialiserMotDePasse /></RouteAuth>} />
             
             {/* Route publique d'accueil */}
             <Route path="/accueil" element={<RouteClientPublique><Accueil /></RouteClientPublique>} />
