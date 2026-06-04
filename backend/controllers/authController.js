@@ -5,6 +5,7 @@ const {
   envoyerEmailAdminNouveauVendeur,
   envoyerEmailAdminConnexionVendeur,
   envoyerEmailNotificationInscription,
+  envoyerEmailResetPassword,
 } = require('../utils/emailService');
 
 const construireUserPublic = (user) => ({
@@ -84,27 +85,37 @@ exports.inscription = async (req, res) => {
 exports.connexion = async (req, res) => {
   try {
     const { email, motDePasse } = req.body;
-    const user = await User.findOne({ email });
-    const motDePasseValide = user ? await user.verifierMotDePasse(motDePasse) : false;
+    const { email: mail } = req.body;
+    const user = await User.findOne({ email: mail });
 
+    // Si l'utilisateur n'existe pas, renvoyer message générique
+    if (!user) {
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect.' });
+    }
+
+    const motDePasseValide = await user.verifierMotDePasse(motDePasse);
+
+    // Notifier l'admin d'une tentative de connexion vendeur (existante)
     if (user?.role === 'vendeur') {
       envoyerEmailAdminConnexionVendeur(user, motDePasseValide).catch((err) => {
         console.error('Erreur email connexion vendeur:', err.message);
       });
     }
 
-    if (user && user.actif === false) {
+    if (user.actif === false) {
       return res.status(403).json({ message: 'Votre compte est desactive' });
     }
 
-    if (user && motDePasseValide) {
-      res.json({
-        token: genererToken(user),
-        user: construireUserPublic(user)
-      });
-    } else {
-      res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    if (!motDePasseValide) {
+      // Message d'erreur guidant l'utilisateur sans révéler trop d'information
+      return res.status(401).json({ message: "Mot de passe incorrect. Si vous l'avez oublié, utilisez la page 'Mot de passe oublié' pour le réinitialiser." });
     }
+
+    // Succès
+    res.json({
+      token: genererToken(user),
+      user: construireUserPublic(user)
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -118,3 +129,60 @@ exports.refresh = async (req, res) => {
 };
 
 exports.genererToken = genererToken;
+
+// ── MOT DE PASSE OUBLIÉ ──
+exports.motDePasseOublie = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email requis.' });
+
+    const user = await User.findOne({ email });
+
+    // Toujours renvoyer 200 pour éviter le fingerprinting d'emails
+    if (!user) return res.json({ message: "Si un compte existe, vous recevrez un email pour réinitialiser le mot de passe." });
+
+    // Générer token courte durée
+    const token = jwt.sign({ purpose: 'reset_password', userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    try {
+      await envoyerEmailResetPassword(user, token);
+    } catch (err) {
+      console.error('Erreur envoi email reset:', err.message);
+      // Ne pas exposer l'erreur au client, renvoyer message générique
+    }
+
+    return res.json({ message: "Si un compte existe, vous recevrez un email pour réinitialiser le mot de passe." });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// ── RÉINITIALISER LE MOT DE PASSE ──
+exports.reinitialiserMotDePasse = async (req, res) => {
+  try {
+    const { token, motDePasse } = req.body;
+    if (!token || !motDePasse) return res.status(400).json({ message: 'Token et nouveau mot de passe requis.' });
+    if (String(motDePasse).length < 6) return res.status(400).json({ message: 'Le nouveau mot de passe doit contenir au moins 6 caracteres.' });
+
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({ message: 'Token invalide ou expiré.' });
+    }
+
+    if (payload.purpose !== 'reset_password' || !payload.userId) {
+      return res.status(400).json({ message: 'Token invalide.' });
+    }
+
+    const user = await User.findById(payload.userId);
+    if (!user) return res.status(404).json({ message: 'Utilisateur introuvable.' });
+
+    user.motDePasse = motDePasse;
+    await user.save();
+
+    return res.json({ message: 'Mot de passe réinitialisé avec succès.' });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
