@@ -76,6 +76,9 @@ export default function Connexion() {
                 <Icon name={showPassword ? "eye-off" : "eye"} size={18} color="#999" />
               </button>
             </div>
+            <div style={styles.forgotRow}>
+              <Link to="/mot-de-passe-oublie" style={styles.forgotLink} className="forgot-link">Mot de passe oublié ?</Link>
+            </div>
           </div>
           
           <button type="submit" disabled={chargement} style={styles.bouton}>
@@ -240,6 +243,17 @@ const styles = {
     fontSize: 'clamp(0.85rem, 3vw, 0.9rem)',
     color: '#666',
   },
+  forgotRow: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginTop: '8px',
+  },
+  forgotLink: {
+    fontSize: '0.9rem',
+    color: '#C8410A',
+    textDecoration: 'none',
+    fontWeight: 600,
+  },
   lien: {
     color: '#C8410A',
     fontWeight: '600',
@@ -290,6 +304,13 @@ styleSheet.textContent = `
   .eye-btn:hover {
     opacity: 0.7;
   }
+
+  .forgot-link {
+    display: inline-block;
+    padding: 6px 4px;
+    border-radius: 6px;
+  }
+  .forgot-link:hover { text-decoration: underline; }
   
   /* Responsive pour très petits écrans */
   @media (max-width: 480px) {
@@ -306,6 +327,7 @@ styleSheet.textContent = `
       width: 16px;
       height: 16px;
     }
+    .forgot-link { display: block; text-align: right; }
   }
 `;
 document.head.appendChild(styleSheet);
