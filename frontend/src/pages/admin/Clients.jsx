@@ -118,6 +118,8 @@ const formatDelai = (delai) => ({
 
 const DossierVendeur = ({ user }) => {
   const dossier = user.verificationVendeur || {};
+  const isDataUrlPng = (val) => typeof val === 'string' && val.startsWith('data:image/');
+
   const lignes = [
     ['Nom complet', dossier.nomComplet],
     ['CNI / Passport', dossier.numeroPieceIdentite],
@@ -127,8 +129,11 @@ const DossierVendeur = ({ user }) => {
     ['Autre precision', dossier.autreTypeProduit],
     ['Delai expedition', formatDelai(dossier.delaiExpedition)],
     ['Declaration', dossier.declarationAcceptee ? 'Acceptee' : 'Non acceptee'],
-    ['Signature', dossier.signatureElectronique],
+    ['Signature', isDataUrlPng(dossier.signatureElectronique) ? dossier.signatureElectronique : 'Non renseignee'],
+
     ['Date signature', dossier.dateSignature ? new Date(dossier.dateSignature).toLocaleDateString('fr-FR') : 'Non renseignee'],
+
+
     ['Soumis le', dossier.soumisLe ? new Date(dossier.soumisLe).toLocaleString('fr-FR') : 'Non renseigne'],
   ];
 
