@@ -1,0 +1,102 @@
+@startuml
+skinparam dpi 150
+skinparam classAttributeIconSize 0
+left to right direction
+
+' Classes principales
+class User {
+  +_id: ObjectId
+  nom: String
+  prenom: String
+  email: String
+  motDePasse: String
+  role: String
+  statutVendeur: String
+  nomBoutique: String
+  telephone: String
+  adresse: Object
+  photoProfil: String
+  actif: Boolean
+}
+
+class Produit {
+  +_id: ObjectId
+  nom: String
+  description: String
+  prix: Number
+  prixAncien: Number
+  categorie: String
+  vendeurId: ObjectId
+  marque: String
+  stock: Number
+  images: List<String>
+  badge: String
+  noteMoyenne: Number
+  nombreAvis: Number
+  venteFlash: Object
+  actif: Boolean
+}
+
+class Commande {
+  +_id: ObjectId
+  clientId: ObjectId
+  lignes: List<CommandeLigne>
+  montantTotal: Number
+  adresseLivraison: Object
+  statut: String
+  modePaiement: String
+  notes: String
+  dateCommande: Date
+}
+
+class CommandeLigne {
+  produitId: ObjectId
+  vendeurId: ObjectId
+  nomProduit: String
+  categorie: String
+  prixUnitaire: Number
+  quantite: Number
+  sousTotal: Number
+}
+
+class Categorie {
+  +_id: ObjectId
+  nom: String
+  description: String
+  actif: Boolean
+}
+
+class Avis {
+  +_id: ObjectId
+  produitId: ObjectId
+  clientId: ObjectId
+  commandeId: ObjectId
+  note: Number
+  commentaire: String
+  createdAt: Date
+}
+
+class Notification {
+  +_id: ObjectId
+  vendeurId: ObjectId
+  type: String
+  titre: String
+  message: String
+  data: Object
+  lu: Boolean
+  createdAt: Date
+}
+
+' Relations
+User "1" o-- "0..*" Produit : vend
+User "1" o-- "0..*" Commande : passe
+User "1" "0..*" --> "0..*" Avis : ecrit
+Produit "1" "0..*" --> "0..*" Avis : recupere
+Commande "1" o-- "1..*" CommandeLigne : contient
+CommandeLigne "*" --> "1" Produit : reference
+CommandeLigne "*" --> "1" User : vendeur
+Notification "*" --> "1" User : destine
+
+note "Categorie est stockee comme String sur Produit" as N1
+
+@enduml
