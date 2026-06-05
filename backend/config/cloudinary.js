@@ -14,7 +14,12 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: (req, file) => ({
-    folder: file.fieldname === 'photoProfil' ? 'electromaison/profils' : 'electromaison/produits',
+    folder:
+      file.fieldname === 'photoProfil'
+        ? 'electromaison/profils'
+        : file.fieldname === 'photoIdentiteEnMain'
+          ? 'electromaison/verifications-vendeurs'
+          : 'electromaison/produits',
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
     transformation: [
       { width: 900, height: 900, crop: 'limit', quality: 'auto:good', fetch_format: 'auto' },
