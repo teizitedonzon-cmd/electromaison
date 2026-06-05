@@ -31,17 +31,27 @@ const envoyerEmail = async (options) => {
   }
 };
 
+const nettoyerUrl = (url) => String(url || '').trim().replace(/\/+$/, '');
+
+const obtenirFrontendUrl = () =>
+  nettoyerUrl(process.env.FRONTEND_URL) || 'http://localhost:3001';
+
+const obtenirBackendUrl = () =>
+  nettoyerUrl(process.env.BACKEND_URL) ||
+  nettoyerUrl(process.env.RENDER_EXTERNAL_URL) ||
+  'http://localhost:5000';
+
 const envoyerEmailAdminNouveauVendeur = async (vendeurInfo, tokenApprove, tokenReject) => {
   // Destinataire admin : teyshopmarket@gmail.com (pour approver/rejeter)
   const adminEmail = process.env.ADMIN_EMAIL || 'teyshopmarket@gmail.com';
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-  const backendUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL || 'http://localhost:5000';
+  const frontendUrl = obtenirFrontendUrl();
+  const backendUrl = obtenirBackendUrl();
 
   // Adresse d'expéditeur : elowenlea@gmail.com (compte SMTP authentifié)
   const smtpUser = process.env.EMAIL_USER || 'elowenlea@gmail.com';
 
-  const approveUrl = `${backendUrl.replace(/\/+$/, '')}/api/admin/vendor-action?token=${encodeURIComponent(tokenApprove)}`;
-  const rejectUrl = `${backendUrl.replace(/\/+$/, '')}/api/admin/vendor-action?token=${encodeURIComponent(tokenReject)}`;
+  const approveUrl = `${backendUrl}/api/admin/vendor-action?token=${encodeURIComponent(tokenApprove)}`;
+  const rejectUrl = `${backendUrl}/api/admin/vendor-action?token=${encodeURIComponent(tokenReject)}`;
 
   const html = `
     <div style="font-family:Inter,Arial,sans-serif;background:#f5f7fa;padding:28px">
@@ -62,7 +72,7 @@ const envoyerEmailAdminNouveauVendeur = async (vendeurInfo, tokenApprove, tokenR
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
             <a href="${approveUrl}" style="background:#28a745;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700">Approuver</a>
             <a href="${rejectUrl}" style="background:#dc3545;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700">Rejeter</a>
-            <a href="${frontendUrl.replace(/\/+$/, '')}/admin/clients" style="background:#6c757d;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Voir dans l'admin</a>
+            <a href="${frontendUrl}/admin/clients" style="background:#6c757d;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Voir dans l'admin</a>
           </div>
 
           <p style="color:#777;margin-top:18px;font-size:13px">Ce lien expire dans 7 jours. Si vous n'avez pas demandé cette action, ignorez cet email.</p>
@@ -85,7 +95,7 @@ const envoyerEmailAdminNouveauVendeur = async (vendeurInfo, tokenApprove, tokenR
 const envoyerEmailDecisionVendeur = async (utilisateur, statut) => {
   const destinataire = utilisateur.email;
   const smtpUser = process.env.EMAIL_USER || 'no-reply@electromaison.local';
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+  const frontendUrl = obtenirFrontendUrl();
 
   const titre = statut === 'approuve' ? 'Votre compte vendeur a été approuvé' : 'Votre demande de vendeur a été rejetée';
   const message = statut === 'approuve'
@@ -138,7 +148,7 @@ const envoyerEmailAdminConnexionVendeur = async (vendeurInfo, connexionReussie) 
 
 const envoyerEmailNotificationInscription = async (utilisateur) => {
   const destinataire = process.env.NOTIFY_SIGNUP_EMAIL || 'teyshopmarket@gmail.com';
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+  const frontendUrl = obtenirFrontendUrl();
   const fromAddress = process.env.EMAIL_USER || 'elowenlea@gmail.com';
 
   await envoyerEmail({
@@ -172,10 +182,10 @@ const envoyerEmailNotificationInscription = async (utilisateur) => {
 
 const envoyerEmailResetPassword = async (utilisateur, token) => {
   const destinataire = utilisateur.email;
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+  const frontendUrl = obtenirFrontendUrl();
   const smtpUser = process.env.EMAIL_USER || 'elowenlea@gmail.com';
 
-  const resetUrl = `${frontendUrl.replace(/\/+$/, '')}/reinitialiser-mot-de-passe?token=${encodeURIComponent(token)}`;
+  const resetUrl = `${frontendUrl}/reinitialiser-mot-de-passe?token=${encodeURIComponent(token)}`;
 
   const html = `
     <div style="font-family:Inter,Arial,sans-serif;background:#f7f8fa;padding:20px">
@@ -201,6 +211,7 @@ const envoyerEmailResetPassword = async (utilisateur, token) => {
 
 module.exports = {
   envoyerEmailAdminNouveauVendeur,
+  envoyerEmailDecisionVendeur,
   envoyerEmailAdminConnexionVendeur,
   envoyerEmailNotificationInscription,
   envoyerEmailResetPassword,
