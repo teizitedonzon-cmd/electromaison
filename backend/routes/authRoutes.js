@@ -6,7 +6,10 @@ const { proteger } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware'); 
 
 
-router.post('/inscription', upload.single('photoProfil'), inscription);
+router.post('/inscription', upload.fields([
+  { name: 'photoProfil', maxCount: 1 },
+  { name: 'photoIdentiteEnMain', maxCount: 1 },
+]), inscription);
 router.post('/connexion', connexion);
 router.post('/mot-de-passe-oublie', motDePasseOublie);
 router.post('/reinitialiser-mot-de-passe', reinitialiserMotDePasse);
