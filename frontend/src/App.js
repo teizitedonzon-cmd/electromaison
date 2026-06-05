@@ -10,6 +10,7 @@ import { CartProvider } from './context/CartContext';
 // Pages Auth
 import Connexion from './pages/auth/Connexion';
 import Inscription from './pages/auth/Inscription';
+import VerificationVendeur from './pages/auth/VerificationVendeur';
 import MotDePasseOublie from './pages/auth/MotDePasseOublie';
 import ReinitialiserMotDePasse from './pages/auth/ReinitialiserMotDePasse';
 
@@ -43,7 +44,7 @@ const RoutePrivee = ({ children }) => {
 const dashboardParRole = (user) => {
   if (!user) return '/connexion';
   if (user.role === 'admin') return '/admin/dashboard';
-  if (user.role === 'vendeur') return '/vendeur/dashboard';
+  if (user.role === 'vendeur' && user.statutVendeur === 'approuve') return '/vendeur/dashboard';
   return '/';
 };
 
@@ -70,7 +71,7 @@ const RouteAdmin = ({ children }) => {
 const RouteVendeur = ({ children }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/connexion" replace />;
-  return user.role === 'vendeur' ? children : <Navigate to={dashboardParRole(user)} replace />;
+  return user.role === 'vendeur' && user.statutVendeur === 'approuve' ? children : <Navigate to={dashboardParRole(user)} replace />;
 };
 
 const RouteAuth = ({ children }) => {
@@ -85,7 +86,7 @@ function RedirectionParRole() {
   if (!user) return <Navigate to="/connexion" />;
   
   if (user.role === 'admin') return <Navigate to="/admin/dashboard" />;
-  if (user.role === 'vendeur') return <Navigate to="/vendeur/dashboard" />;
+  if (user.role === 'vendeur' && user.statutVendeur === 'approuve') return <Navigate to="/vendeur/dashboard" />;
   return <Navigate to="/" />;
 }
 
@@ -104,6 +105,7 @@ function App() {
             {/* Routes Auth */}
             <Route path="/connexion" element={<RouteAuth><Connexion /></RouteAuth>} />
             <Route path="/inscription" element={<RouteAuth><Inscription /></RouteAuth>} />
+            <Route path="/verification-vendeur" element={<RouteAuth><VerificationVendeur /></RouteAuth>} />
             <Route path="/mot-de-passe-oublie" element={<RouteAuth><MotDePasseOublie /></RouteAuth>} />
             <Route path="/reinitialiser-mot-de-passe" element={<RouteAuth><ReinitialiserMotDePasse /></RouteAuth>} />
             
