@@ -1,0 +1,27 @@
+@startuml
+skinparam dpi 150
+skinparam nodesep 50
+node "Client (Navigateur)" as Client
+node "Vercel - Frontend" as Vercel
+node "Render - Backend (Node.js)" as Render
+database "MongoDB Atlas" as MongoDB
+cloud "Cloudinary (images)" as Cloudinary
+
+Client --> Vercel : HTTP(S) requests (UI)
+Vercel --> Render : API requests (HTTP(S))
+Render --> MongoDB : MongoDB connection (MONGO_URI)
+Render --> Cloudinary : Upload / retrieve images
+
+note left of Render
+Backend déployé sur Render
+Node.js + Express
+Gestion des uploads -> Cloudinary
+Connexion DB -> MongoDB Atlas
+end note
+
+note right of Vercel
+Frontend React déployé sur Vercel
+Communique via l'API publique
+end note
+
+@enduml
