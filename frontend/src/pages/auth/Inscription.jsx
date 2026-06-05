@@ -34,13 +34,19 @@ export default function Inscription() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.role === 'vendeur') {
+      navigate('/verification-vendeur', { state: { inscription: form, photoProfil: photo } });
+      return;
+    }
+
     setChargement(true);
     const data = new FormData();
     Object.keys(form).forEach(key => data.append(key, form[key]));
     if (photo) data.append('photoProfil', photo);
 
     try {
-      const user = await inscription(data);
+      const result = await inscription(data);
+      const user = result.user;
       toast.success(`Bienvenue ${user.prenom} ! Votre compte a été créé avec succès.`);
       
       // Redirection selon le rôle
