@@ -8,6 +8,13 @@ const normalizeApiUrl = (url) => {
 
 const getApiBaseUrl = () => {
   const configuredUrl = normalizeApiUrl(process.env.REACT_APP_API_URL);
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isVercelApp = hostname === 'electromaison.vercel.app' || hostname.endsWith('.vercel.app');
+
+  if (isVercelApp && configuredUrl.includes('onrender.com')) {
+    return '/api';
+  }
+
   return configuredUrl;
 };
 
