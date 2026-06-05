@@ -44,7 +44,7 @@ const RoutePrivee = ({ children }) => {
 const dashboardParRole = (user) => {
   if (!user) return '/connexion';
   if (user.role === 'admin') return '/admin/dashboard';
-  if (user.role === 'vendeur' && user.statutVendeur === 'approuve') return '/vendeur/dashboard';
+  if (user.role === 'vendeur') return '/vendeur/dashboard';
   return '/';
 };
 
@@ -71,7 +71,7 @@ const RouteAdmin = ({ children }) => {
 const RouteVendeur = ({ children }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/connexion" replace />;
-  return user.role === 'vendeur' && user.statutVendeur === 'approuve' ? children : <Navigate to={dashboardParRole(user)} replace />;
+  return user.role === 'vendeur' ? children : <Navigate to={dashboardParRole(user)} replace />;
 };
 
 const RouteAuth = ({ children }) => {
@@ -86,7 +86,7 @@ function RedirectionParRole() {
   if (!user) return <Navigate to="/connexion" />;
   
   if (user.role === 'admin') return <Navigate to="/admin/dashboard" />;
-  if (user.role === 'vendeur' && user.statutVendeur === 'approuve') return <Navigate to="/vendeur/dashboard" />;
+  if (user.role === 'vendeur') return <Navigate to="/vendeur/dashboard" />;
   return <Navigate to="/" />;
 }
 
