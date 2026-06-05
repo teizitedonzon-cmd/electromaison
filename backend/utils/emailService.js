@@ -41,6 +41,13 @@ const obtenirBackendUrl = () =>
   nettoyerUrl(process.env.RENDER_EXTERNAL_URL) ||
   'http://localhost:5000';
 
+const formatDelaiExpedition = (delai) => ({
+  moins_24h: 'Moins de 24 heures',
+  '1_2_jours': '1 a 2 jours',
+  '3_5_jours': '3 a 5 jours',
+  plus_5_jours: 'Plus de 5 jours',
+}[delai] || 'Non renseigne');
+
 const envoyerEmailAdminNouveauVendeur = async (vendeurInfo, tokenApprove, tokenReject) => {
   // Destinataire admin : teyshopmarket@gmail.com (pour approver/rejeter)
   const adminEmail = process.env.ADMIN_EMAIL || 'teyshopmarket@gmail.com';
@@ -49,6 +56,10 @@ const envoyerEmailAdminNouveauVendeur = async (vendeurInfo, tokenApprove, tokenR
 
   // Adresse d'expéditeur : elowenlea@gmail.com (compte SMTP authentifié)
   const smtpUser = process.env.EMAIL_USER || 'elowenlea@gmail.com';
+  const verification = vendeurInfo.verificationVendeur || {};
+  const typesProduits = Array.isArray(verification.typesProduits) && verification.typesProduits.length
+    ? verification.typesProduits.join(', ')
+    : 'Non renseigne';
 
   const approveUrl = `${backendUrl}/api/admin/vendor-action?token=${encodeURIComponent(tokenApprove)}`;
   const rejectUrl = `${backendUrl}/api/admin/vendor-action?token=${encodeURIComponent(tokenReject)}`;
@@ -67,6 +78,14 @@ const envoyerEmailAdminNouveauVendeur = async (vendeurInfo, tokenApprove, tokenR
             <tr><td style="padding:6px 0;font-weight:600">Email</td><td style="padding:6px 0">${vendeurInfo.email}</td></tr>
             <tr><td style="padding:6px 0;font-weight:600">Téléphone</td><td style="padding:6px 0">${vendeurInfo.telephone || 'Non renseigné'}</td></tr>
             <tr><td style="padding:6px 0;font-weight:600">Statut</td><td style="padding:6px 0">${vendeurInfo.statutVendeur || 'en_attente'}</td></tr>
+            <tr><td style="padding:6px 0;font-weight:600">Nom complet</td><td style="padding:6px 0">${verification.nomComplet || 'Non renseigne'}</td></tr>
+            <tr><td style="padding:6px 0;font-weight:600">CNI / Passport</td><td style="padding:6px 0">${verification.numeroPieceIdentite || 'Non renseigne'}</td></tr>
+            <tr><td style="padding:6px 0;font-weight:600">Residence</td><td style="padding:6px 0">${verification.villeResidence || 'Ville non renseignee'} - ${verification.quartierResidence || 'Quartier non renseigne'}</td></tr>
+            <tr><td style="padding:6px 0;font-weight:600">Produits</td><td style="padding:6px 0">${typesProduits}${verification.autreTypeProduit ? ` (${verification.autreTypeProduit})` : ''}</td></tr>
+            <tr><td style="padding:6px 0;font-weight:600">Expedition</td><td style="padding:6px 0">${formatDelaiExpedition(verification.delaiExpedition)}</td></tr>
+            <tr><td style="padding:6px 0;font-weight:600">Declaration</td><td style="padding:6px 0">${verification.declarationAcceptee ? 'Acceptee' : 'Non acceptee'}</td></tr>
+            <tr><td style="padding:6px 0;font-weight:600">Signature</td><td style="padding:6px 0">${verification.signatureElectronique || 'Non renseignee'}</td></tr>
+            ${verification.photoIdentiteEnMain ? `<tr><td style="padding:6px 0;font-weight:600">Photo identite</td><td style="padding:6px 0"><a href="${verification.photoIdentiteEnMain}">Voir la photo</a></td></tr>` : ''}
           </table>
 
           <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
