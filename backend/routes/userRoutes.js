@@ -122,14 +122,22 @@ router.put('/:id/statut-vendeur', proteger, admin, async (req, res) => {
       return res.status(400).json({ message: 'Statut vendeur invalide' });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { statutVendeur },
-      { new: true, runValidators: true }
-    ).select('-motDePasse');
+    const user = await User.findById(req.params.id).select('-motDePasse');
 
     if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
-    if (['approuve', 'rejete'].includes(statutVendeur)) {
+
+    if (statutVendeur === 'rejete') {
+      envoyerEmailDecisionVendeur(user, statutVendeur).catch((err) => {
+        console.error('Erreur email decision vendeur:', err.message);
+      });
+      await User.findByIdAndDelete(user._id);
+      return res.json({ message: 'Vendeur rejete et compte supprime' });
+    }
+
+    user.statutVendeur = statutVendeur;
+    await user.save();
+
+    if (statutVendeur === 'approuve') {
       envoyerEmailDecisionVendeur(user, statutVendeur).catch((err) => {
         console.error('Erreur email decision vendeur:', err.message);
       });
