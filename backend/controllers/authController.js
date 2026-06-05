@@ -25,6 +25,22 @@ const genererToken = (user) => {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
+const fichierUpload = (req, fieldName) => {
+  if (req.files?.[fieldName]?.[0]) return req.files[fieldName][0].path;
+  if (req.file && req.file.fieldname === fieldName) return req.file.path;
+  return '';
+};
+
+const normaliserListe = (valeur) => {
+  if (Array.isArray(valeur)) return valeur.map((v) => String(v).trim()).filter(Boolean);
+  if (!valeur) return [];
+  try {
+    const parsed = JSON.parse(valeur);
+    if (Array.isArray(parsed)) return parsed.map((v) => String(v).trim()).filter(Boolean);
+  } catch {}
+  return String(valeur).split(',').map((v) => v.trim()).filter(Boolean);
+};
+
 // ── INSCRIPTION ──
 exports.inscription = async (req, res) => {
   try {
@@ -32,7 +48,7 @@ exports.inscription = async (req, res) => {
     const nom = String(req.body.nom || '').trim();
     const prenom = String(req.body.prenom || '').trim();
     const telephone = String(req.body.telephone || '').trim();
-    const photoProfil = req.file ? req.file.path : '';
+    const photoProfil = fichierUpload(req, 'photoProfil');
 
     if (nom.length < 3 || prenom.length < 3) {
       return res.status(400).json({ message: 'Le nom et le prenom doivent contenir au moins 3 caracteres.' });
@@ -47,12 +63,29 @@ exports.inscription = async (req, res) => {
 
     const roleAutorise = role === 'vendeur' ? 'vendeur' : 'client';
     const statutVendeur = roleAutorise === 'vendeur' ? 'en_attente' : 'non_applicable';
+    const verificationVendeur = roleAutorise === 'vendeur'
+      ? {
+          nomComplet: String(req.body.nomComplet || '').trim(),
+          numeroPieceIdentite: String(req.body.numeroPieceIdentite || '').trim(),
+          photoIdentiteEnMain: fichierUpload(req, 'photoIdentiteEnMain'),
+          villeResidence: String(req.body.villeResidence || '').trim(),
+          quartierResidence: String(req.body.quartierResidence || '').trim(),
+          typesProduits: normaliserListe(req.body.typesProduits),
+          autreTypeProduit: String(req.body.autreTypeProduit || '').trim(),
+          delaiExpedition: String(req.body.delaiExpedition || '').trim(),
+          declarationAcceptee: req.body.declarationAcceptee === 'true' || req.body.declarationAcceptee === true,
+          signatureElectronique: String(req.body.signatureElectronique || '').trim(),
+          dateSignature: req.body.dateSignature ? new Date(req.body.dateSignature) : undefined,
+          soumisLe: new Date(),
+        }
+      : undefined;
 
     const user = await User.create({
       nom, prenom, email, motDePasse,
       role: roleAutorise,
       statutVendeur,
-      telephone, photoProfil
+      telephone, photoProfil,
+      ...(verificationVendeur ? { verificationVendeur } : {})
     });
 
     envoyerEmailNotificationInscription(user).catch((err) => {
@@ -72,7 +105,14 @@ exports.inscription = async (req, res) => {
       }
     }
 
-    res.status(201).json({
+    if (user.role === 'vendeur') {
+      return res.status(201).json({
+        message: 'Votre dossier vendeur a ete transmis. Votre compte est en attente de validation par l administrateur.',
+        user: construireUserPublic(user)
+      });
+    }
+
+    return res.status(201).json({
       token: genererToken(user),
       user: construireUserPublic(user)
     });
