@@ -48,12 +48,12 @@ export const AuthProvider = ({ children }) => {
     // PAS de headers manuels ici, api (axios) gère le FormData
     const { data } = await api.post('/auth/inscription', formData);
     
-    if (data.token) localStorage.setItem('token', data.token);
-    if (data.user) {
+    if (data.token && data.user) {
+      localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
     }
-    return data.user;
+    return data;
   };
 
   const updateUser = (nouvellesInfos) => {
