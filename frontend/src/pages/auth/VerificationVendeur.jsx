@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import Icon from '../../components/Icon';
 import logot from '../../assets/images/logot.jpg';
+import SignaturePad from '../../components/SignaturePad';
+
 
 const TYPES_PRODUITS = [
   'Electronique',
@@ -33,7 +35,7 @@ export default function VerificationVendeur() {
   const dateSignature = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const [form, setForm] = useState({
-    nomComplet: base ? `${base.prenom || ''} ${base.nom || ''}`.trim() : '',
+    nomComplet: base ? `${base.prenom || ''} ${base.prenom || ''}`.trim() : '',
     numeroPieceIdentite: '',
     villeResidence: '',
     quartierResidence: '',
@@ -41,8 +43,9 @@ export default function VerificationVendeur() {
     autreTypeProduit: '',
     delaiExpedition: '',
     declarationAcceptee: false,
-    signatureElectronique: '',
+    signatureElectronique: '', // dataURL PNG
   });
+
   const [photoIdentite, setPhotoIdentite] = useState(null);
   const [chargement, setChargement] = useState(false);
 
@@ -180,13 +183,32 @@ export default function VerificationVendeur() {
           <div style={styles.grid}>
             <div style={styles.champ}>
               <label style={styles.label}>Signature electronique</label>
-              <input name="signatureElectronique" value={form.signatureElectronique} onChange={handleChange} style={styles.input} />
+              <div style={{ marginTop: 10 }}>
+                <SignaturePad
+                  height={220}
+                  onChange={(dataUrl) =>
+                    setForm((prev) => ({ ...prev, signatureElectronique: dataUrl || '' }))
+                  }
+                  initialDataUrl={form.signatureElectronique}
+                />
+                {form.signatureElectronique ? (
+                  <p style={{ color: '#10B981', marginTop: 10, fontSize: 12, fontWeight: 700 }}>
+                    Signature enregistrée.
+                  </p>
+                ) : (
+                  <p style={{ color: '#64748B', marginTop: 10, fontSize: 12, fontWeight: 700 }}>
+                    Signez ci-dessus (tactile/souris).
+                  </p>
+                )}
+              </div>
             </div>
             <div style={styles.champ}>
               <label style={styles.label}>Date</label>
               <input value={dateSignature} readOnly style={{ ...styles.input, background: '#F8FAFC' }} />
             </div>
           </div>
+
+
 
           <button type="submit" disabled={chargement} style={styles.bouton}>
             {chargement ? 'Envoi en cours...' : 'Envoyer mon dossier vendeur'}
