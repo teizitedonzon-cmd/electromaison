@@ -108,6 +108,7 @@ exports.inscription = async (req, res) => {
     if (user.role === 'vendeur') {
       return res.status(201).json({
         message: 'Votre dossier vendeur a ete transmis. Votre compte est en attente de validation par l administrateur.',
+        token: genererToken(user),
         user: construireUserPublic(user)
       });
     }
