@@ -30,6 +30,24 @@ const userSchema = new mongoose.Schema({
     ville: { type: String },
     pays: { type: String, default: 'Cameroun' },
   },
+  verificationVendeur: {
+    nomComplet: { type: String, trim: true },
+    numeroPieceIdentite: { type: String, trim: true },
+    photoIdentiteEnMain: { type: String, default: '' },
+    villeResidence: { type: String, trim: true },
+    quartierResidence: { type: String, trim: true },
+    typesProduits: [{ type: String, trim: true }],
+    autreTypeProduit: { type: String, trim: true },
+    delaiExpedition: {
+      type: String,
+      enum: ['', 'moins_24h', '1_2_jours', '3_5_jours', 'plus_5_jours'],
+      default: ''
+    },
+    declarationAcceptee: { type: Boolean, default: false },
+    signatureElectronique: { type: String, trim: true },
+    dateSignature: { type: Date },
+    soumisLe: { type: Date },
+  },
   photoProfil: { type: String, default: '' },
   actif: { type: Boolean, default: true }
 }, { timestamps: true });
