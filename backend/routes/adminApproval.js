@@ -24,6 +24,12 @@ router.get('/vendor-action', async (req, res) => {
       return res.send(`<h2>Déjà ${newStatus}</h2><p>La décision a déjà été prise pour cet utilisateur.</p>`);
     }
 
+    if (newStatus === 'rejete') {
+      envoyerEmailDecisionVendeur(user, newStatus).catch((err) => console.error('Erreur email décision vendeur:', err.message));
+      await User.findByIdAndDelete(user._id);
+      return res.send(`<h2>Vendeur rejeté</h2><p>La demande a été rejetée et le compte a été supprimé.</p>`);
+    }
+
     user.statutVendeur = newStatus;
     await user.save();
 
