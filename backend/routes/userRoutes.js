@@ -3,6 +3,7 @@ const router = express.Router();
 const { proteger, admin } = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const upload = require('../middleware/uploadMiddleware');
+const { envoyerEmailDecisionVendeur } = require('../utils/emailService');
 
 router.get('/', proteger, admin, async (req, res) => {
   try {
@@ -128,6 +129,11 @@ router.put('/:id/statut-vendeur', proteger, admin, async (req, res) => {
     ).select('-motDePasse');
 
     if (!user) return res.status(404).json({ message: 'Utilisateur introuvable' });
+    if (['approuve', 'rejete'].includes(statutVendeur)) {
+      envoyerEmailDecisionVendeur(user, statutVendeur).catch((err) => {
+        console.error('Erreur email decision vendeur:', err.message);
+      });
+    }
     res.json({ message: 'Statut vendeur mis a jour', user });
   } catch (error) {
     res.status(500).json({ message: error.message });
