@@ -1,0 +1,31 @@
+@startuml
+skinparam dpi 150
+start
+:Consulter panier;
+if (Panier vide ?) then (oui)
+  :Afficher "Panier vide";
+  stop
+else (non)
+  :Valider adresse et mode paiement;
+  :Envoyer requête POST /commandes;
+  if (Réponse erreur stock ?) then (oui)
+    :Afficher produit indisponible / ajuster quantite;
+    stop
+  else (non)
+    if (Paiement requis) then (oui)
+      :Traiter paiement (extern)
+      if (Paiement échoue) then (oui)
+        :Afficher erreur paiement;
+        stop
+      else (non)
+        :Continuer
+      endif
+    endif
+    :Backend décrémente stock;
+    :Backend crée commande;
+    :Backend notifie vendeurs;
+    :Afficher confirmation de commande;
+    stop
+  endif
+endif
+@enduml
